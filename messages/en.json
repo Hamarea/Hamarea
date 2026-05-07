@@ -1,0 +1,99 @@
+{
+  "common": {
+    "siteName": "Hamarea",
+    "tagline": "Curated products & accessories, shipped worldwide.",
+    "search": "Search",
+    "cart": "Cart",
+    "account": "My account",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "signup": "Sign up",
+    "addToCart": "Add to cart",
+    "buyNow": "Buy now",
+    "outOfStock": "Out of stock",
+    "inStock": "In stock",
+    "freeShipping": "Free shipping",
+    "loading": "Loading…",
+    "currency": "EUR"
+  },
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "categories": "Categories",
+    "about": "About",
+    "contact": "Contact",
+    "admin": "Admin"
+  },
+  "home": {
+    "heroTitle": "Blue • Green • Brown selection",
+    "heroSubtitle": "A curated boutique with thoughtfully selected products, shipped worldwide.",
+    "heroCta": "Browse the shop",
+    "featured": "Featured products",
+    "newArrivals": "New arrivals",
+    "viewAll": "View all"
+  },
+  "product": {
+    "description": "Description",
+    "details": "Specifications",
+    "shipping": "Shipping & returns",
+    "reviews": "Customer reviews",
+    "relatedProducts": "You may also like",
+    "selectVariant": "Select a variant"
+  },
+  "cart": {
+    "title": "Your cart",
+    "empty": "Your cart is empty.",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tax": "Tax",
+    "total": "Total",
+    "checkout": "Checkout",
+    "continueShopping": "Continue shopping",
+    "remove": "Remove"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "signupTitle": "Create an account",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full name",
+    "forgotPassword": "Forgot your password?",
+    "submit": "Continue",
+    "googleLogin": "Continue with Google",
+    "noAccount": "No account yet?",
+    "hasAccount": "Already have an account?"
+  },
+  "account": {
+    "myOrders": "My orders",
+    "addresses": "Addresses",
+    "profile": "Profile",
+    "wishlist": "Wishlist",
+    "orderStatus": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
+    }
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "orders": "Orders",
+    "customers": "Customers",
+    "stock": "Stock",
+    "categories": "Categories",
+    "coupons": "Coupons",
+    "reviews": "Reviews",
+    "settings": "Settings"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "legal": "Legal notice",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "contact": "Contact"
+  }
+}

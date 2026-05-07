@@ -1,0 +1,34 @@
+{
+  "common": {
+    "siteName": "Hamarea",
+    "tagline": "Sorgfältig ausgewählte Produkte und Accessoires – weltweit versandt.",
+    "search": "Suchen",
+    "cart": "Warenkorb",
+    "account": "Mein Konto",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "signup": "Registrieren",
+    "addToCart": "In den Warenkorb",
+    "buyNow": "Jetzt kaufen",
+    "outOfStock": "Ausverkauft",
+    "inStock": "Auf Lager",
+    "freeShipping": "Kostenloser Versand",
+    "loading": "Lädt…",
+    "currency": "EUR"
+  },
+  "nav": { "home": "Start", "shop": "Shop", "categories": "Kategorien", "about": "Über uns", "contact": "Kontakt", "admin": "Admin" },
+  "home": {
+    "heroTitle": "Auswahl in Blau • Grün • Braun",
+    "heroSubtitle": "Eine sorgfältig kuratierte Boutique mit erlesenen Produkten.",
+    "heroCta": "Zum Shop",
+    "featured": "Empfehlungen",
+    "newArrivals": "Neuheiten",
+    "viewAll": "Alle ansehen"
+  },
+  "product": { "description": "Beschreibung", "details": "Eigenschaften", "shipping": "Versand & Rückgabe", "reviews": "Kundenbewertungen", "relatedProducts": "Das könnte Ihnen gefallen", "selectVariant": "Variante wählen" },
+  "cart": { "title": "Ihr Warenkorb", "empty": "Ihr Warenkorb ist leer.", "subtotal": "Zwischensumme", "shipping": "Versand", "tax": "MwSt.", "total": "Gesamt", "checkout": "Zur Kasse", "continueShopping": "Weiter einkaufen", "remove": "Entfernen" },
+  "auth": { "loginTitle": "Anmelden", "signupTitle": "Konto erstellen", "email": "E-Mail", "password": "Passwort", "fullName": "Vollständiger Name", "forgotPassword": "Passwort vergessen?", "submit": "Weiter", "googleLogin": "Mit Google fortfahren", "noAccount": "Noch kein Konto?", "hasAccount": "Bereits registriert?" },
+  "account": { "myOrders": "Meine Bestellungen", "addresses": "Adressen", "profile": "Profil", "wishlist": "Wunschliste", "orderStatus": { "pending": "Ausstehend", "paid": "Bezahlt", "processing": "In Bearbeitung", "shipped": "Versandt", "delivered": "Geliefert", "cancelled": "Storniert", "refunded": "Erstattet" } },
+  "admin": { "dashboard": "Dashboard", "products": "Produkte", "orders": "Bestellungen", "customers": "Kunden", "stock": "Lager", "categories": "Kategorien", "coupons": "Gutscheine", "reviews": "Bewertungen", "settings": "Einstellungen" },
+  "footer": { "rights": "Alle Rechte vorbehalten.", "legal": "Impressum", "terms": "AGB", "privacy": "Datenschutz", "contact": "Kontakt" }
+}

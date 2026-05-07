@@ -1,0 +1,99 @@
+{
+  "common": {
+    "siteName": "Hamarea",
+    "tagline": "Produits & accessoires soignés, livrés partout dans le monde.",
+    "search": "Rechercher",
+    "cart": "Panier",
+    "account": "Mon compte",
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "signup": "Créer un compte",
+    "addToCart": "Ajouter au panier",
+    "buyNow": "Acheter maintenant",
+    "outOfStock": "Rupture de stock",
+    "inStock": "En stock",
+    "freeShipping": "Livraison offerte",
+    "loading": "Chargement…",
+    "currency": "EUR"
+  },
+  "nav": {
+    "home": "Accueil",
+    "shop": "Boutique",
+    "categories": "Catégories",
+    "about": "À propos",
+    "contact": "Contact",
+    "admin": "Admin"
+  },
+  "home": {
+    "heroTitle": "Sélection bleu • vert • marron",
+    "heroSubtitle": "Une boutique soignée, des produits choisis avec exigence, livrés dans le monde entier.",
+    "heroCta": "Découvrir la boutique",
+    "featured": "Produits en vedette",
+    "newArrivals": "Nouveautés",
+    "viewAll": "Voir tout"
+  },
+  "product": {
+    "description": "Description",
+    "details": "Caractéristiques",
+    "shipping": "Livraison & retours",
+    "reviews": "Avis clients",
+    "relatedProducts": "Vous aimerez aussi",
+    "selectVariant": "Choisir une variante"
+  },
+  "cart": {
+    "title": "Votre panier",
+    "empty": "Votre panier est vide.",
+    "subtotal": "Sous-total",
+    "shipping": "Livraison",
+    "tax": "TVA",
+    "total": "Total",
+    "checkout": "Passer commande",
+    "continueShopping": "Continuer mes achats",
+    "remove": "Retirer"
+  },
+  "auth": {
+    "loginTitle": "Connexion",
+    "signupTitle": "Créer un compte",
+    "email": "Email",
+    "password": "Mot de passe",
+    "fullName": "Nom complet",
+    "forgotPassword": "Mot de passe oublié ?",
+    "submit": "Continuer",
+    "googleLogin": "Continuer avec Google",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà inscrit ?"
+  },
+  "account": {
+    "myOrders": "Mes commandes",
+    "addresses": "Adresses",
+    "profile": "Profil",
+    "wishlist": "Favoris",
+    "orderStatus": {
+      "pending": "En attente",
+      "paid": "Payée",
+      "processing": "En préparation",
+      "shipped": "Expédiée",
+      "delivered": "Livrée",
+      "cancelled": "Annulée",
+      "refunded": "Remboursée"
+    }
+  },
+  "admin": {
+    "dashboard": "Tableau de bord",
+    "products": "Produits",
+    "orders": "Commandes",
+    "customers": "Clients",
+    "stock": "Stock",
+    "categories": "Catégories",
+    "coupons": "Coupons",
+    "reviews": "Avis",
+    "settings": "Paramètres"
+  },
+  "footer": {
+    "rights": "Tous droits réservés.",
+    "legal": "Mentions légales",
+    "terms": "CGV",
+    "privacy": "Confidentialité",
+    "contact": "Contact"
+  }
+}

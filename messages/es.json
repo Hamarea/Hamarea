@@ -1,0 +1,34 @@
+{
+  "common": {
+    "siteName": "Hamarea",
+    "tagline": "Productos y accesorios cuidados, enviados a todo el mundo.",
+    "search": "Buscar",
+    "cart": "Carrito",
+    "account": "Mi cuenta",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "signup": "Crear cuenta",
+    "addToCart": "Añadir al carrito",
+    "buyNow": "Comprar ahora",
+    "outOfStock": "Agotado",
+    "inStock": "En stock",
+    "freeShipping": "Envío gratis",
+    "loading": "Cargando…",
+    "currency": "EUR"
+  },
+  "nav": { "home": "Inicio", "shop": "Tienda", "categories": "Categorías", "about": "Sobre nosotros", "contact": "Contacto", "admin": "Admin" },
+  "home": {
+    "heroTitle": "Selección azul • verde • marrón",
+    "heroSubtitle": "Una boutique cuidada con productos seleccionados con esmero.",
+    "heroCta": "Ver la tienda",
+    "featured": "Destacados",
+    "newArrivals": "Novedades",
+    "viewAll": "Ver todo"
+  },
+  "product": { "description": "Descripción", "details": "Características", "shipping": "Envío y devoluciones", "reviews": "Opiniones", "relatedProducts": "También te puede gustar", "selectVariant": "Elegir variante" },
+  "cart": { "title": "Tu carrito", "empty": "Tu carrito está vacío.", "subtotal": "Subtotal", "shipping": "Envío", "tax": "IVA", "total": "Total", "checkout": "Finalizar compra", "continueShopping": "Seguir comprando", "remove": "Quitar" },
+  "auth": { "loginTitle": "Iniciar sesión", "signupTitle": "Crear cuenta", "email": "Email", "password": "Contraseña", "fullName": "Nombre completo", "forgotPassword": "¿Olvidaste tu contraseña?", "submit": "Continuar", "googleLogin": "Continuar con Google", "noAccount": "¿No tienes cuenta?", "hasAccount": "¿Ya tienes cuenta?" },
+  "account": { "myOrders": "Mis pedidos", "addresses": "Direcciones", "profile": "Perfil", "wishlist": "Favoritos", "orderStatus": { "pending": "Pendiente", "paid": "Pagado", "processing": "Preparando", "shipped": "Enviado", "delivered": "Entregado", "cancelled": "Cancelado", "refunded": "Reembolsado" } },
+  "admin": { "dashboard": "Panel", "products": "Productos", "orders": "Pedidos", "customers": "Clientes", "stock": "Stock", "categories": "Categorías", "coupons": "Cupones", "reviews": "Opiniones", "settings": "Ajustes" },
+  "footer": { "rights": "Todos los derechos reservados.", "legal": "Aviso legal", "terms": "Términos", "privacy": "Privacidad", "contact": "Contacto" }
+}
