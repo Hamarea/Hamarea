@@ -9,6 +9,7 @@
     "logout": "Cerrar sesión",
     "signup": "Crear cuenta",
     "addToCart": "Añadir al carrito",
+    "added": "¡Añadido!",
     "buyNow": "Comprar ahora",
     "outOfStock": "Agotado",
     "inStock": "En stock",
@@ -17,6 +18,17 @@
     "currency": "EUR"
   },
   "nav": { "home": "Inicio", "shop": "Tienda", "categories": "Categorías", "about": "Sobre nosotros", "contact": "Contacto", "admin": "Admin" },
+  "shop": {
+    "searchPlaceholder": "Buscar productos…",
+    "sortLabel": "Ordenar",
+    "sort": { "newest": "Más recientes", "oldest": "Más antiguos", "priceAsc": "Precio ascendente", "priceDesc": "Precio descendente" },
+    "filterCategory": "Categoría",
+    "allCategories": "Todas",
+    "empty": "Ningún producto coincide con tu búsqueda.",
+    "resetFilters": "Restablecer",
+    "resultsCount": "{count, plural, =0 {0 productos} =1 {1 producto} other {# productos}}",
+    "pagination": { "prev": "Anterior", "next": "Siguiente", "page": "Página {current} de {total}" }
+  },
   "home": {
     "heroTitle": "Selección azul • verde • marrón",
     "heroSubtitle": "Una boutique cuidada con productos seleccionados con esmero.",
@@ -60,5 +72,9 @@
     "flagBy": "Reportado por",
     "errors": { "forbidden": "Acción reservada al equipo de moderación.", "generic": "Acción imposible. Inténtalo de nuevo." }
   },
-  "footer": { "rights": "Todos los derechos reservados.", "legal": "Aviso legal", "terms": "Términos", "privacy": "Privacidad", "contact": "Contacto" }
+  "footer": { "rights": "Todos los derechos reservados.", "legal": "Aviso legal", "terms": "Términos", "privacy": "Privacidad", "contact": "Contacto" },
+  "legal": {
+    "placeholder": "Esta página se completará pronto. Contáctanos si tienes alguna duda.",
+    "lastUpdated": "Última actualización: {date}"
+  }
 }

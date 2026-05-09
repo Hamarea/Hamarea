@@ -1,10 +1,10 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import { Link } from "@/i18n/navigation";
+import { ChevronRight } from "lucide-react";
 import { getProductBySlug } from "@/lib/queries";
-import { Badge } from "@/components/ui/badge";
-import { formatMoney } from "@/lib/utils";
-import { AddToCartButton } from "@/components/shop/add-to-cart-button";
+import { ImageGallery } from "@/components/shop/image-gallery";
+import { VariantPicker } from "@/components/shop/variant-picker";
 
 export default async function ProductPage({
   params,
@@ -17,74 +17,73 @@ export default async function ProductPage({
   const p = await getProductBySlug(slug, locale);
   if (!p) notFound();
 
+  const galleryImages = p.images.length
+    ? p.images.map((img) => ({ url: img.url, alt: img.alt }))
+    : p.image_url
+      ? [{ url: p.image_url, alt: p.name }]
+      : [];
+
   return (
-    <article className="container-page grid gap-10 py-12 md:grid-cols-2">
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--color-bg)]">
-        {p.image_url ? (
-          <Image
-            src={p.image_url}
-            alt={p.name}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center text-[var(--color-muted)]">
-            Image
+    <article className="container-page py-12">
+      <nav
+        aria-label="breadcrumb"
+        className="mb-6 flex items-center gap-1 text-xs text-[var(--color-muted)]"
+      >
+        <Link href="/" className="hover:text-[var(--color-foreground)]">
+          {t("nav.home")}
+        </Link>
+        <ChevronRight className="h-3 w-3" />
+        <Link href="/products" className="hover:text-[var(--color-foreground)]">
+          {t("nav.shop")}
+        </Link>
+        {p.category && (
+          <>
+            <ChevronRight className="h-3 w-3" />
+            <Link
+              href={{ pathname: "/products", query: { category: p.category.slug } }}
+              className="hover:text-[var(--color-foreground)]"
+            >
+              {p.category.name}
+            </Link>
+          </>
+        )}
+        <ChevronRight className="h-3 w-3" />
+        <span className="text-[var(--color-foreground)]">{p.name}</span>
+      </nav>
+
+      <div className="grid gap-10 md:grid-cols-2">
+        <ImageGallery images={galleryImages} fallbackAlt={p.name} />
+
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl">{p.name}</h1>
+
+          <div className="mt-4">
+            <VariantPicker
+              productId={p.id}
+              slug={p.slug}
+              name={p.name}
+              image={p.image_url}
+              variants={p.variants}
+              locale={locale}
+            />
           </div>
-        )}
-      </div>
-      <div>
-        {p.compare_at_price_cents && p.compare_at_price_cents > p.price_cents && (
-          <Badge variant="accent" className="mb-4">Promotion</Badge>
-        )}
-        <h1 className="font-display text-3xl md:text-4xl">{p.name}</h1>
-        <div className="mt-4 flex items-baseline gap-3">
-          <span className="text-3xl font-semibold text-[var(--color-primary-700)]">
-            {formatMoney(p.price_cents, p.currency, locale)}
-          </span>
-          {p.compare_at_price_cents && (
-            <span className="text-lg text-[var(--color-muted)] line-through">
-              {formatMoney(p.compare_at_price_cents, p.currency, locale)}
-            </span>
-          )}
+
+          <section className="mt-10 border-t border-[var(--color-border)] pt-6">
+            <h2 className="font-display text-xl">{t("product.description")}</h2>
+            <p className="mt-3 leading-relaxed text-[var(--color-muted)]">
+              {p.description}
+            </p>
+          </section>
+
+          <section className="mt-8 border-t border-[var(--color-border)] pt-6 text-sm">
+            <h2 className="mb-3 font-display text-xl">{t("product.shipping")}</h2>
+            <ul className="space-y-1.5 text-[var(--color-muted)]">
+              <li>✓ Livraison sous 3-5 jours ouvrés (UE)</li>
+              <li>✓ Retours gratuits sous 14 jours</li>
+              <li>✓ Emballage soigné, sans plastique</li>
+            </ul>
+          </section>
         </div>
-        <p className="mt-2 text-sm text-[var(--color-secondary-600)]">
-          {p.in_stock ? `✓ ${t("common.inStock")}` : `✗ ${t("common.outOfStock")}`}
-        </p>
-
-        <div className="mt-8">
-          <AddToCartButton
-            line={{
-              variantId: p.id,
-              productId: p.id,
-              slug: p.slug,
-              name: p.name,
-              image: p.image_url,
-              unitPriceCents: p.price_cents,
-              currency: p.currency,
-              quantity: 1,
-            }}
-            disabled={!p.in_stock}
-          />
-        </div>
-
-        <section className="mt-10 border-t border-[var(--color-border)] pt-6">
-          <h2 className="font-display text-xl">{t("product.description")}</h2>
-          <p className="mt-3 text-[var(--color-muted)] leading-relaxed">
-            {p.description}
-          </p>
-        </section>
-
-        <section className="mt-8 border-t border-[var(--color-border)] pt-6 text-sm">
-          <h2 className="font-display text-xl mb-3">{t("product.shipping")}</h2>
-          <ul className="space-y-1.5 text-[var(--color-muted)]">
-            <li>✓ Livraison sous 3-5 jours ouvrés (UE)</li>
-            <li>✓ Retours gratuits sous 14 jours</li>
-            <li>✓ Emballage soigné, sans plastique</li>
-          </ul>
-        </section>
       </div>
     </article>
   );

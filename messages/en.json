@@ -9,6 +9,7 @@
     "logout": "Sign out",
     "signup": "Sign up",
     "addToCart": "Add to cart",
+    "added": "Added!",
     "buyNow": "Buy now",
     "outOfStock": "Out of stock",
     "inStock": "In stock",
@@ -23,6 +24,26 @@
     "about": "About",
     "contact": "Contact",
     "admin": "Admin"
+  },
+  "shop": {
+    "searchPlaceholder": "Search products…",
+    "sortLabel": "Sort",
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "priceAsc": "Price ascending",
+      "priceDesc": "Price descending"
+    },
+    "filterCategory": "Category",
+    "allCategories": "All",
+    "empty": "No product matches your search.",
+    "resetFilters": "Reset",
+    "resultsCount": "{count, plural, =0 {0 products} =1 {1 product} other {# products}}",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {current} of {total}"
+    }
   },
   "home": {
     "heroTitle": "Blue • Green • Brown selection",
@@ -152,5 +173,9 @@
     "terms": "Terms",
     "privacy": "Privacy",
     "contact": "Contact"
+  },
+  "legal": {
+    "placeholder": "This page will be filled in shortly. Reach out if you have any question.",
+    "lastUpdated": "Last updated: {date}"
   }
 }
