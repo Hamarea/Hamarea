@@ -9,6 +9,7 @@
     "logout": "Se déconnecter",
     "signup": "Créer un compte",
     "addToCart": "Ajouter au panier",
+    "added": "Ajouté !",
     "buyNow": "Acheter maintenant",
     "outOfStock": "Rupture de stock",
     "inStock": "En stock",
@@ -24,10 +25,41 @@
     "contact": "Contact",
     "admin": "Admin"
   },
+  "shop": {
+    "searchPlaceholder": "Rechercher un produit…",
+    "sortLabel": "Trier",
+    "sort": {
+      "newest": "Plus récents",
+      "oldest": "Plus anciens",
+      "priceAsc": "Prix croissant",
+      "priceDesc": "Prix décroissant"
+    },
+    "filterCategory": "Catégorie",
+    "allCategories": "Toutes",
+    "empty": "Aucun produit ne correspond à votre recherche.",
+    "resetFilters": "Réinitialiser",
+    "resultsCount": "{count, plural, =0 {0 produit} =1 {1 produit} other {# produits}}",
+    "pagination": {
+      "prev": "Précédent",
+      "next": "Suivant",
+      "page": "Page {current} sur {total}"
+    }
+  },
   "home": {
     "heroTitle": "Sélection bleu • vert • marron",
     "heroSubtitle": "Une boutique soignée, des produits choisis avec exigence, livrés dans le monde entier.",
     "heroCta": "Découvrir la boutique",
+    "heroDisplayLine1": "Des pièces",
+    "heroDisplayLine2": "qui ont",
+    "heroDisplayLine3": "une histoire",
+    "heroDisplaySubtitle": "Le soin du détail, à chaque commande.",
+    "heroCaption": "Lina · Lin de la collection Maison 2026",
+    "heroSubBrand": "Atelier",
+    "heroFindStore": "Trouver une boutique",
+    "marqueeNew": "Nouveauté",
+    "marqueeCollection": "Collection Maison 2026",
+    "marqueeShipping": "Livraison offerte dès 150€",
+    "marqueeCta": "Découvrir",
     "featured": "Produits en vedette",
     "newArrivals": "Nouveautés",
     "viewAll": "Voir tout"
@@ -87,7 +119,53 @@
     "categories": "Catégories",
     "coupons": "Coupons",
     "reviews": "Avis",
+    "moderation": "Modération",
     "settings": "Paramètres"
+  },
+  "moderation": {
+    "title": "Modération des avis",
+    "lead": "Approuvez, rejetez ou consultez les avis signalés. Chaque action est tracée dans le journal d'audit.",
+    "tabs": {
+      "pending": "En attente",
+      "flagged": "Signalés",
+      "rejected": "Rejetés",
+      "approved": "Approuvés"
+    },
+    "empty": {
+      "pending": "Aucun avis en attente. Bon café ☕",
+      "flagged": "Aucun avis signalé.",
+      "rejected": "Aucun avis rejeté.",
+      "approved": "Aucun avis approuvé pour le moment."
+    },
+    "column": {
+      "review": "Avis",
+      "product": "Produit",
+      "author": "Auteur",
+      "rating": "Note",
+      "flags": "Signal.",
+      "date": "Date",
+      "actions": "Actions",
+      "moderator": "Modérateur"
+    },
+    "verified": "Achat vérifié",
+    "anonymous": "Anonyme",
+    "actions": {
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "reopen": "Remettre en attente",
+      "viewProduct": "Voir le produit"
+    },
+    "note": {
+      "label": "Note interne (optionnel)",
+      "placeholder": "Motif visible uniquement par l'équipe de modération",
+      "save": "Enregistrer la note"
+    },
+    "flagReason": "Motif",
+    "flagBy": "Signalé par",
+    "errors": {
+      "forbidden": "Action réservée à l'équipe de modération.",
+      "generic": "Action impossible. Réessaie."
+    }
   },
   "footer": {
     "rights": "Tous droits réservés.",
@@ -95,5 +173,9 @@
     "terms": "CGV",
     "privacy": "Confidentialité",
     "contact": "Contact"
+  },
+  "legal": {
+    "placeholder": "Cette page sera bientôt complétée. En attendant, contactez-nous pour toute question.",
+    "lastUpdated": "Dernière mise à jour : {date}"
   }
 }

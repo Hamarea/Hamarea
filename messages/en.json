@@ -9,6 +9,7 @@
     "logout": "Sign out",
     "signup": "Sign up",
     "addToCart": "Add to cart",
+    "added": "Added!",
     "buyNow": "Buy now",
     "outOfStock": "Out of stock",
     "inStock": "In stock",
@@ -24,10 +25,41 @@
     "contact": "Contact",
     "admin": "Admin"
   },
+  "shop": {
+    "searchPlaceholder": "Search products…",
+    "sortLabel": "Sort",
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "priceAsc": "Price ascending",
+      "priceDesc": "Price descending"
+    },
+    "filterCategory": "Category",
+    "allCategories": "All",
+    "empty": "No product matches your search.",
+    "resetFilters": "Reset",
+    "resultsCount": "{count, plural, =0 {0 products} =1 {1 product} other {# products}}",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {current} of {total}"
+    }
+  },
   "home": {
     "heroTitle": "Blue • Green • Brown selection",
     "heroSubtitle": "A curated boutique with thoughtfully selected products, shipped worldwide.",
     "heroCta": "Browse the shop",
+    "heroDisplayLine1": "Pieces",
+    "heroDisplayLine2": "with a",
+    "heroDisplayLine3": "story",
+    "heroDisplaySubtitle": "Care, in every detail.",
+    "heroCaption": "Lina · Linen from the Maison 2026 collection",
+    "heroSubBrand": "Atelier",
+    "heroFindStore": "Find a store",
+    "marqueeNew": "New arrival",
+    "marqueeCollection": "Maison 2026 collection",
+    "marqueeShipping": "Free shipping over €150",
+    "marqueeCta": "Discover",
     "featured": "Featured products",
     "newArrivals": "New arrivals",
     "viewAll": "View all"
@@ -87,7 +119,53 @@
     "categories": "Categories",
     "coupons": "Coupons",
     "reviews": "Reviews",
+    "moderation": "Moderation",
     "settings": "Settings"
+  },
+  "moderation": {
+    "title": "Review moderation",
+    "lead": "Approve, reject or inspect flagged reviews. Every action is recorded in the audit log.",
+    "tabs": {
+      "pending": "Pending",
+      "flagged": "Flagged",
+      "rejected": "Rejected",
+      "approved": "Approved"
+    },
+    "empty": {
+      "pending": "No pending reviews. Take a break ☕",
+      "flagged": "No flagged reviews.",
+      "rejected": "No rejected reviews.",
+      "approved": "No approved reviews yet."
+    },
+    "column": {
+      "review": "Review",
+      "product": "Product",
+      "author": "Author",
+      "rating": "Rating",
+      "flags": "Flags",
+      "date": "Date",
+      "actions": "Actions",
+      "moderator": "Moderator"
+    },
+    "verified": "Verified purchase",
+    "anonymous": "Anonymous",
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "reopen": "Reopen",
+      "viewProduct": "View product"
+    },
+    "note": {
+      "label": "Internal note (optional)",
+      "placeholder": "Reason visible to the moderation team only",
+      "save": "Save note"
+    },
+    "flagReason": "Reason",
+    "flagBy": "Flagged by",
+    "errors": {
+      "forbidden": "Restricted to the moderation team.",
+      "generic": "Action failed. Please retry."
+    }
   },
   "footer": {
     "rights": "All rights reserved.",
@@ -95,5 +173,9 @@
     "terms": "Terms",
     "privacy": "Privacy",
     "contact": "Contact"
+  },
+  "legal": {
+    "placeholder": "This page will be filled in shortly. Reach out if you have any question.",
+    "lastUpdated": "Last updated: {date}"
   }
 }

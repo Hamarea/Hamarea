@@ -27,7 +27,7 @@ export function AddToCartButton({
       }}
     >
       {added ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
-      {disabled ? t("common.outOfStock") : added ? "Ajouté !" : t("common.addToCart")}
+      {disabled ? t("common.outOfStock") : added ? t("common.added") : t("common.addToCart")}
     </Button>
   );
 }

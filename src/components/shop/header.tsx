@@ -1,58 +1,148 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Search, ShoppingBag, User, Menu } from "lucide-react";
+import { usePathname } from "@/i18n/navigation";
+import { Search, ShoppingBag, User, Menu, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/stores/cart";
 import { LocaleSwitcher } from "./locale-switcher";
+import { cn } from "@/lib/utils";
 
 export function ShopHeader() {
   const t = useTranslations();
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const count = useCart((s) => s.count());
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isHome) {
+      setScrolled(true);
+      return;
+    }
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isHome]);
+
+  const overlay = isHome && !scrolled;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-bg)]/85 backdrop-blur">
+    <header
+      className={cn(
+        "sticky top-0 z-50 transition-colors duration-300",
+        overlay
+          ? "border-b border-transparent bg-transparent text-white"
+          : "border-b border-[var(--color-border)] bg-[var(--color-bg)]/85 text-[var(--color-foreground)] backdrop-blur",
+      )}
+    >
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link
           href="/"
-          className="font-display text-2xl tracking-tight text-[var(--color-primary-700)]"
+          className={cn(
+            "font-display text-2xl tracking-tight",
+            overlay ? "text-white" : "text-[var(--color-primary-700)]",
+          )}
         >
           Hamarea
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          <Link href="/products" className="hover:text-[var(--color-primary-600)]">
+        <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
+          <Link
+            href="/products"
+            className={cn(
+              "transition-opacity hover:opacity-80",
+              overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
+            )}
+          >
             {t("nav.shop")}
           </Link>
-          <Link href="/categories" className="hover:text-[var(--color-primary-600)]">
+          <Link
+            href="/categories"
+            className={cn(
+              "transition-opacity hover:opacity-80",
+              overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
+            )}
+          >
             {t("nav.categories")}
           </Link>
-          <Link href="/about" className="hover:text-[var(--color-primary-600)]">
+          <Link
+            href="/about"
+            className={cn(
+              "transition-opacity hover:opacity-80",
+              overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
+            )}
+          >
             {t("nav.about")}
           </Link>
         </nav>
 
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label={t("common.search")}>
+          <Link
+            href="/contact"
+            className={cn(
+              "hidden items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors md:inline-flex",
+              overlay
+                ? "border-white/60 text-white hover:bg-white/10"
+                : "border-[var(--color-foreground)]/30 text-[var(--color-foreground)] hover:bg-[var(--color-foreground)]/5",
+            )}
+          >
+            {t("home.heroFindStore")}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t("common.search")}
+            className={overlay ? "text-white hover:bg-white/10 hover:text-white" : ""}
+          >
             <Search className="h-5 w-5" />
           </Button>
           <LocaleSwitcher />
-          <Button asChild variant="ghost" size="icon" aria-label={t("common.account")}>
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            aria-label={t("common.account")}
+            className={overlay ? "text-white hover:bg-white/10 hover:text-white" : ""}
+          >
             <Link href="/account">
               <User className="h-5 w-5" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon" aria-label={t("common.cart")} className="relative">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            aria-label={t("common.cart")}
+            className={cn(
+              "relative",
+              overlay ? "text-white hover:bg-white/10 hover:text-white" : "",
+            )}
+          >
             <Link href="/cart">
               <ShoppingBag className="h-5 w-5" />
-              {count > 0 && (
-                <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-accent-400)] px-1.5 text-[10px] font-semibold text-white">
-                  {count}
-                </span>
-              )}
+              <span
+                className={cn(
+                  "ml-1 text-sm tabular-nums",
+                  overlay ? "text-white/90" : "text-[var(--color-foreground)]/70",
+                )}
+              >
+                ({count})
+              </span>
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" className="md:hidden" aria-label="Menu">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "md:hidden",
+              overlay ? "text-white hover:bg-white/10 hover:text-white" : "",
+            )}
+            aria-label="Menu"
+          >
             <Menu className="h-5 w-5" />
           </Button>
         </div>

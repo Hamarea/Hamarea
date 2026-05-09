@@ -9,6 +9,7 @@
     "logout": "Abmelden",
     "signup": "Registrieren",
     "addToCart": "In den Warenkorb",
+    "added": "Hinzugefügt!",
     "buyNow": "Jetzt kaufen",
     "outOfStock": "Ausverkauft",
     "inStock": "Auf Lager",
@@ -17,10 +18,32 @@
     "currency": "EUR"
   },
   "nav": { "home": "Start", "shop": "Shop", "categories": "Kategorien", "about": "Über uns", "contact": "Kontakt", "admin": "Admin" },
+  "shop": {
+    "searchPlaceholder": "Produkte suchen…",
+    "sortLabel": "Sortieren",
+    "sort": { "newest": "Neueste", "oldest": "Älteste", "priceAsc": "Preis aufsteigend", "priceDesc": "Preis absteigend" },
+    "filterCategory": "Kategorie",
+    "allCategories": "Alle",
+    "empty": "Kein Produkt entspricht Ihrer Suche.",
+    "resetFilters": "Zurücksetzen",
+    "resultsCount": "{count, plural, =0 {0 Produkte} =1 {1 Produkt} other {# Produkte}}",
+    "pagination": { "prev": "Zurück", "next": "Weiter", "page": "Seite {current} von {total}" }
+  },
   "home": {
     "heroTitle": "Auswahl in Blau • Grün • Braun",
     "heroSubtitle": "Eine sorgfältig kuratierte Boutique mit erlesenen Produkten.",
     "heroCta": "Zum Shop",
+    "heroDisplayLine1": "Stücke",
+    "heroDisplayLine2": "mit einer",
+    "heroDisplayLine3": "Geschichte",
+    "heroDisplaySubtitle": "Sorgfalt im Detail – bei jeder Bestellung.",
+    "heroCaption": "Lina · Leinen aus der Maison-Kollektion 2026",
+    "heroSubBrand": "Atelier",
+    "heroFindStore": "Filiale finden",
+    "marqueeNew": "Neuheit",
+    "marqueeCollection": "Maison-Kollektion 2026",
+    "marqueeShipping": "Kostenloser Versand ab 150€",
+    "marqueeCta": "Entdecken",
     "featured": "Empfehlungen",
     "newArrivals": "Neuheiten",
     "viewAll": "Alle ansehen"
@@ -29,6 +52,29 @@
   "cart": { "title": "Ihr Warenkorb", "empty": "Ihr Warenkorb ist leer.", "subtotal": "Zwischensumme", "shipping": "Versand", "tax": "MwSt.", "total": "Gesamt", "checkout": "Zur Kasse", "continueShopping": "Weiter einkaufen", "remove": "Entfernen" },
   "auth": { "loginTitle": "Anmelden", "signupTitle": "Konto erstellen", "email": "E-Mail", "password": "Passwort", "fullName": "Vollständiger Name", "forgotPassword": "Passwort vergessen?", "submit": "Weiter", "googleLogin": "Mit Google fortfahren", "noAccount": "Noch kein Konto?", "hasAccount": "Bereits registriert?" },
   "account": { "myOrders": "Meine Bestellungen", "addresses": "Adressen", "profile": "Profil", "wishlist": "Wunschliste", "orderStatus": { "pending": "Ausstehend", "paid": "Bezahlt", "processing": "In Bearbeitung", "shipped": "Versandt", "delivered": "Geliefert", "cancelled": "Storniert", "refunded": "Erstattet" } },
-  "admin": { "dashboard": "Dashboard", "products": "Produkte", "orders": "Bestellungen", "customers": "Kunden", "stock": "Lager", "categories": "Kategorien", "coupons": "Gutscheine", "reviews": "Bewertungen", "settings": "Einstellungen" },
-  "footer": { "rights": "Alle Rechte vorbehalten.", "legal": "Impressum", "terms": "AGB", "privacy": "Datenschutz", "contact": "Kontakt" }
+  "admin": { "dashboard": "Dashboard", "products": "Produkte", "orders": "Bestellungen", "customers": "Kunden", "stock": "Lager", "categories": "Kategorien", "coupons": "Gutscheine", "reviews": "Bewertungen", "moderation": "Moderation", "settings": "Einstellungen" },
+  "moderation": {
+    "title": "Bewertungs-Moderation",
+    "lead": "Genehmigen, ablehnen oder gemeldete Bewertungen prüfen. Jede Aktion wird im Audit-Log erfasst.",
+    "tabs": { "pending": "Ausstehend", "flagged": "Gemeldet", "rejected": "Abgelehnt", "approved": "Genehmigt" },
+    "empty": {
+      "pending": "Keine ausstehenden Bewertungen. Pause ☕",
+      "flagged": "Keine gemeldeten Bewertungen.",
+      "rejected": "Keine abgelehnten Bewertungen.",
+      "approved": "Noch keine genehmigten Bewertungen."
+    },
+    "column": { "review": "Bewertung", "product": "Produkt", "author": "Autor", "rating": "Note", "flags": "Meldungen", "date": "Datum", "actions": "Aktionen", "moderator": "Moderator" },
+    "verified": "Verifizierter Kauf",
+    "anonymous": "Anonym",
+    "actions": { "approve": "Genehmigen", "reject": "Ablehnen", "reopen": "Wieder öffnen", "viewProduct": "Produkt ansehen" },
+    "note": { "label": "Interne Notiz (optional)", "placeholder": "Nur für das Moderations-Team sichtbar", "save": "Notiz speichern" },
+    "flagReason": "Grund",
+    "flagBy": "Gemeldet von",
+    "errors": { "forbidden": "Nur für das Moderations-Team.", "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen." }
+  },
+  "footer": { "rights": "Alle Rechte vorbehalten.", "legal": "Impressum", "terms": "AGB", "privacy": "Datenschutz", "contact": "Kontakt" },
+  "legal": {
+    "placeholder": "Diese Seite wird bald ergänzt. Bitte melden Sie sich bei Fragen.",
+    "lastUpdated": "Letzte Aktualisierung: {date}"
+  }
 }
