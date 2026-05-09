@@ -15,35 +15,46 @@ import {
   Settings,
 } from "lucide-react";
 
+const isSupabaseConfigured = () =>
+  Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
+
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect({ href: "/login", locale: "fr" });
+  const supabaseConfigured = isSupabaseConfigured();
+  let userEmail = "preview@hamarea.local";
 
-  // Server-side admin gate (middleware also enforces this)
-  type ProfileRow = { role: string | null };
-  const { data: profile } = await (supabase as unknown as {
-    from: (t: string) => {
-      select: (q: string) => {
-        eq: (k: string, v: string) => {
-          maybeSingle: () => Promise<{ data: ProfileRow | null }>;
+  if (supabaseConfigured) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) redirect({ href: "/login", locale: "fr" });
+
+    type ProfileRow = { role: string | null };
+    const { data: profile } = await (supabase as unknown as {
+      from: (t: string) => {
+        select: (q: string) => {
+          eq: (k: string, v: string) => {
+            maybeSingle: () => Promise<{ data: ProfileRow | null }>;
+          };
         };
       };
-    };
-  })
-    .from("profiles")
-    .select("role")
-    .eq("id", user!.id)
-    .maybeSingle();
+    })
+      .from("profiles")
+      .select("role")
+      .eq("id", user!.id)
+      .maybeSingle();
 
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    redirect({ href: "/", locale: "fr" });
+    if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
+      redirect({ href: "/", locale: "fr" });
+    }
+    userEmail = user!.email ?? "—";
   }
 
   const t = await getTranslations();
@@ -63,6 +74,11 @@ export default async function AdminLayout({
     <div className="min-h-screen bg-[var(--color-bg)] grid md:grid-cols-[240px_1fr]">
       <aside className="border-r border-[var(--color-border)] bg-[var(--color-primary-700)] text-[var(--color-primary-50)] p-4">
         <p className="font-display text-2xl mb-6 text-white">Hamarea</p>
+        {!supabaseConfigured && (
+          <p className="mb-4 rounded-md border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/15 px-2 py-1.5 text-[10px] uppercase tracking-wider text-[var(--color-warning)]">
+            Mode aperçu — Supabase non configuré
+          </p>
+        )}
         <nav className="space-y-1">
           {items.map((it) => {
             const Icon = it.icon;
@@ -79,10 +95,12 @@ export default async function AdminLayout({
           })}
         </nav>
         <div className="mt-8 border-t border-white/10 pt-4">
-          <p className="text-xs opacity-70 truncate">{user!.email}</p>
-          <div className="mt-2">
-            <LogoutButton />
-          </div>
+          <p className="text-xs opacity-70 truncate">{userEmail}</p>
+          {supabaseConfigured && (
+            <div className="mt-2">
+              <LogoutButton />
+            </div>
+          )}
         </div>
       </aside>
       <main className="p-6 md:p-10">{children}</main>
