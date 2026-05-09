@@ -11,6 +11,7 @@ import {
   Boxes,
   Tag,
   Star,
+  ShieldCheck,
   Settings,
 } from "lucide-react";
 
@@ -54,6 +55,7 @@ export default async function AdminLayout({
     { href: "/admin/stock", label: t("admin.stock"), icon: Boxes },
     { href: "/admin/coupons", label: t("admin.coupons"), icon: Tag },
     { href: "/admin/reviews", label: t("admin.reviews"), icon: Star },
+    { href: "/admin/moderation", label: t("admin.moderation"), icon: ShieldCheck },
     { href: "/admin/settings", label: t("admin.settings"), icon: Settings },
   ];
 

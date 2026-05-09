@@ -40,6 +40,25 @@
   "cart": { "title": "Ihr Warenkorb", "empty": "Ihr Warenkorb ist leer.", "subtotal": "Zwischensumme", "shipping": "Versand", "tax": "MwSt.", "total": "Gesamt", "checkout": "Zur Kasse", "continueShopping": "Weiter einkaufen", "remove": "Entfernen" },
   "auth": { "loginTitle": "Anmelden", "signupTitle": "Konto erstellen", "email": "E-Mail", "password": "Passwort", "fullName": "Vollständiger Name", "forgotPassword": "Passwort vergessen?", "submit": "Weiter", "googleLogin": "Mit Google fortfahren", "noAccount": "Noch kein Konto?", "hasAccount": "Bereits registriert?" },
   "account": { "myOrders": "Meine Bestellungen", "addresses": "Adressen", "profile": "Profil", "wishlist": "Wunschliste", "orderStatus": { "pending": "Ausstehend", "paid": "Bezahlt", "processing": "In Bearbeitung", "shipped": "Versandt", "delivered": "Geliefert", "cancelled": "Storniert", "refunded": "Erstattet" } },
-  "admin": { "dashboard": "Dashboard", "products": "Produkte", "orders": "Bestellungen", "customers": "Kunden", "stock": "Lager", "categories": "Kategorien", "coupons": "Gutscheine", "reviews": "Bewertungen", "settings": "Einstellungen" },
+  "admin": { "dashboard": "Dashboard", "products": "Produkte", "orders": "Bestellungen", "customers": "Kunden", "stock": "Lager", "categories": "Kategorien", "coupons": "Gutscheine", "reviews": "Bewertungen", "moderation": "Moderation", "settings": "Einstellungen" },
+  "moderation": {
+    "title": "Bewertungs-Moderation",
+    "lead": "Genehmigen, ablehnen oder gemeldete Bewertungen prüfen. Jede Aktion wird im Audit-Log erfasst.",
+    "tabs": { "pending": "Ausstehend", "flagged": "Gemeldet", "rejected": "Abgelehnt", "approved": "Genehmigt" },
+    "empty": {
+      "pending": "Keine ausstehenden Bewertungen. Pause ☕",
+      "flagged": "Keine gemeldeten Bewertungen.",
+      "rejected": "Keine abgelehnten Bewertungen.",
+      "approved": "Noch keine genehmigten Bewertungen."
+    },
+    "column": { "review": "Bewertung", "product": "Produkt", "author": "Autor", "rating": "Note", "flags": "Meldungen", "date": "Datum", "actions": "Aktionen", "moderator": "Moderator" },
+    "verified": "Verifizierter Kauf",
+    "anonymous": "Anonym",
+    "actions": { "approve": "Genehmigen", "reject": "Ablehnen", "reopen": "Wieder öffnen", "viewProduct": "Produkt ansehen" },
+    "note": { "label": "Interne Notiz (optional)", "placeholder": "Nur für das Moderations-Team sichtbar", "save": "Notiz speichern" },
+    "flagReason": "Grund",
+    "flagBy": "Gemeldet von",
+    "errors": { "forbidden": "Nur für das Moderations-Team.", "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen." }
+  },
   "footer": { "rights": "Alle Rechte vorbehalten.", "legal": "Impressum", "terms": "AGB", "privacy": "Datenschutz", "contact": "Kontakt" }
 }

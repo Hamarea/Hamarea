@@ -40,6 +40,25 @@
   "cart": { "title": "Tu carrito", "empty": "Tu carrito está vacío.", "subtotal": "Subtotal", "shipping": "Envío", "tax": "IVA", "total": "Total", "checkout": "Finalizar compra", "continueShopping": "Seguir comprando", "remove": "Quitar" },
   "auth": { "loginTitle": "Iniciar sesión", "signupTitle": "Crear cuenta", "email": "Email", "password": "Contraseña", "fullName": "Nombre completo", "forgotPassword": "¿Olvidaste tu contraseña?", "submit": "Continuar", "googleLogin": "Continuar con Google", "noAccount": "¿No tienes cuenta?", "hasAccount": "¿Ya tienes cuenta?" },
   "account": { "myOrders": "Mis pedidos", "addresses": "Direcciones", "profile": "Perfil", "wishlist": "Favoritos", "orderStatus": { "pending": "Pendiente", "paid": "Pagado", "processing": "Preparando", "shipped": "Enviado", "delivered": "Entregado", "cancelled": "Cancelado", "refunded": "Reembolsado" } },
-  "admin": { "dashboard": "Panel", "products": "Productos", "orders": "Pedidos", "customers": "Clientes", "stock": "Stock", "categories": "Categorías", "coupons": "Cupones", "reviews": "Opiniones", "settings": "Ajustes" },
+  "admin": { "dashboard": "Panel", "products": "Productos", "orders": "Pedidos", "customers": "Clientes", "stock": "Stock", "categories": "Categorías", "coupons": "Cupones", "reviews": "Opiniones", "moderation": "Moderación", "settings": "Ajustes" },
+  "moderation": {
+    "title": "Moderación de opiniones",
+    "lead": "Aprueba, rechaza o revisa las opiniones reportadas. Cada acción queda registrada en el log de auditoría.",
+    "tabs": { "pending": "Pendientes", "flagged": "Reportadas", "rejected": "Rechazadas", "approved": "Aprobadas" },
+    "empty": {
+      "pending": "Sin opiniones pendientes. Tómate un café ☕",
+      "flagged": "Sin opiniones reportadas.",
+      "rejected": "Sin opiniones rechazadas.",
+      "approved": "Aún no hay opiniones aprobadas."
+    },
+    "column": { "review": "Opinión", "product": "Producto", "author": "Autor", "rating": "Nota", "flags": "Avisos", "date": "Fecha", "actions": "Acciones", "moderator": "Moderador" },
+    "verified": "Compra verificada",
+    "anonymous": "Anónimo",
+    "actions": { "approve": "Aprobar", "reject": "Rechazar", "reopen": "Reabrir", "viewProduct": "Ver producto" },
+    "note": { "label": "Nota interna (opcional)", "placeholder": "Motivo visible solo para el equipo de moderación", "save": "Guardar nota" },
+    "flagReason": "Motivo",
+    "flagBy": "Reportado por",
+    "errors": { "forbidden": "Acción reservada al equipo de moderación.", "generic": "Acción imposible. Inténtalo de nuevo." }
+  },
   "footer": { "rights": "Todos los derechos reservados.", "legal": "Aviso legal", "terms": "Términos", "privacy": "Privacidad", "contact": "Contacto" }
 }

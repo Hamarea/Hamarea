@@ -98,7 +98,53 @@
     "categories": "Categories",
     "coupons": "Coupons",
     "reviews": "Reviews",
+    "moderation": "Moderation",
     "settings": "Settings"
+  },
+  "moderation": {
+    "title": "Review moderation",
+    "lead": "Approve, reject or inspect flagged reviews. Every action is recorded in the audit log.",
+    "tabs": {
+      "pending": "Pending",
+      "flagged": "Flagged",
+      "rejected": "Rejected",
+      "approved": "Approved"
+    },
+    "empty": {
+      "pending": "No pending reviews. Take a break ☕",
+      "flagged": "No flagged reviews.",
+      "rejected": "No rejected reviews.",
+      "approved": "No approved reviews yet."
+    },
+    "column": {
+      "review": "Review",
+      "product": "Product",
+      "author": "Author",
+      "rating": "Rating",
+      "flags": "Flags",
+      "date": "Date",
+      "actions": "Actions",
+      "moderator": "Moderator"
+    },
+    "verified": "Verified purchase",
+    "anonymous": "Anonymous",
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "reopen": "Reopen",
+      "viewProduct": "View product"
+    },
+    "note": {
+      "label": "Internal note (optional)",
+      "placeholder": "Reason visible to the moderation team only",
+      "save": "Save note"
+    },
+    "flagReason": "Reason",
+    "flagBy": "Flagged by",
+    "errors": {
+      "forbidden": "Restricted to the moderation team.",
+      "generic": "Action failed. Please retry."
+    }
   },
   "footer": {
     "rights": "All rights reserved.",
