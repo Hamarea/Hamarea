@@ -6,6 +6,11 @@ import { ProductGrid } from "@/components/shop/product-grid";
 import { CategoryStrip } from "@/components/shop/category-strip";
 import { listFeaturedProducts, listCategories } from "@/lib/queries";
 
+// Override via `NEXT_PUBLIC_HERO_IMAGE_URL` (any URL on a host whitelisted in
+// next.config.ts → images.remotePatterns) when you have your own brand shot.
+const DEFAULT_HERO_IMAGE =
+  "https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=2400&q=85";
+
 export default async function HomePage({
   params,
 }: {
@@ -14,6 +19,9 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
+
+  const heroImage =
+    process.env.NEXT_PUBLIC_HERO_IMAGE_URL?.trim() || DEFAULT_HERO_IMAGE;
 
   const [products, categories] = await Promise.all([
     listFeaturedProducts(locale, 8),
@@ -24,7 +32,7 @@ export default async function HomePage({
     <>
       <section className="relative -mt-16 h-[100svh] min-h-[640px] w-full overflow-hidden bg-[var(--color-primary-900)] text-white">
         <Image
-          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2400&q=85"
+          src={heroImage}
           alt={t("home.heroCaption")}
           fill
           priority
