@@ -24,7 +24,7 @@ export default async function HomePage({
     <>
       <section className="relative -mt-16 h-[100svh] min-h-[640px] w-full overflow-hidden bg-[var(--color-primary-900)] text-white">
         <Image
-          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2400&q=85"
+          src="/hero.jpg"
           alt={t("home.heroCaption")}
           fill
           priority
