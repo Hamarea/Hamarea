@@ -1,55 +1,67 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getStripe } from "@/lib/stripe";
 
 /**
- * Stripe webhook stub.
- * To enable: install `stripe`, verify `Stripe-Signature` with STRIPE_WEBHOOK_SECRET,
- * then on `payment_intent.succeeded` -> mark order paid + call RPC decrement_stock_for_order.
+ * Stripe webhook.
+ * Verifies the Stripe-Signature header with STRIPE_WEBHOOK_SECRET, dedups on
+ * webhook_events.event_id (unique), and on payment_intent.succeeded marks the
+ * order paid + calls the decrement_stock_for_order RPC.
  */
 export async function POST(req: Request) {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+  const stripe = getStripe();
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!stripe || !secret) {
     return NextResponse.json({ error: "stripe not configured" }, { status: 503 });
   }
+
   const sig = req.headers.get("stripe-signature");
   if (!sig) return NextResponse.json({ error: "no signature" }, { status: 400 });
 
   const payload = await req.text();
-  let event: { id: string; type: string; data: { object: { id: string; metadata?: { order_id?: string } } } };
+  let event: Stripe.Event;
   try {
-    event = JSON.parse(payload);
-  } catch {
-    return NextResponse.json({ error: "bad payload" }, { status: 400 });
+    event = stripe.webhooks.constructEvent(payload, sig, secret);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "bad signature";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  // Idempotency: skip if already seen
   const admin = createAdminClient();
   const sb = admin as unknown as {
     from: (t: string) => {
-      insert: (rows: Record<string, unknown>) => Promise<{ error: { code?: string } | null }>;
-      select: (q: string) => {
-        eq: (k: string, v: string) => {
-          maybeSingle: () => Promise<{ data: unknown }>;
-        };
-      };
+      insert: (
+        rows: Record<string, unknown>,
+      ) => Promise<{ error: { code?: string } | null }>;
       update: (rows: Record<string, unknown>) => {
         eq: (k: string, v: string) => Promise<{ error: unknown }>;
       };
-      rpc?: (name: string, args: Record<string, unknown>) => Promise<unknown>;
     };
     rpc: (name: string, args: Record<string, unknown>) => Promise<unknown>;
   };
 
-  await sb
-    .from("webhook_events")
-    .insert({ provider: "stripe", event_id: event.id, type: event.type, payload: event });
+  // Idempotency: unique (provider, event_id) — duplicate insert returns 23505
+  // and we ack the event without re-processing.
+  const { error: insertErr } = await sb.from("webhook_events").insert({
+    provider: "stripe",
+    event_id: event.id,
+    type: event.type,
+    payload: event as unknown as Record<string, unknown>,
+  });
+  if (insertErr?.code === "23505") {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
 
   if (event.type === "payment_intent.succeeded") {
-    const orderId = event.data.object.metadata?.order_id;
+    const pi = event.data.object as Stripe.PaymentIntent;
+    const orderId = pi.metadata?.order_id;
     if (orderId) {
       await sb.from("orders").update({ status: "paid" }).eq("id", orderId);
       await sb.rpc("decrement_stock_for_order", { p_order_id: orderId });
     }
   }
+
   return NextResponse.json({ received: true });
 }
 

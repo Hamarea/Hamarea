@@ -16,16 +16,24 @@ function createStubClient() {
   builder.update = () => builder;
   builder.delete = () => builder;
   builder.eq = chain;
+  builder.neq = chain;
   builder.gt = chain;
   builder.gte = chain;
   builder.lt = chain;
   builder.lte = chain;
+  builder.in = chain;
+  builder.is = chain;
+  builder.not = chain;
   builder.ilike = chain;
   builder.like = chain;
   builder.or = chain;
+  builder.match = chain;
+  builder.contains = chain;
+  builder.filter = chain;
   builder.order = chain;
   builder.limit = chain;
   builder.range = chain;
+  builder.upsert = () => builder;
   builder.maybeSingle = async () => ({ data: null, error: null, count: 0 });
   builder.single = async () => ({ data: null, error: null, count: 0 });
   // Awaiting the builder resolves to an empty list response.

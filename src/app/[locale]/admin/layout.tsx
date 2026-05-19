@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { redirect } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
@@ -27,6 +28,14 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const supabaseConfigured = isSupabaseConfigured();
+
+  // Backstop: in production without Supabase, /admin must not be reachable.
+  // The middleware already returns 404, but if it ever gets bypassed we want
+  // the layout to refuse to render the preview stub too.
+  if (!supabaseConfigured && process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   let userEmail = "preview@hamarea.local";
 
   if (supabaseConfigured) {

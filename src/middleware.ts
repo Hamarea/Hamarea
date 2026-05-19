@@ -9,10 +9,24 @@ export async function middleware(request: NextRequest) {
   // Refresh Supabase auth cookies
   let response = intlMiddleware(request);
 
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = new URL(request.url);
+  const isAdminPath =
+    url.pathname.startsWith("/admin") ||
+    /^\/(fr|en|es|de)\/admin/.test(url.pathname);
+
+  // Safety net: in production, never let /admin be reachable when Supabase
+  // isn't wired up. Otherwise the role check below is skipped and the page
+  // renders publicly with a stub user.
+  if (isAdminPath && (!supabaseUrl || !supabaseKey) && process.env.NODE_ENV === "production") {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
+  if (supabaseUrl && supabaseKey) {
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      supabaseUrl,
+      supabaseKey,
       {
         cookies: {
           getAll() {
@@ -50,11 +64,6 @@ export async function middleware(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     // Protect /admin: only role=admin or staff can enter.
-    const url = new URL(request.url);
-    const isAdminPath =
-      url.pathname.startsWith("/admin") ||
-      /^\/(fr|en|es|de)\/admin/.test(url.pathname);
-
     if (isAdminPath) {
       if (!user) {
         url.pathname = "/login";

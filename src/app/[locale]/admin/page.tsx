@@ -7,22 +7,55 @@ import { TrendingUp, ShoppingBag, Users, AlertTriangle } from "lucide-react";
 async function getStats() {
   try {
     const supabase = await createClient();
-    type Counter = { count: number | null };
+    const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    type RevenueRow = { total_cents: number | null };
+    type InventoryRow = { quantity: number; reorder_point: number };
+
     const sb = supabase as unknown as {
       from: (t: string) => {
-        select: (q: string, opts?: { count: "exact"; head: true }) => Promise<Counter>;
+        select: {
+          (q: string, opts: { count: "exact"; head: true }): Promise<{
+            count: number | null;
+          }>;
+          (q: string): {
+            in: (
+              col: string,
+              vals: string[],
+            ) => {
+              gte: (
+                col: string,
+                v: string,
+              ) => Promise<{ data: RevenueRow[] | null }>;
+            };
+          } & Promise<{ data: InventoryRow[] | null }>;
+        };
       };
     };
-    const [orders30, totalOrders, totalCustomers] = await Promise.all([
-      sb.from("orders").select("*", { count: "exact", head: true }),
+
+    const [totalOrders, totalCustomers, revenueRes, inventoryRes] = await Promise.all([
       sb.from("orders").select("*", { count: "exact", head: true }),
       sb.from("profiles").select("*", { count: "exact", head: true }),
+      sb
+        .from("orders")
+        .select("total_cents")
+        .in("status", ["paid", "shipped", "delivered"])
+        .gte("created_at", since30),
+      sb.from("inventory").select("quantity,reorder_point"),
     ]);
+
+    const revenue = (revenueRes.data ?? []).reduce(
+      (sum, row) => sum + (row.total_cents ?? 0),
+      0,
+    );
+    const lowStock = (inventoryRes.data ?? []).filter(
+      (row) => row.quantity <= row.reorder_point,
+    ).length;
+
     return {
-      revenue: 0,
+      revenue,
       orders: totalOrders.count ?? 0,
       customers: totalCustomers.count ?? 0,
-      lowStock: orders30.count ?? 0,
+      lowStock,
     };
   } catch {
     return { revenue: 0, orders: 0, customers: 0, lowStock: 0 };

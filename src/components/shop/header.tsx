@@ -50,33 +50,23 @@ export function ShopHeader() {
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
-          <Link
-            href="/products"
-            className={cn(
-              "transition-opacity hover:opacity-80",
-              overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
-            )}
-          >
-            {t("nav.shop")}
-          </Link>
-          <Link
-            href="/categories"
-            className={cn(
-              "transition-opacity hover:opacity-80",
-              overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
-            )}
-          >
-            {t("nav.categories")}
-          </Link>
-          <Link
-            href="/about"
-            className={cn(
-              "transition-opacity hover:opacity-80",
-              overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
-            )}
-          >
-            {t("nav.about")}
-          </Link>
+          {[
+            { href: "/#acheter", label: "La sacoche" },
+            { href: "/#avis", label: "Avis" },
+            { href: "/#faq", label: "FAQ" },
+            { href: "/about", label: t("nav.about") },
+          ].map((it) => (
+            <a
+              key={it.href}
+              href={it.href}
+              className={cn(
+                "transition-opacity hover:opacity-80",
+                overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
+              )}
+            >
+              {it.label}
+            </a>
+          ))}
         </nav>
 
         <div className="flex items-center gap-1">

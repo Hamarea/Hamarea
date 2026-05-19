@@ -1,25 +1,19 @@
 import { getTranslations } from "next-intl/server";
-import { Card } from "@/components/ui/card";
+import { CheckoutClient } from "./checkout-client";
 
 export default async function CheckoutPage() {
   const t = await getTranslations();
+  const stripeConfigured = Boolean(process.env.STRIPE_SECRET_KEY);
+
   return (
-    <section className="container-page max-w-3xl py-16">
-      <h1 className="font-display text-3xl mb-6">{t("cart.checkout")}</h1>
-      <Card className="p-8">
-        <p className="text-[var(--color-muted)]">
-          Le tunnel de paiement Stripe sera branché ici (étape <strong>Phase 3</strong> de la roadmap).
+    <section className="container-page max-w-5xl py-12">
+      <h1 className="font-display text-3xl mb-2">{t("cart.checkout")}</h1>
+      {!stripeConfigured && (
+        <p className="mb-6 rounded-md border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/15 px-3 py-2 text-sm text-[var(--color-warning)]">
+          Mode aperçu — définissez <code>STRIPE_SECRET_KEY</code> dans <code>.env.local</code> pour activer le paiement.
         </p>
-        <ol className="mt-4 list-decimal pl-5 text-sm space-y-1">
-          <li>Adresse de livraison</li>
-          <li>Choix transporteur (Shippo)</li>
-          <li>Stripe Payment Element</li>
-        </ol>
-        <p className="mt-4 text-xs text-[var(--color-muted)]">
-          Endpoints à créer : <code>POST /api/checkout/intent</code>, webhook{" "}
-          <code>POST /api/webhooks/stripe</code>.
-        </p>
-      </Card>
+      )}
+      <CheckoutClient />
     </section>
   );
 }

@@ -1,10 +1,34 @@
 import Image from "next/image";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { ArrowRight } from "lucide-react";
-import { ProductGrid } from "@/components/shop/product-grid";
-import { CategoryStrip } from "@/components/shop/category-strip";
-import { listFeaturedProducts, listCategories } from "@/lib/queries";
+import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
+import { HeroImage } from "@/components/product/hero-image";
+import { BuyBox } from "@/components/product/buy-box";
+import { TrustBar } from "@/components/product/trust-bar";
+import { UspGrid } from "@/components/product/usp-grid";
+import { PressBar } from "@/components/product/press-bar";
+import { HowItWorks } from "@/components/product/how-it-works";
+import { ColorsShowcase } from "@/components/product/colors-showcase";
+import { Comparison } from "@/components/product/comparison";
+import { BundlePicker } from "@/components/product/bundle-picker";
+import { Testimonials } from "@/components/product/testimonials";
+import { Faq } from "@/components/product/faq";
+import { VideoReel } from "@/components/product/video-reel";
+import { StickyBuyBar } from "@/components/product/sticky-buy-bar";
+import { ProductJsonLd } from "@/components/product/product-jsonld";
+import { SACOCHE } from "@/lib/product";
+
+export const metadata: Metadata = {
+  title: "Hamarea — Sacoche étanche pour smartphone | IPX8 jusqu'à 30m",
+  description:
+    "Filmez, swipez, plongez. Sacoche waterproof certifiée IPX8 jusqu'à 30 m. Compatible iPhone & Android. Écran tactile sous l'eau. 3 couleurs. Livraison 48h offerte.",
+  openGraph: {
+    title: "Hamarea — Sacoche étanche pour smartphone",
+    description:
+      "Protégez votre smartphone partout : plage, piscine, kayak, randonnée. IPX8 30 m, écran tactile sous l'eau.",
+    images: ["/hero.jpg"],
+    type: "website",
+  },
+};
 
 export default async function HomePage({
   params,
@@ -13,121 +37,92 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations();
 
-  const [products, categories] = await Promise.all([
-    listFeaturedProducts(locale, 8),
-    listCategories(locale),
-  ]);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   return (
     <>
-      <section className="relative -mt-16 h-[100svh] min-h-[640px] w-full overflow-hidden bg-[var(--color-primary-900)] text-white">
-        <Image
-          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2400&q=85"
-          alt={t("home.heroCaption")}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+      <ProductJsonLd siteUrl={siteUrl} />
 
+      {/* HERO full-bleed (passe sous le header sticky) */}
+      <section
+        id="acheter"
+        className="relative -mt-16 min-h-[100svh] w-full overflow-hidden bg-[var(--color-primary-900)] text-white"
+      >
+        <HeroImage />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/15 to-black/55"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/70 via-black/20 to-transparent"
+          className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/10"
         />
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent"
+          className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/70 via-black/30 to-transparent"
         />
 
-        <div className="relative z-10 flex h-full flex-col">
-          <div className="container-page flex flex-1 items-end pt-24 pb-10 md:items-center md:pb-0">
-            <div className="grid w-full grid-cols-1 md:grid-cols-12">
-              <div className="md:col-span-7 md:col-start-6 md:pl-8">
-                <h1 className="font-display text-[clamp(3.25rem,9.5vw,9.5rem)] font-black uppercase leading-[0.92] tracking-[-0.02em] text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
-                  <span className="block">{t("home.heroDisplayLine1")}</span>
-                  <span className="block">{t("home.heroDisplayLine2")}</span>
-                  <span className="block">{t("home.heroDisplayLine3")}</span>
-                </h1>
-                <p className="mt-5 font-display text-lg italic text-white/90 md:text-2xl">
-                  {t("home.heroDisplaySubtitle")}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="container-page flex flex-col gap-6 pb-6 md:flex-row md:items-end md:justify-between md:pb-8">
-            <p className="font-display text-sm italic tracking-wide text-white/85 md:text-base">
-              {t("home.heroCaption")}
+        <div className="container-page relative z-10 grid min-h-[calc(100svh-4rem)] grid-cols-1 items-center gap-8 pt-24 pb-12 md:grid-cols-12 md:pt-28">
+          <div className="md:col-span-5 lg:col-span-4">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+              Bestseller de l&apos;été
+            </span>
+            <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,4rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] drop-shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+              Filmez. Clipper.
+              <br />
+              <span className="text-[var(--color-accent-300,#fda4af)]">Plongez.</span>
+            </h1>
+            <p className="mt-3 text-sm text-white/90 md:text-base">
+              Votre smartphone reste au sec. Sacoche certifiée IPX8 jusqu&apos;à 30 m.
             </p>
-            <div className="flex items-center gap-4 text-white/90">
-              <span className="flex items-center gap-2">
-                <span className="grid h-7 w-7 place-items-center rounded-sm bg-white/10 ring-1 ring-white/30">
-                  <svg
-                    aria-hidden
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 fill-white"
-                  >
-                    <path d="M12 3 2 21h20L12 3Zm0 5.2L18.5 19h-13L12 8.2Z" />
-                  </svg>
-                </span>
-                <span className="font-display text-lg uppercase tracking-[0.18em]">
-                  Hamarea
-                </span>
-              </span>
-              <span className="h-6 w-px bg-white/40" />
-              <span className="flex items-center gap-2 text-xs uppercase tracking-[0.3em]">
-                <span className="grid h-5 w-5 place-items-center rounded-full ring-1 ring-white/40">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                </span>
-                {t("home.heroSubBrand")}
-              </span>
+            <div className="mt-5">
+              <BuyBox variant="hero" compact />
             </div>
           </div>
-
-          <div className="border-t border-white/15 bg-black/40 backdrop-blur-sm">
-            <div className="container-page flex h-11 items-center gap-6 overflow-hidden text-[11px] uppercase tracking-[0.32em] text-white/85 md:text-xs">
-              <span>{t("home.marqueeNew")}</span>
-              <span className="opacity-50">·</span>
-              <span className="hidden sm:inline">
-                {t("home.marqueeCollection")}
-              </span>
-              <span className="hidden opacity-50 sm:inline">·</span>
-              <span className="hidden md:inline">
-                {t("home.marqueeShipping")}
-              </span>
-              <span className="hidden opacity-50 md:inline">·</span>
-              <Link
-                href="/products"
-                className="ml-auto inline-flex items-center gap-2 transition-opacity hover:opacity-100 hover:text-white"
-              >
-                {t("home.marqueeCta")}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
+          <div className="hidden md:col-span-7 md:block lg:col-span-8" aria-hidden />
         </div>
       </section>
 
-      <CategoryStrip categories={categories} />
+      <TrustBar />
+      <PressBar />
+      <UspGrid />
+      <HowItWorks />
+      <VideoReel />
+      <ColorsShowcase />
+      <Comparison />
+      <BundlePicker />
+      <Testimonials />
+      <Faq />
 
-      <section className="container-page py-16">
-        <div className="mb-8 flex items-end justify-between">
-          <h2 className="font-display text-3xl">{t("home.featured")}</h2>
-          <Link
-            href="/products"
-            className="text-sm font-medium text-[var(--color-primary-600)] hover:underline"
+      {/* Closing CTA */}
+      <section className="relative overflow-hidden bg-[var(--color-primary-900)] py-20 text-white">
+        <Image
+          src="/hero.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover opacity-30"
+        />
+        <div className="container-page relative z-10 text-center">
+          <h2 className="mx-auto max-w-2xl font-display text-3xl md:text-5xl">
+            Prêt à protéger votre smartphone pour de bon ?
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-white/85">
+            Rejoignez les {SACOCHE.unitsSold.toLocaleString("fr-FR")}+ clients
+            qui ne sortent plus sans leur sacoche Hamarea.
+          </p>
+          <a
+            href="#acheter"
+            className="mt-8 inline-flex items-center justify-center rounded-full bg-white px-8 py-4 font-semibold text-[var(--color-foreground)] transition-transform hover:scale-105"
           >
-            {t("home.viewAll")} →
-          </Link>
+            Je commande la mienne →
+          </a>
         </div>
-        <ProductGrid products={products} locale={locale} />
       </section>
+
+      <StickyBuyBar />
     </>
   );
 }
