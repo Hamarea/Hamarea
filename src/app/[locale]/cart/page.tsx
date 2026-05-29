@@ -6,13 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCart } from "@/stores/cart";
 import { formatMoney } from "@/lib/utils";
+import { SHIPPING } from "@/lib/product";
 import { Trash2, Minus, Plus } from "lucide-react";
 
 export default function CartPage() {
   const t = useTranslations();
   const { lines, setQty, remove, subtotalCents } = useCart();
   const subtotal = subtotalCents();
-  const shipping = subtotal > 7900 || subtotal === 0 ? 0 : 590;
+  const shipping =
+    subtotal >= SHIPPING.freeAboveCents || subtotal === 0
+      ? 0
+      : SHIPPING.standardCents;
   const total = subtotal + shipping;
 
   return (

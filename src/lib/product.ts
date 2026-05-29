@@ -136,7 +136,7 @@ export const SACOCHE = {
     },
     {
       q: "Quelle est la livraison ?",
-      a: "Livraison standard 3-5 jours ouvrés OFFERTE à partir de 79€. Sinon 5,90€. Livraison express 1-2 jours : 12,90€. Expédié depuis la France.",
+      a: "Livraison standard 3-5 jours ouvrés OFFERTE à partir de 39€. Sinon 5,90€. Livraison express 1-2 jours : 12,90€.",
     },
     {
       q: "Garantie et retour ?",
@@ -178,3 +178,38 @@ export const SACOCHE = {
 } as const;
 
 export type Sacoche = typeof SACOCHE;
+
+/**
+ * Quantity-break discounts in %. MUST match the tiers shown in BundlePicker.
+ * Exposed so the checkout API can recompute prices server-side instead of
+ * trusting a client-supplied amount (price-tampering protection).
+ */
+export const PACK_DISCOUNTS: Readonly<Record<number, number>> = {
+  1: 0,
+  2: 15,
+  3: 25,
+};
+
+/** Authoritative unit price (cents) for a given pack tier. Single source of truth. */
+export function unitPriceForPack(packQty: number): number {
+  const pct = PACK_DISCOUNTS[packQty] ?? 0;
+  return Math.round(SACOCHE.priceCents * (1 - pct / 100));
+}
+
+/** Resolve a colour by its display name (case-insensitive). */
+export function colorByName(name: string): ProductColor | undefined {
+  return SACOCHE.colors.find(
+    (c) => c.name.toLowerCase() === name.trim().toLowerCase(),
+  );
+}
+
+/**
+ * Shipping config — single source of truth for copy, checkout UI and the
+ * Stripe route. Threshold recalibrated to ~1.5× unit price so a 2-/3-pack
+ * unlocks free shipping (the old 79 € was unreachable for a 24,90 € product).
+ */
+export const SHIPPING = {
+  freeAboveCents: 3900,
+  standardCents: 590,
+  expressCents: 1290,
+} as const;

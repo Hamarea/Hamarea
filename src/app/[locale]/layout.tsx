@@ -5,6 +5,8 @@ import { Inter, Fraunces } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
+import { CartDrawer } from "@/components/shop/cart-drawer";
+import { MotionProvider } from "@/components/motion-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
@@ -31,12 +33,15 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${inter.variable} ${fraunces.variable}`}>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <div className="relative z-10 -mb-px bg-[var(--color-primary-900)] py-1.5 text-center text-[11px] font-medium uppercase tracking-wider text-white">
-            🌊 −30% jusqu&apos;à dimanche · Livraison 48h offerte dès 79€
-          </div>
-          <ShopHeader />
-          <main className="min-h-[calc(100vh-4rem)]">{children}</main>
-          <ShopFooter />
+          <MotionProvider>
+            <div className="relative z-10 -mb-px bg-[var(--color-primary-900)] py-1.5 text-center text-[11px] font-medium uppercase tracking-wider text-white">
+              🌊 Livraison offerte dès 39€ · Retours gratuits 30j · Garantie 2 ans
+            </div>
+            <ShopHeader />
+            <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+            <ShopFooter />
+            <CartDrawer />
+          </MotionProvider>
         </NextIntlClientProvider>
       </body>
     </html>
