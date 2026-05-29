@@ -2,25 +2,31 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SACOCHE } from "@/lib/product";
+import { Reveal } from "@/components/ui/reveal";
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
+  const reduce = useReducedMotion();
 
   return (
     <section id="faq" className="container-page max-w-3xl py-16 md:py-20 scroll-mt-20">
-      <div className="text-center">
+      <Reveal className="text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--color-primary-600)]">
           Questions fréquentes
         </p>
         <h2 className="mt-2 font-display text-3xl md:text-4xl">
           Tout ce qu&apos;il faut savoir.
         </h2>
-      </div>
+      </Reveal>
 
       <ul className="mt-10 divide-y divide-[var(--color-border)] rounded-2xl border border-[var(--color-border)] bg-white">
         {SACOCHE.faq.map((f, i) => {
           const isOpen = open === i;
+          const panelInner = (
+            <div className="px-5 pb-5 text-sm text-[var(--color-muted)]">{f.a}</div>
+          );
           return (
             <li key={f.q}>
               <button
@@ -33,20 +39,40 @@ export function Faq() {
               >
                 <span className="font-medium">{f.q}</span>
                 <ChevronDown
-                  className={`h-5 w-5 shrink-0 text-[var(--color-muted)] transition-transform ${
+                  className={`h-5 w-5 shrink-0 text-[var(--color-muted)] transition-transform duration-300 ${
                     isOpen ? "rotate-180" : ""
                   }`}
                 />
               </button>
-              <div
-                id={`faq-panel-${i}`}
-                role="region"
-                aria-labelledby={`faq-trigger-${i}`}
-                hidden={!isOpen}
-                className="px-5 pb-5 text-sm text-[var(--color-muted)]"
-              >
-                {f.a}
-              </div>
+
+              {reduce ? (
+                isOpen && (
+                  <div
+                    id={`faq-panel-${i}`}
+                    role="region"
+                    aria-labelledby={`faq-trigger-${i}`}
+                  >
+                    {panelInner}
+                  </div>
+                )
+              ) : (
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      id={`faq-panel-${i}`}
+                      role="region"
+                      aria-labelledby={`faq-trigger-${i}`}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      {panelInner}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
             </li>
           );
         })}

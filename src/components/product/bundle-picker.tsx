@@ -7,6 +7,7 @@ import { useCart } from "@/stores/cart";
 import { useCartUI } from "@/stores/cart-ui";
 import { formatMoney } from "@/lib/utils";
 import { SACOCHE } from "@/lib/product";
+import { Reveal } from "@/components/ui/reveal";
 
 const PACKS = [
   {
@@ -65,7 +66,7 @@ export function BundlePicker() {
 
   return (
     <section className="container-page py-16 md:py-20">
-      <div className="mx-auto max-w-2xl text-center">
+      <Reveal className="mx-auto max-w-2xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--color-primary-600)]">
           Économisez plus
         </p>
@@ -75,20 +76,20 @@ export function BundlePicker() {
         <p className="mt-3 text-sm text-[var(--color-muted)]">
           Plus vous en prenez, plus la remise grimpe. Idéal en cadeau.
         </p>
-      </div>
+      </Reveal>
 
       <div className="mx-auto mt-10 grid max-w-4xl gap-4 md:grid-cols-3">
-        {PACKS.map((p) => {
+        {PACKS.map((p, i) => {
           const active = p.id === pack.id;
           return (
+            <Reveal as="div" key={p.id} delay={i * 0.08}>
             <button
-              key={p.id}
               type="button"
               onClick={() => setPack(p)}
-              className={`relative rounded-2xl border-2 p-6 text-left transition-all ${
+              className={`relative h-full w-full rounded-2xl border-2 p-6 text-left transition-all duration-300 ${
                 active
                   ? "border-[var(--color-primary-600)] bg-white shadow-lg"
-                  : "border-[var(--color-border)] bg-white hover:border-[var(--color-primary-300)]"
+                  : "border-[var(--color-border)] bg-white hover:-translate-y-1 hover:border-[var(--color-primary-300)] hover:shadow-md"
               }`}
             >
               {p.highlight && (
@@ -140,6 +141,7 @@ export function BundlePicker() {
                 </span>
               )}
             </button>
+            </Reveal>
           );
         })}
       </div>

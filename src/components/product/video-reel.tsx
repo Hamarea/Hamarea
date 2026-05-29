@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX, Play } from "lucide-react";
 import { SACOCHE } from "@/lib/product";
+import { Reveal } from "@/components/ui/reveal";
 
 export function VideoReel() {
   const reels: ReadonlyArray<{ src: string; caption?: string }> = SACOCHE.media.reels;
@@ -11,7 +12,7 @@ export function VideoReel() {
   return (
     <section className="bg-[var(--color-foreground)] py-16 text-white md:py-20">
       <div className="container-page">
-        <div className="mx-auto max-w-2xl text-center">
+        <Reveal className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/60">
             En action
           </p>
@@ -21,17 +22,19 @@ export function VideoReel() {
           <p className="mt-3 text-sm text-white/70">
             Pas de retouche, pas de mise en scène. Juste la sacoche, dans la vraie vie.
           </p>
-        </div>
+        </Reveal>
 
         <div className="mt-10 -mx-4 overflow-x-auto px-4 pb-4 [scrollbar-width:thin] md:overflow-visible md:px-0">
           <ul className="flex snap-x snap-mandatory gap-4 md:grid md:grid-cols-3 md:gap-6">
-            {reels.map((r) => (
-              <li
+            {reels.map((r, i) => (
+              <Reveal
+                as="li"
                 key={r.src}
+                delay={i * 0.08}
                 className="w-[78vw] shrink-0 snap-center sm:w-[60vw] md:w-auto"
               >
                 <ReelPlayer src={r.src} caption={r.caption} />
-              </li>
+              </Reveal>
             ))}
           </ul>
         </div>
