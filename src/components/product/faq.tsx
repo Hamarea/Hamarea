@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { SACOCHE } from "@/lib/product";
 import { Reveal } from "@/components/ui/reveal";
 
@@ -58,7 +58,7 @@ export function Faq() {
               ) : (
                 <AnimatePresence initial={false}>
                   {isOpen && (
-                    <motion.div
+                    <m.div
                       id={`faq-panel-${i}`}
                       role="region"
                       aria-labelledby={`faq-trigger-${i}`}
@@ -69,7 +69,7 @@ export function Faq() {
                       className="overflow-hidden"
                     >
                       {panelInner}
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               )}

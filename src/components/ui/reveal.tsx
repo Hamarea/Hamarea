@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 const EASE = [0.22, 0.61, 0.36, 1] as const;
@@ -18,9 +18,9 @@ type RevealProps = {
 
 /**
  * Scroll-reveal wrapper. Animates opacity + transform only (GPU, no layout
- * shift → CLS-safe), fires once, and fully bypasses animation when the user
- * prefers reduced motion. A Server Component can render this and pass
- * server-rendered children through.
+ * shift), fires once, and fully bypasses animation when the user prefers
+ * reduced motion. Uses the lightweight `m` component (see MotionProvider /
+ * LazyMotion) so it doesn't pull the full framer-motion bundle.
  */
 export function Reveal({
   children,
@@ -45,27 +45,27 @@ export function Reveal({
   switch (as) {
     case "li":
       return (
-        <motion.li className={className} initial={initial} whileInView={whileInView} viewport={viewport} transition={transition}>
+        <m.li className={className} initial={initial} whileInView={whileInView} viewport={viewport} transition={transition}>
           {children}
-        </motion.li>
+        </m.li>
       );
     case "section":
       return (
-        <motion.section className={className} initial={initial} whileInView={whileInView} viewport={viewport} transition={transition}>
+        <m.section className={className} initial={initial} whileInView={whileInView} viewport={viewport} transition={transition}>
           {children}
-        </motion.section>
+        </m.section>
       );
     case "span":
       return (
-        <motion.span className={className} initial={initial} whileInView={whileInView} viewport={viewport} transition={transition}>
+        <m.span className={className} initial={initial} whileInView={whileInView} viewport={viewport} transition={transition}>
           {children}
-        </motion.span>
+        </m.span>
       );
     default:
       return (
-        <motion.div className={className} initial={initial} whileInView={whileInView} viewport={viewport} transition={transition}>
+        <m.div className={className} initial={initial} whileInView={whileInView} viewport={viewport} transition={transition}>
           {children}
-        </motion.div>
+        </m.div>
       );
   }
 }

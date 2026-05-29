@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { m, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { useSelectedColor_current } from "@/stores/selected-color";
 
 /**
@@ -30,7 +30,7 @@ export function HeroImage() {
   }
 
   return (
-    <motion.div className="absolute inset-0" style={{ y, scale: 1.18 }}>
+    <m.div className="absolute inset-0" style={{ y, scale: 1.18 }}>
       <Image
         key={color.id}
         src={color.imageUrl}
@@ -40,6 +40,6 @@ export function HeroImage() {
         sizes="100vw"
         className="object-cover object-center"
       />
-    </motion.div>
+    </m.div>
   );
 }
