@@ -3,18 +3,27 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
-import { Search, ShoppingBag, User, Menu, ArrowRight } from "lucide-react";
+import { ShoppingBag, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/stores/cart";
+import { useCartUI } from "@/stores/cart-ui";
 import { LocaleSwitcher } from "./locale-switcher";
 import { cn } from "@/lib/utils";
+
+const NAV = [
+  { href: "/#acheter", label: "La sacoche" },
+  { href: "/#avis", label: "Avis" },
+  { href: "/#faq", label: "FAQ" },
+];
 
 export function ShopHeader() {
   const t = useTranslations();
   const pathname = usePathname();
   const isHome = pathname === "/";
   const count = useCart((s) => s.count());
+  const openDrawer = useCartUI((s) => s.openDrawer);
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isHome) {
@@ -27,7 +36,7 @@ export function ShopHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome]);
 
-  const overlay = isHome && !scrolled;
+  const overlay = isHome && !scrolled && !menuOpen;
 
   return (
     <header
@@ -50,12 +59,7 @@ export function ShopHeader() {
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
-          {[
-            { href: "/#acheter", label: "La sacoche" },
-            { href: "/#avis", label: "Avis" },
-            { href: "/#faq", label: "FAQ" },
-            { href: "/about", label: t("nav.about") },
-          ].map((it) => (
+          {NAV.map((it) => (
             <a
               key={it.href}
               href={it.href}
@@ -67,29 +71,18 @@ export function ShopHeader() {
               {it.label}
             </a>
           ))}
+          <Link
+            href="/about"
+            className={cn(
+              "transition-opacity hover:opacity-80",
+              overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
+            )}
+          >
+            {t("nav.about")}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-1">
-          <Link
-            href="/contact"
-            className={cn(
-              "hidden items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors md:inline-flex",
-              overlay
-                ? "border-white/60 text-white hover:bg-white/10"
-                : "border-[var(--color-foreground)]/30 text-[var(--color-foreground)] hover:bg-[var(--color-foreground)]/5",
-            )}
-          >
-            {t("home.heroFindStore")}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("common.search")}
-            className={overlay ? "text-white hover:bg-white/10 hover:text-white" : ""}
-          >
-            <Search className="h-5 w-5" />
-          </Button>
           <LocaleSwitcher />
           <Button
             asChild
@@ -103,26 +96,24 @@ export function ShopHeader() {
             </Link>
           </Button>
           <Button
-            asChild
             variant="ghost"
             size="icon"
+            onClick={openDrawer}
             aria-label={t("common.cart")}
             className={cn(
               "relative",
               overlay ? "text-white hover:bg-white/10 hover:text-white" : "",
             )}
           >
-            <Link href="/cart">
-              <ShoppingBag className="h-5 w-5" />
-              <span
-                className={cn(
-                  "ml-1 text-sm tabular-nums",
-                  overlay ? "text-white/90" : "text-[var(--color-foreground)]/70",
-                )}
-              >
-                ({count})
-              </span>
-            </Link>
+            <ShoppingBag className="h-5 w-5" />
+            <span
+              className={cn(
+                "ml-1 text-sm tabular-nums",
+                overlay ? "text-white/90" : "text-[var(--color-foreground)]/70",
+              )}
+            >
+              ({count})
+            </span>
           </Button>
           <Button
             variant="ghost"
@@ -132,11 +123,49 @@ export function ShopHeader() {
               overlay ? "text-white hover:bg-white/10 hover:text-white" : "",
             )}
             aria-label="Menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
           >
-            <Menu className="h-5 w-5" />
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
+
+      {menuOpen && (
+        <nav className="border-t border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 md:hidden">
+          <ul className="flex flex-col gap-1 text-sm font-medium">
+            {NAV.map((it) => (
+              <li key={it.href}>
+                <a
+                  href={it.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-md px-3 py-3 hover:bg-white"
+                >
+                  {it.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <Link
+                href="/about"
+                onClick={() => setMenuOpen(false)}
+                className="block rounded-md px-3 py-3 hover:bg-white"
+              >
+                {t("nav.about")}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/contact"
+                onClick={() => setMenuOpen(false)}
+                className="block rounded-md px-3 py-3 hover:bg-white"
+              >
+                {t("nav.contact")}
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      )}
     </header>
   );
 }

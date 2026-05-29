@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { ShoppingBag, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/stores/cart";
+import { useCartUI } from "@/stores/cart-ui";
 import { useSelectedColor, useSelectedColor_current } from "@/stores/selected-color";
 import { formatMoney } from "@/lib/utils";
 import { SACOCHE } from "@/lib/product";
 
 export function StickyBuyBar() {
   const add = useCart((s) => s.add);
+  const openDrawer = useCartUI((s) => s.openDrawer);
   const color = useSelectedColor_current();
   const setColorId = useSelectedColor((s) => s.setId);
   const [visible, setVisible] = useState(false);
@@ -36,6 +38,7 @@ export function StickyBuyBar() {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
+    openDrawer();
   };
 
   return (
@@ -65,7 +68,8 @@ export function StickyBuyBar() {
                 type="button"
                 onClick={() => setColorId(c.id)}
                 aria-label={`Couleur ${c.name}`}
-                className={`h-7 w-7 rounded-full ring-2 transition-all ${
+                aria-pressed={active}
+                className={`h-10 w-10 rounded-full ring-2 transition-all ${
                   active
                     ? "ring-[var(--color-primary-600)] scale-110"
                     : "ring-[var(--color-border)]"

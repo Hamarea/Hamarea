@@ -8,73 +8,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/utils";
+import { SHIPPING } from "@/lib/product";
 
-type Step = 1 | 2 | 3;
-
-type Address = {
-  fullName: string;
-  email: string;
-  street: string;
-  city: string;
-  postalCode: string;
-  country: string;
-};
-
-const EMPTY_ADDRESS: Address = {
-  fullName: "",
-  email: "",
-  street: "",
-  city: "",
-  postalCode: "",
-  country: "FR",
-};
-
-const SHIPPING = {
-  standard: { label: "Livraison standard (3-5j)", cents: 590 },
-  express: { label: "Livraison express (1-2j)", cents: 1290 },
+const SHIPPING_LABELS = {
+  standard: { label: "Livraison standard (3-5j)", cents: SHIPPING.standardCents },
+  express: { label: "Livraison express (1-2j)", cents: SHIPPING.expressCents },
 } as const;
 
-type ShippingMethod = keyof typeof SHIPPING;
+type ShippingMethod = keyof typeof SHIPPING_LABELS;
 
 export function CheckoutClient() {
   const router = useRouter();
   const lines = useCart((s) => s.lines);
   const subtotal = useCart((s) => s.subtotalCents());
-  const [step, setStep] = useState<Step>(1);
-  const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
+  const [email, setEmail] = useState("");
   const [shipping, setShipping] = useState<ShippingMethod>("standard");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const shippingCents = useMemo(
-    () => (subtotal >= 7900 ? 0 : SHIPPING[shipping].cents),
+    () =>
+      subtotal >= SHIPPING.freeAboveCents ? 0 : SHIPPING_LABELS[shipping].cents,
     [subtotal, shipping],
   );
   const total = subtotal + shippingCents;
+  const toFree = Math.max(0, SHIPPING.freeAboveCents - subtotal);
 
   if (lines.length === 0) {
     return (
       <Card className="p-8 text-center">
         <p className="text-[var(--color-muted)]">Votre panier est vide.</p>
-        <Button className="mt-4" onClick={() => router.push("/products")}>
-          Voir les produits
+        <Button className="mt-4" onClick={() => router.push("/")}>
+          Voir le produit
         </Button>
       </Card>
     );
   }
 
-  const goNext = (e: React.FormEvent) => {
+  const pay = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setStep((s) => (s < 3 ? ((s + 1) as Step) : s));
-  };
-
-  const goBack = () => {
-    setError(null);
-    setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
-  };
-
-  const pay = async () => {
     setSubmitting(true);
     setError(null);
     try {
@@ -82,12 +54,13 @@ export function CheckoutClient() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          email: address.email,
+          email,
           shippingMethod: shipping,
-          address,
-          // Only identifiers + quantities — the server recomputes prices.
+          // Only references — the server recomputes the authoritative price.
           lines: lines.map((l) => ({
-            variantId: l.variantId,
+            productId: l.productId,
+            color: l.options?.color ?? "",
+            pack: Number(l.options?.pack ?? 1),
             quantity: l.quantity,
           })),
         }),
@@ -107,108 +80,92 @@ export function CheckoutClient() {
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-[1fr_360px]">
+    <form onSubmit={pay} className="grid gap-6 md:grid-cols-[1fr_360px]">
       <div className="space-y-4">
-        <Stepper step={step} />
-
-        {step === 1 && (
-          <Card className="p-6">
-            <h2 className="font-medium mb-4">Adresse de livraison</h2>
-            <form onSubmit={goNext} className="grid gap-4 sm:grid-cols-2">
-              <Field label="Nom complet" name="fullName" value={address.fullName}
-                onChange={(v) => setAddress({ ...address, fullName: v })} required />
-              <Field label="E-mail" name="email" type="email" value={address.email}
-                onChange={(v) => setAddress({ ...address, email: v })} required />
-              <Field label="Adresse" name="street" value={address.street}
-                onChange={(v) => setAddress({ ...address, street: v })} required className="sm:col-span-2" />
-              <Field label="Ville" name="city" value={address.city}
-                onChange={(v) => setAddress({ ...address, city: v })} required />
-              <Field label="Code postal" name="postalCode" value={address.postalCode}
-                onChange={(v) => setAddress({ ...address, postalCode: v })} required />
-              <Field label="Pays" name="country" value={address.country}
-                onChange={(v) => setAddress({ ...address, country: v.toUpperCase() })}
-                maxLength={2} required />
-              <div className="sm:col-span-2">
-                <Button type="submit">Continuer</Button>
-              </div>
-            </form>
-          </Card>
-        )}
-
-        {step === 2 && (
-          <Card className="p-6">
-            <h2 className="font-medium mb-4">Livraison</h2>
-            <div className="space-y-2">
-              {(Object.keys(SHIPPING) as ShippingMethod[]).map((m) => {
-                const opt = SHIPPING[m];
-                const cents = subtotal >= 7900 ? 0 : opt.cents;
-                return (
-                  <label
-                    key={m}
-                    className={`flex cursor-pointer items-center justify-between rounded-md border p-3 text-sm ${
-                      shipping === m
-                        ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
-                        : "border-[var(--color-border)]"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="shipping"
-                        value={m}
-                        checked={shipping === m}
-                        onChange={() => setShipping(m)}
-                      />
-                      {opt.label}
-                    </span>
-                    <span className="font-medium">
-                      {cents === 0 ? "Offert" : formatMoney(cents)}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" onClick={goBack}>Retour</Button>
-              <Button onClick={(e) => goNext(e as unknown as React.FormEvent)}>Continuer</Button>
-            </div>
-          </Card>
-        )}
-
-        {step === 3 && (
-          <Card className="p-6">
-            <h2 className="font-medium mb-4">Paiement</h2>
-            <div className="space-y-2 text-sm">
-              <p><span className="text-[var(--color-muted)]">Livraison :</span> {address.fullName}, {address.street}, {address.postalCode} {address.city}, {address.country}</p>
-              <p><span className="text-[var(--color-muted)]">E-mail :</span> {address.email}</p>
-              <p><span className="text-[var(--color-muted)]">Méthode :</span> {SHIPPING[shipping].label}</p>
-            </div>
-            {error && (
-              <p className="mt-4 rounded-md border border-[var(--color-danger)]/40 bg-[var(--color-danger)]/10 p-3 text-sm text-[var(--color-danger)]">
-                {error}
-              </p>
-            )}
-            <p className="mt-4 text-xs text-[var(--color-muted)]">
-              Vous serez redirigé vers Stripe Checkout pour saisir votre carte en toute sécurité.
+        <Card className="p-6">
+          <h2 className="mb-4 font-medium">Vos coordonnées</h2>
+          <div className="space-y-1.5">
+            <Label htmlFor="email">E-mail</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(ev) => setEmail(ev.target.value)}
+              placeholder="vous@exemple.com"
+            />
+            <p className="text-xs text-[var(--color-muted)]">
+              Pour le reçu et le suivi. L&apos;adresse de livraison est saisie à
+              l&apos;étape suivante, sur la page sécurisée Stripe.
             </p>
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" onClick={goBack} disabled={submitting}>Retour</Button>
-              <Button onClick={pay} disabled={submitting}>
-                {submitting ? "Redirection…" : `Payer ${formatMoney(total)}`}
-              </Button>
-            </div>
-          </Card>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="mb-4 font-medium">Livraison</h2>
+          {toFree > 0 ? (
+            <p className="mb-3 rounded-md bg-[var(--color-primary-50)] px-3 py-2 text-xs text-[var(--color-primary-700)]">
+              Plus que <strong>{formatMoney(toFree)}</strong> pour la livraison
+              offerte.
+            </p>
+          ) : (
+            <p className="mb-3 rounded-md bg-[var(--color-secondary-50)] px-3 py-2 text-xs text-[var(--color-secondary-700)]">
+              🎉 Livraison offerte débloquée.
+            </p>
+          )}
+          <div className="space-y-2">
+            {(Object.keys(SHIPPING_LABELS) as ShippingMethod[]).map((m) => {
+              const opt = SHIPPING_LABELS[m];
+              const cents =
+                subtotal >= SHIPPING.freeAboveCents ? 0 : opt.cents;
+              return (
+                <label
+                  key={m}
+                  className={`flex cursor-pointer items-center justify-between rounded-md border p-3 text-sm ${
+                    shipping === m
+                      ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
+                      : "border-[var(--color-border)]"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="shipping"
+                      value={m}
+                      checked={shipping === m}
+                      onChange={() => setShipping(m)}
+                    />
+                    {opt.label}
+                  </span>
+                  <span className="font-medium">
+                    {cents === 0 ? "Offert" : formatMoney(cents)}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </Card>
+
+        {error && (
+          <p className="rounded-md border border-[var(--color-danger)]/40 bg-[var(--color-danger)]/10 p-3 text-sm text-[var(--color-danger)]">
+            {error}
+          </p>
         )}
       </div>
 
       <aside>
-        <Card className="p-6 sticky top-24">
-          <h3 className="font-medium mb-3">Récapitulatif</h3>
+        <Card className="sticky top-24 p-6">
+          <h3 className="mb-3 font-medium">Récapitulatif</h3>
           <ul className="space-y-2 text-sm">
             {lines.map((l) => (
               <li key={l.variantId} className="flex justify-between gap-2">
                 <span className="truncate">
-                  {l.name} <span className="text-[var(--color-muted)]">× {l.quantity}</span>
+                  {l.name}{" "}
+                  <span className="text-[var(--color-muted)]">
+                    × {l.quantity}
+                  </span>
                 </span>
                 <span className="shrink-0 tabular-nums">
                   {formatMoney(l.unitPriceCents * l.quantity)}
@@ -224,80 +181,27 @@ export function CheckoutClient() {
             />
             <Row label="Total" value={formatMoney(total)} bold />
           </div>
+          <Button type="submit" className="mt-5 w-full" disabled={submitting}>
+            {submitting ? "Redirection…" : `Payer ${formatMoney(total)}`}
+          </Button>
+          <p className="mt-3 text-center text-[11px] text-[var(--color-muted)]">
+            Paiement sécurisé par Stripe · CB · Apple Pay · Google Pay
+          </p>
         </Card>
       </aside>
-    </div>
+    </form>
   );
 }
 
-function Stepper({ step }: { step: Step }) {
-  const labels = ["Adresse", "Livraison", "Paiement"];
-  return (
-    <ol className="flex items-center gap-2 text-xs uppercase tracking-wider">
-      {labels.map((l, i) => {
-        const n = (i + 1) as Step;
-        const active = n === step;
-        const done = n < step;
-        return (
-          <li key={l} className="flex items-center gap-2">
-            <span
-              className={`grid h-6 w-6 place-items-center rounded-full text-[11px] ${
-                active
-                  ? "bg-[var(--color-primary-600)] text-white"
-                  : done
-                    ? "bg-[var(--color-primary-200)] text-[var(--color-primary-700)]"
-                    : "bg-[var(--color-bg)] text-[var(--color-muted)] ring-1 ring-[var(--color-border)]"
-              }`}
-            >
-              {n}
-            </span>
-            <span className={active ? "text-[var(--color-fg)]" : "text-[var(--color-muted)]"}>
-              {l}
-            </span>
-            {i < labels.length - 1 && <span className="mx-2 text-[var(--color-muted)]">—</span>}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
-function Field({
+function Row({
   label,
-  name,
   value,
-  onChange,
-  type = "text",
-  required,
-  className,
-  maxLength,
+  bold,
 }: {
   label: string;
-  name: string;
   value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  required?: boolean;
-  className?: string;
-  maxLength?: number;
+  bold?: boolean;
 }) {
-  return (
-    <div className={`space-y-1.5 ${className ?? ""}`}>
-      <Label htmlFor={name}>{label}</Label>
-      <Input
-        id={name}
-        name={name}
-        type={type}
-        value={value}
-        required={required}
-        maxLength={maxLength}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </div>
-  );
-}
-
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
     <div className={`flex justify-between ${bold ? "font-semibold" : ""}`}>
       <span>{label}</span>

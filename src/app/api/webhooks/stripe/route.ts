@@ -7,12 +7,15 @@ import { getStripe } from "@/lib/stripe";
  * Stripe webhook.
  * Verifies the Stripe-Signature header with STRIPE_WEBHOOK_SECRET, dedups on
  * webhook_events.event_id (unique), then reconciles the order: marks it paid,
- * stores the PaymentIntent id, records a payment row and decrements stock.
+ * stores the PaymentIntent id, writes the Stripe-collected address, records a
+ * payment row and decrements stock.
  *
  * Enable these events on the Stripe endpoint: `checkout.session.completed`
  * (primary). `payment_intent.succeeded` is also handled as a fallback — both
  * are safe to enable because the paid transition is idempotent per order.
  */
+
+type AddressJson = Record<string, unknown>;
 
 // Minimal structural view of the service-role client (the generated Database
 // type does not yet cover the commerce tables).
@@ -44,6 +47,40 @@ type AdminDb = {
   ) => Promise<{ error: { message?: string } | null }>;
 };
 
+// Shape of Stripe's customer_details / shipping_details on a Checkout Session.
+type StripeAddrDetails =
+  | {
+      name?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      address?: {
+        line1?: string | null;
+        line2?: string | null;
+        city?: string | null;
+        state?: string | null;
+        postal_code?: string | null;
+        country?: string | null;
+      } | null;
+    }
+  | null
+  | undefined;
+
+function toAddressJson(d: StripeAddrDetails): AddressJson | null {
+  if (!d || !d.address) return null;
+  const a = d.address;
+  return {
+    full_name: d.name ?? null,
+    email: d.email ?? null,
+    phone: d.phone ?? null,
+    line1: a.line1 ?? null,
+    line2: a.line2 ?? null,
+    city: a.city ?? null,
+    state: a.state ?? null,
+    postal_code: a.postal_code ?? null,
+    country: a.country ?? null,
+  };
+}
+
 /**
  * Idempotently flip an order to `paid` and run the one-time side effects.
  * The `status <> 'paid'` guard means a second event for the same order (e.g.
@@ -57,18 +94,28 @@ async function markOrderPaid(
     amountCents: number | null;
     currency: string | null;
     raw: unknown;
+    shippingAddress?: AddressJson | null;
+    billingAddress?: AddressJson | null;
   },
 ) {
-  const { orderId, paymentIntentId, amountCents, currency, raw } = params;
+  const {
+    orderId,
+    paymentIntentId,
+    amountCents,
+    currency,
+    raw,
+    shippingAddress,
+    billingAddress,
+  } = params;
 
   const { data: updated, error: updErr } = await sb
     .from("orders")
     .update({
       status: "paid",
       placed_at: new Date().toISOString(),
-      ...(paymentIntentId
-        ? { stripe_payment_intent_id: paymentIntentId }
-        : {}),
+      ...(paymentIntentId ? { stripe_payment_intent_id: paymentIntentId } : {}),
+      ...(shippingAddress ? { shipping_address: shippingAddress } : {}),
+      ...(billingAddress ? { billing_address: billingAddress } : {}),
     })
     .eq("id", orderId)
     .neq("status", "paid")
@@ -142,11 +189,25 @@ export async function POST(req: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const orderId = session.metadata?.order_id ?? session.client_reference_id;
+    const orderId =
+      session.metadata?.order_id ?? session.client_reference_id ?? undefined;
     const paymentIntentId =
       typeof session.payment_intent === "string"
         ? session.payment_intent
         : (session.payment_intent?.id ?? null);
+
+    // Stripe collected the address at Checkout — read it from the session.
+    const loose = session as unknown as {
+      customer_details?: StripeAddrDetails;
+      collected_information?: { shipping_details?: StripeAddrDetails };
+      shipping_details?: StripeAddrDetails;
+    };
+    const billing = toAddressJson(loose.customer_details);
+    const shipping =
+      toAddressJson(
+        loose.collected_information?.shipping_details ?? loose.shipping_details,
+      ) ?? billing;
+
     if (orderId) {
       await markOrderPaid(sb, {
         orderId,
@@ -154,6 +215,8 @@ export async function POST(req: Request) {
         amountCents: session.amount_total,
         currency: session.currency,
         raw: session,
+        shippingAddress: shipping,
+        billingAddress: billing,
       });
     }
   } else if (event.type === "payment_intent.succeeded") {
@@ -173,4 +236,5 @@ export async function POST(req: Request) {
   return NextResponse.json({ received: true });
 }
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

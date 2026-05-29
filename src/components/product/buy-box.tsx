@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ShoppingBag, Star } from "lucide-react";
+import { Check, ShoppingBag, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/stores/cart";
+import { useRouter } from "@/i18n/navigation";
+import { useCart, type CartLine } from "@/stores/cart";
+import { useCartUI } from "@/stores/cart-ui";
 import { useSelectedColor, useSelectedColor_current } from "@/stores/selected-color";
 import { formatMoney } from "@/lib/utils";
 import { SACOCHE } from "@/lib/product";
+import { PaymentMarks, Reassurance } from "@/components/product/reassurance";
 
 export function BuyBox({
   variant = "hero",
@@ -16,25 +19,35 @@ export function BuyBox({
   compact?: boolean;
 }) {
   const add = useCart((s) => s.add);
+  const openDrawer = useCartUI((s) => s.openDrawer);
+  const router = useRouter();
   const color = useSelectedColor_current();
   const setColorId = useSelectedColor((s) => s.setId);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
+  const buildLine = (): CartLine => ({
+    variantId: color.variantId,
+    productId: SACOCHE.id,
+    slug: SACOCHE.slug,
+    name: `${SACOCHE.name} — ${color.name}`,
+    image: color.imageUrl,
+    unitPriceCents: SACOCHE.priceCents,
+    currency: SACOCHE.currency,
+    quantity: qty,
+    options: { color: color.name },
+  });
+
   const onAdd = () => {
-    add({
-      variantId: color.variantId,
-      productId: SACOCHE.id,
-      slug: SACOCHE.slug,
-      name: `${SACOCHE.name} — ${color.name}`,
-      image: color.imageUrl,
-      unitPriceCents: SACOCHE.priceCents,
-      currency: SACOCHE.currency,
-      quantity: qty,
-      options: { color: color.name },
-    });
+    add(buildLine());
     setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
+    setTimeout(() => setAdded(false), 1500);
+    openDrawer();
+  };
+
+  const onBuyNow = () => {
+    add(buildLine());
+    router.push("/checkout");
   };
 
   const savings = SACOCHE.compareAtCents
@@ -43,12 +56,13 @@ export function BuyBox({
   const savingsPct = SACOCHE.compareAtCents
     ? Math.round((savings / SACOCHE.compareAtCents) * 100)
     : 0;
+  const installment = Math.round((SACOCHE.priceCents * qty) / 3);
 
   const dark = variant === "hero";
 
   const pad = compact ? "p-4" : "p-5 md:p-6";
   const priceSize = compact ? "text-2xl" : "text-3xl";
-  const swatchSize = compact ? "h-8 w-8" : "h-10 w-10";
+  const swatchSize = compact ? "h-10 w-10" : "h-11 w-11";
   const btnSize: "md" | "lg" = compact ? "md" : "lg";
   const gap = compact ? "mt-3" : "mt-5";
 
@@ -97,6 +111,10 @@ export function BuyBox({
           </>
         )}
       </div>
+
+      <p className={`mt-1 text-[11px] ${dark ? "text-white/70" : "text-[var(--color-muted)]"}`}>
+        ou 3× {formatMoney(installment)} — paiement fractionné disponible
+      </p>
 
       <div className={gap}>
         <p
@@ -147,8 +165,8 @@ export function BuyBox({
           <button
             type="button"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="h-9 w-8 text-base"
-            aria-label="Diminuer"
+            className="grid h-11 w-10 place-items-center text-lg"
+            aria-label="Diminuer la quantité"
           >
             −
           </button>
@@ -156,8 +174,8 @@ export function BuyBox({
           <button
             type="button"
             onClick={() => setQty((q) => Math.min(10, q + 1))}
-            className="h-9 w-8 text-base"
-            aria-label="Augmenter"
+            className="grid h-11 w-10 place-items-center text-lg"
+            aria-label="Augmenter la quantité"
           >
             +
           </button>
@@ -177,14 +195,20 @@ export function BuyBox({
       </div>
 
       {!compact && (
-        <p
-          className={`mt-3 text-[11px] ${
-            dark ? "text-white/75" : "text-[var(--color-muted)]"
-          }`}
+        <Button
+          size="lg"
+          variant={dark ? "secondary" : "accent"}
+          className="mt-2 w-full"
+          onClick={onBuyNow}
         >
-          Livraison 48h offerte · Garantie 2 ans · Paiement sécurisé
-        </p>
+          <Zap className="h-4 w-4" /> Acheter maintenant
+        </Button>
       )}
+
+      <div className={`${compact ? "mt-3" : "mt-4"} space-y-2`}>
+        <Reassurance dark={dark} />
+        {!compact && <PaymentMarks dark={dark} />}
+      </div>
     </div>
   );
 }

@@ -136,7 +136,7 @@ export const SACOCHE = {
     },
     {
       q: "Quelle est la livraison ?",
-      a: "Livraison standard 3-5 jours ouvrés OFFERTE à partir de 79€. Sinon 5,90€. Livraison express 1-2 jours : 12,90€. Expédié depuis la France.",
+      a: "Livraison standard 3-5 jours ouvrés OFFERTE à partir de 39€. Sinon 5,90€. Livraison express 1-2 jours : 12,90€.",
     },
     {
       q: "Garantie et retour ?",
@@ -180,62 +180,36 @@ export const SACOCHE = {
 export type Sacoche = typeof SACOCHE;
 
 /**
- * Pack/bundle pricing — single source of truth shared by the BundlePicker UI
- * and the server-side checkout validation. Keep this in sync nowhere else:
- * both the storefront and `/api/checkout/session` read from here.
+ * Quantity-break discounts in %. MUST match the tiers shown in BundlePicker.
+ * Exposed so the checkout API can recompute prices server-side instead of
+ * trusting a client-supplied amount (price-tampering protection).
  */
-export const BUNDLES = [
-  { qty: 1, discountPct: 0 },
-  { qty: 2, discountPct: 15 },
-  { qty: 3, discountPct: 25 },
-] as const;
+export const PACK_DISCOUNTS: Readonly<Record<number, number>> = {
+  1: 0,
+  2: 15,
+  3: 25,
+};
 
-/** Discounted unit price (cents) for a given pack quantity. */
-export function packUnitPriceCents(qty: number): number {
-  const bundle = BUNDLES.find((b) => b.qty === qty);
-  const pct = bundle?.discountPct ?? 0;
+/** Authoritative unit price (cents) for a given pack tier. Single source of truth. */
+export function unitPriceForPack(packQty: number): number {
+  const pct = PACK_DISCOUNTS[packQty] ?? 0;
   return Math.round(SACOCHE.priceCents * (1 - pct / 100));
 }
 
-export type ResolvedVariant = {
-  variantId: string;
-  colorId: ProductColor["id"];
-  colorName: string;
-  packQty: number;
-  unitPriceCents: number;
-  currency: typeof SACOCHE.currency;
-  name: string;
-  imageUrl: string;
-};
+/** Resolve a colour by its display name (case-insensitive). */
+export function colorByName(name: string): ProductColor | undefined {
+  return SACOCHE.colors.find(
+    (c) => c.name.toLowerCase() === name.trim().toLowerCase(),
+  );
+}
 
 /**
- * Maps a cart `variantId` back to its trusted, server-computed line data.
- * Accepts `sacoche-<color>` and `sacoche-<color>-pack-<n>`. Returns `null` for
- * anything unknown so checkout can reject tampered or unrecognised lines.
- * This is the authority for prices — the client value is never trusted.
+ * Shipping config — single source of truth for copy, checkout UI and the
+ * Stripe route. Threshold recalibrated to ~1.5× unit price so a 2-/3-pack
+ * unlocks free shipping (the old 79 € was unreachable for a 24,90 € product).
  */
-export function resolveVariant(variantId: string): ResolvedVariant | null {
-  const match = variantId.match(
-    /^(sacoche-(?:rose|noir|blanc))(?:-pack-(\d+))?$/,
-  );
-  if (!match) return null;
-  const baseId = match[1];
-  const packQty = match[2] ? Number(match[2]) : 1;
-  const color = SACOCHE.colors.find((c) => c.variantId === baseId);
-  if (!color) return null;
-  if (!BUNDLES.some((b) => b.qty === packQty)) return null;
-  const name =
-    packQty > 1
-      ? `${SACOCHE.name} — Pack ${packQty} (${color.name})`
-      : `${SACOCHE.name} — ${color.name}`;
-  return {
-    variantId,
-    colorId: color.id,
-    colorName: color.name,
-    packQty,
-    unitPriceCents: packUnitPriceCents(packQty),
-    currency: SACOCHE.currency,
-    name,
-    imageUrl: color.imageUrl,
-  };
-}
+export const SHIPPING = {
+  freeAboveCents: 3900,
+  standardCents: 590,
+  expressCents: 1290,
+} as const;

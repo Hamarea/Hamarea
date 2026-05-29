@@ -1,4 +1,5 @@
 import { Check, X } from "lucide-react";
+import { Reveal } from "@/components/ui/reveal";
 
 const ROWS = [
   { feature: "Étanchéité testée IPX8 (30 m)", us: true, them: false },
@@ -14,7 +15,7 @@ const ROWS = [
 export function Comparison() {
   return (
     <section className="container-page py-16 md:py-20">
-      <div className="mx-auto max-w-2xl text-center">
+      <Reveal className="mx-auto max-w-2xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--color-primary-600)]">
           Comparatif
         </p>
@@ -24,16 +25,16 @@ export function Comparison() {
         <p className="mt-3 text-sm text-[var(--color-muted)]">
           Pourquoi payer 60€ ailleurs pour avoir moins ?
         </p>
-      </div>
-      <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white">
-        <table className="w-full text-sm">
+      </Reveal>
+      <Reveal delay={0.1} className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white">
+        <table className="w-full text-xs sm:text-sm">
           <thead className="bg-[var(--color-bg)] text-left">
             <tr>
-              <th className="px-5 py-4 font-semibold">Critère</th>
-              <th className="px-5 py-4 text-center font-display text-base font-semibold text-[var(--color-primary-700)]">
+              <th className="px-3 py-3 sm:px-5 sm:py-4 font-semibold">Critère</th>
+              <th className="px-3 py-3 sm:px-5 sm:py-4 text-center font-display text-base font-semibold text-[var(--color-primary-700)]">
                 Hamarea
               </th>
-              <th className="px-5 py-4 text-center font-semibold text-[var(--color-muted)]">
+              <th className="px-3 py-3 sm:px-5 sm:py-4 text-center font-semibold text-[var(--color-muted)]">
                 Sacoche classique
               </th>
             </tr>
@@ -44,15 +45,15 @@ export function Comparison() {
                 key={r.feature}
                 className={i % 2 === 0 ? "bg-white" : "bg-[var(--color-bg)]/50"}
               >
-                <td className="px-5 py-3">{r.feature}</td>
-                <td className="px-5 py-3 text-center">
+                <td className="px-3 py-2.5 sm:px-5 sm:py-3">{r.feature}</td>
+                <td className="px-3 py-2.5 sm:px-5 sm:py-3 text-center">
                   {r.us ? (
                     <Check className="mx-auto h-5 w-5 text-[var(--color-success,#16a34a)]" />
                   ) : (
                     <X className="mx-auto h-5 w-5 text-[var(--color-muted)]" />
                   )}
                 </td>
-                <td className="px-5 py-3 text-center">
+                <td className="px-3 py-2.5 sm:px-5 sm:py-3 text-center">
                   {r.them ? (
                     <Check className="mx-auto h-5 w-5 text-[var(--color-success,#16a34a)]" />
                   ) : (
@@ -63,7 +64,7 @@ export function Comparison() {
             ))}
           </tbody>
         </table>
-      </div>
+      </Reveal>
     </section>
   );
 }

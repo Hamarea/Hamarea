@@ -1,7 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import { SACOCHE } from "@/lib/product";
+import { useSelectedColor } from "@/stores/selected-color";
 
 export function ColorsShowcase() {
+  const setColorId = useSelectedColor((s) => s.setId);
+
   return (
     <section className="container-page py-16 md:py-20">
       <div className="mx-auto max-w-2xl text-center">
@@ -12,7 +17,8 @@ export function ColorsShowcase() {
           La vôtre, c&apos;est laquelle ?
         </h2>
         <p className="mt-3 text-sm text-[var(--color-muted)]">
-          Rose poudré, noir intemporel ou blanc minimaliste. Toutes en édition limitée.
+          Rose poudré, noir intemporel ou blanc minimaliste. Trois finitions, une
+          même étanchéité IPX8.
         </p>
       </div>
 
@@ -36,12 +42,11 @@ export function ColorsShowcase() {
             <div className="flex items-center justify-between p-5">
               <div>
                 <p className="font-display text-xl">{c.name}</p>
-                <p className="text-xs text-[var(--color-muted)]">
-                  Édition limitée
-                </p>
+                <p className="text-xs text-[var(--color-muted)]">En stock</p>
               </div>
               <a
                 href="#acheter"
+                onClick={() => setColorId(c.id)}
                 className="rounded-full bg-[var(--color-foreground)] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Choisir

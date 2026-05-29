@@ -4,16 +4,24 @@ import { useState } from "react";
 import { Check, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/stores/cart";
+import { useCartUI } from "@/stores/cart-ui";
 import { formatMoney } from "@/lib/utils";
-import { SACOCHE, BUNDLES, packUnitPriceCents } from "@/lib/product";
+import { SACOCHE } from "@/lib/product";
+import { Reveal } from "@/components/ui/reveal";
 
-// UI metadata only — discount percentages come from BUNDLES (the single
-// pricing source of truth, shared with server-side checkout validation).
 const PACKS = [
-  { id: "x1", qty: 1, label: "1 sacoche", sub: "Pour vous", highlight: false },
+  {
+    id: "x1",
+    qty: 1,
+    discountPct: 0,
+    label: "1 sacoche",
+    sub: "Pour vous",
+    highlight: false,
+  },
   {
     id: "x2",
     qty: 2,
+    discountPct: 15,
     label: "2 sacoches",
     sub: "Le préféré des couples",
     highlight: true,
@@ -21,21 +29,22 @@ const PACKS = [
   {
     id: "x3",
     qty: 3,
+    discountPct: 25,
     label: "3 sacoches",
     sub: "Pack famille / cadeaux",
     highlight: false,
   },
-].map((m) => ({
-  ...m,
-  discountPct: BUNDLES.find((b) => b.qty === m.qty)?.discountPct ?? 0,
-}));
+];
 
 export function BundlePicker() {
   const add = useCart((s) => s.add);
+  const openDrawer = useCartUI((s) => s.openDrawer);
   const [pack, setPack] = useState(PACKS[1]);
   const [color, setColor] = useState(SACOCHE.colors[0]);
 
-  const unit = packUnitPriceCents(pack.qty);
+  const unit = Math.round(
+    SACOCHE.priceCents * (1 - pack.discountPct / 100),
+  );
   const total = unit * pack.qty;
   const fullPrice = SACOCHE.priceCents * pack.qty;
   const savings = fullPrice - total;
@@ -52,11 +61,12 @@ export function BundlePicker() {
       quantity: pack.qty,
       options: { color: color.name, pack: String(pack.qty) },
     });
+    openDrawer();
   };
 
   return (
     <section className="container-page py-16 md:py-20">
-      <div className="mx-auto max-w-2xl text-center">
+      <Reveal className="mx-auto max-w-2xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--color-primary-600)]">
           Économisez plus
         </p>
@@ -66,20 +76,20 @@ export function BundlePicker() {
         <p className="mt-3 text-sm text-[var(--color-muted)]">
           Plus vous en prenez, plus la remise grimpe. Idéal en cadeau.
         </p>
-      </div>
+      </Reveal>
 
       <div className="mx-auto mt-10 grid max-w-4xl gap-4 md:grid-cols-3">
-        {PACKS.map((p) => {
+        {PACKS.map((p, i) => {
           const active = p.id === pack.id;
           return (
+            <Reveal as="div" key={p.id} delay={i * 0.08}>
             <button
-              key={p.id}
               type="button"
               onClick={() => setPack(p)}
-              className={`relative rounded-2xl border-2 p-6 text-left transition-all ${
+              className={`relative h-full w-full rounded-2xl border-2 p-6 text-left transition-all duration-300 ${
                 active
                   ? "border-[var(--color-primary-600)] bg-white shadow-lg"
-                  : "border-[var(--color-border)] bg-white hover:border-[var(--color-primary-300)]"
+                  : "border-[var(--color-border)] bg-white hover:-translate-y-1 hover:border-[var(--color-primary-300)] hover:shadow-md"
               }`}
             >
               {p.highlight && (
@@ -100,7 +110,9 @@ export function BundlePicker() {
               </div>
               <div className="mt-5 flex items-baseline gap-2">
                 <span className="text-2xl font-bold tabular-nums">
-                  {formatMoney(packUnitPriceCents(p.qty))}
+                  {formatMoney(
+                    Math.round(SACOCHE.priceCents * (1 - p.discountPct / 100)),
+                  )}
                 </span>
                 <span className="text-xs text-[var(--color-muted)]">/ unité</span>
               </div>
@@ -108,11 +120,18 @@ export function BundlePicker() {
                 <p className="mt-1 text-xs text-[var(--color-muted)]">
                   Total :{" "}
                   <span className="font-semibold text-[var(--color-foreground)]">
-                    {formatMoney(packUnitPriceCents(p.qty) * p.qty)}
+                    {formatMoney(
+                      Math.round(SACOCHE.priceCents * (1 - p.discountPct / 100)) *
+                        p.qty,
+                    )}
                   </span>{" "}
                   · vous économisez{" "}
                   {formatMoney(
-                    SACOCHE.priceCents * p.qty - packUnitPriceCents(p.qty) * p.qty,
+                    SACOCHE.priceCents * p.qty -
+                      Math.round(
+                        SACOCHE.priceCents * (1 - p.discountPct / 100),
+                      ) *
+                        p.qty,
                   )}
                 </p>
               )}
@@ -122,6 +141,7 @@ export function BundlePicker() {
                 </span>
               )}
             </button>
+            </Reveal>
           );
         })}
       </div>
@@ -139,7 +159,8 @@ export function BundlePicker() {
                 type="button"
                 onClick={() => setColor(c)}
                 aria-label={c.name}
-                className={`h-8 w-8 rounded-full ring-2 transition-all ${
+                aria-pressed={active}
+                className={`h-11 w-11 rounded-full ring-2 transition-all ${
                   active
                     ? "ring-[var(--color-primary-600)] scale-110"
                     : "ring-[var(--color-border)]"

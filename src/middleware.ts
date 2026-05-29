@@ -15,6 +15,12 @@ export async function middleware(request: NextRequest) {
   const isAdminPath =
     url.pathname.startsWith("/admin") ||
     /^\/(fr|en|es|de)\/admin/.test(url.pathname);
+  const isAccountPath =
+    url.pathname.startsWith("/account") ||
+    /^\/(fr|en|es|de)\/account/.test(url.pathname);
+  // Only protected routes need a Supabase auth round-trip. The high-traffic
+  // landing/product pages skip it entirely (TTFB win).
+  const needsAuth = isAdminPath || isAccountPath;
 
   // Safety net: in production, never let /admin be reachable when Supabase
   // isn't wired up. Otherwise the role check below is skipped and the page
@@ -23,7 +29,7 @@ export async function middleware(request: NextRequest) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  if (supabaseUrl && supabaseKey) {
+  if (needsAuth && supabaseUrl && supabaseKey) {
     const supabase = createServerClient(
       supabaseUrl,
       supabaseKey,
