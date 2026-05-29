@@ -53,16 +53,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true, duplicate: true });
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const pi = event.data.object as Stripe.PaymentIntent;
-    const orderId = pi.metadata?.order_id;
-    if (orderId) {
-      await sb.from("orders").update({ status: "paid" }).eq("id", orderId);
-      await sb.rpc("decrement_stock_for_order", { p_order_id: orderId });
-    }
+  // Stripe Checkout fires `checkout.session.completed`; the PaymentIntent
+  // event is handled too for non-Checkout flows. Both are idempotent via the
+  // unique (provider, event_id) insert above.
+  const orderId =
+    event.type === "checkout.session.completed"
+      ? (event.data.object as Stripe.Checkout.Session).metadata?.order_id
+      : event.type === "payment_intent.succeeded"
+        ? (event.data.object as Stripe.PaymentIntent).metadata?.order_id
+        : undefined;
+
+  // Fulfillment only runs once an order row exists (order_id in metadata).
+  // The static landing flow does not yet create orders up front — see
+  // checkout/session/route.ts. Guard prevents no-op writes meanwhile.
+  if (orderId) {
+    await sb.from("orders").update({ status: "paid" }).eq("id", orderId);
+    await sb.rpc("decrement_stock_for_order", { p_order_id: orderId });
   }
 
   return NextResponse.json({ received: true });
 }
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

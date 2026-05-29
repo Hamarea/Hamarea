@@ -1,27 +1,25 @@
 "use client";
 
 import Image from "next/image";
-import { SACOCHE } from "@/lib/product";
-import { useSelectedColor } from "@/stores/selected-color";
+import { useSelectedColor_current } from "@/stores/selected-color";
 
+/**
+ * Single LCP image. We render only the currently selected colour instead of
+ * mounting all three (which previously triggered three full-bleed downloads).
+ * `priority` preloads it as the Largest Contentful Paint element.
+ */
 export function HeroImage() {
-  const id = useSelectedColor((s) => s.id);
+  const color = useSelectedColor_current();
 
   return (
-    <>
-      {SACOCHE.colors.map((c) => (
-        <Image
-          key={c.id}
-          src={c.imageUrl}
-          alt={`Sacoche étanche Hamarea — ${c.name}`}
-          fill
-          priority={c.id === SACOCHE.colors[0].id}
-          sizes="100vw"
-          className={`object-cover object-center transition-opacity duration-500 ${
-            id === c.id ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
-    </>
+    <Image
+      key={color.id}
+      src={color.imageUrl}
+      alt={`Sacoche étanche Hamarea — ${color.name}`}
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover object-center"
+    />
   );
 }

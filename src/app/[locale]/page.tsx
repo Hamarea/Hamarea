@@ -17,18 +17,38 @@ import { StickyBuyBar } from "@/components/product/sticky-buy-bar";
 import { ProductJsonLd } from "@/components/product/product-jsonld";
 import { SACOCHE } from "@/lib/product";
 
-export const metadata: Metadata = {
-  title: "Hamarea — Sacoche étanche pour smartphone | IPX8 jusqu'à 30m",
-  description:
-    "Filmez, swipez, plongez. Sacoche waterproof certifiée IPX8 jusqu'à 30 m. Compatible iPhone & Android. Écran tactile sous l'eau. 3 couleurs. Livraison 48h offerte.",
-  openGraph: {
-    title: "Hamarea — Sacoche étanche pour smartphone",
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const path = locale === "fr" ? "/" : `/${locale}`;
+  return {
+    title: "Hamarea — Sacoche étanche pour smartphone | IPX8 jusqu'à 30m",
     description:
-      "Protégez votre smartphone partout : plage, piscine, kayak, randonnée. IPX8 30 m, écran tactile sous l'eau.",
-    images: ["/hero.jpg"],
-    type: "website",
-  },
-};
+      "Filmez, swipez, plongez. Sacoche waterproof certifiée IPX8 jusqu'à 30 m. Compatible iPhone & Android. Écran tactile sous l'eau. 3 couleurs.",
+    alternates: {
+      canonical: path,
+      languages: {
+        fr: "/",
+        en: "/en",
+        es: "/es",
+        de: "/de",
+        "x-default": "/",
+      },
+    },
+    openGraph: {
+      title: "Hamarea — Sacoche étanche pour smartphone",
+      description:
+        "Protégez votre smartphone partout : plage, piscine, kayak, randonnée. IPX8 30 m, écran tactile sous l'eau.",
+      url: `${base}${path}`,
+      images: ["/hero.jpg"],
+      type: "website",
+    },
+  };
+}
 
 export default async function HomePage({
   params,

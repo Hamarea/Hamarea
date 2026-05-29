@@ -32,7 +32,7 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <div className="relative z-10 -mb-px bg-[var(--color-primary-900)] py-1.5 text-center text-[11px] font-medium uppercase tracking-wider text-white">
-            🌊 −30% jusqu&apos;à dimanche · Livraison 48h offerte dès 79€
+            🌊 Livraison offerte dès 39€ · Retours gratuits 30j · Garantie 2 ans
           </div>
           <ShopHeader />
           <main className="min-h-[calc(100vh-4rem)]">{children}</main>

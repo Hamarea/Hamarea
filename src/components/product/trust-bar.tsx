@@ -1,10 +1,10 @@
 import { Truck, ShieldCheck, RotateCcw, Lock } from "lucide-react";
 
 const ITEMS = [
-  { icon: Truck, title: "Livraison 48h", subtitle: "Offerte dès 79€" },
+  { icon: Truck, title: "Livraison rapide", subtitle: "Offerte dès 39€" },
   { icon: ShieldCheck, title: "Garantie 2 ans", subtitle: "Contre tout défaut" },
   { icon: RotateCcw, title: "Retour 30j", subtitle: "Gratuit, sans condition" },
-  { icon: Lock, title: "Paiement sécurisé", subtitle: "CB · Apple Pay · PayPal" },
+  { icon: Lock, title: "Paiement sécurisé", subtitle: "CB · Apple Pay · Google Pay" },
 ];
 
 export function TrustBar() {

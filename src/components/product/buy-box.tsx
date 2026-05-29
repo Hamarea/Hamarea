@@ -182,7 +182,7 @@ export function BuyBox({
             dark ? "text-white/75" : "text-[var(--color-muted)]"
           }`}
         >
-          Livraison 48h offerte · Garantie 2 ans · Paiement sécurisé
+          Livraison offerte dès 39€ · Garantie 2 ans · Paiement sécurisé
         </p>
       )}
     </div>

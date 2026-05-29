@@ -27,6 +27,8 @@ export function Faq() {
                 type="button"
                 onClick={() => setOpen(isOpen ? null : i)}
                 aria-expanded={isOpen}
+                aria-controls={`faq-panel-${i}`}
+                id={`faq-trigger-${i}`}
                 className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-[var(--color-bg)]/50"
               >
                 <span className="font-medium">{f.q}</span>
@@ -36,11 +38,15 @@ export function Faq() {
                   }`}
                 />
               </button>
-              {isOpen && (
-                <div className="px-5 pb-5 text-sm text-[var(--color-muted)]">
-                  {f.a}
-                </div>
-              )}
+              <div
+                id={`faq-panel-${i}`}
+                role="region"
+                aria-labelledby={`faq-trigger-${i}`}
+                hidden={!isOpen}
+                className="px-5 pb-5 text-sm text-[var(--color-muted)]"
+              >
+                {f.a}
+              </div>
             </li>
           );
         })}

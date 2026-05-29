@@ -25,12 +25,12 @@ export function VideoReel() {
 
         <div className="mt-10 -mx-4 overflow-x-auto px-4 pb-4 [scrollbar-width:thin] md:overflow-visible md:px-0">
           <ul className="flex snap-x snap-mandatory gap-4 md:grid md:grid-cols-3 md:gap-6">
-            {reels.map((r, i) => (
+            {reels.map((r) => (
               <li
                 key={r.src}
                 className="w-[78vw] shrink-0 snap-center sm:w-[60vw] md:w-auto"
               >
-                <ReelPlayer src={r.src} caption={r.caption} index={i} />
+                <ReelPlayer src={r.src} caption={r.caption} />
               </li>
             ))}
           </ul>
@@ -43,11 +43,9 @@ export function VideoReel() {
 function ReelPlayer({
   src,
   caption,
-  index,
 }: {
   src: string;
   caption?: string;
-  index: number;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
@@ -99,7 +97,7 @@ function ReelPlayer({
         muted={muted}
         loop
         playsInline
-        preload={index === 0 ? "auto" : "metadata"}
+        preload="none"
         className="h-full w-full object-cover"
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
