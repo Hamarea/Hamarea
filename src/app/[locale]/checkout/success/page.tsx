@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { CheckCircle2, Mail, Package, Truck } from "lucide-react";
+import { ClearCart } from "./clear-cart";
 
 const STEPS = [
   { icon: Mail, title: "Confirmation", body: "Un e-mail récapitulatif arrive dans votre boîte." },
@@ -18,6 +19,7 @@ export default async function CheckoutSuccessPage({
 
   return (
     <section className="container-page max-w-2xl py-16">
+      <ClearCart />
       <Card className="p-8 text-center">
         <CheckCircle2 className="mx-auto h-14 w-14 text-[var(--color-success,#16a34a)]" />
         <h1 className="mt-4 mb-2 font-display text-3xl">Merci pour votre commande ! 🎉</h1>
