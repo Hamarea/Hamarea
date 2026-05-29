@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { CheckCircle2 } from "lucide-react";
+import { ClearCart } from "./clear-cart";
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -12,6 +13,7 @@ export default async function CheckoutSuccessPage({
 
   return (
     <section className="container-page max-w-2xl py-16">
+      <ClearCart />
       <Card className="p-8 text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-[var(--color-success,#16a34a)]" />
         <h1 className="font-display text-3xl mt-4 mb-2">Merci pour votre commande !</h1>

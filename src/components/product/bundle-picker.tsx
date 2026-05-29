@@ -5,21 +5,15 @@ import { Check, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/stores/cart";
 import { formatMoney } from "@/lib/utils";
-import { SACOCHE } from "@/lib/product";
+import { SACOCHE, BUNDLES, packUnitPriceCents } from "@/lib/product";
 
+// UI metadata only — discount percentages come from BUNDLES (the single
+// pricing source of truth, shared with server-side checkout validation).
 const PACKS = [
-  {
-    id: "x1",
-    qty: 1,
-    discountPct: 0,
-    label: "1 sacoche",
-    sub: "Pour vous",
-    highlight: false,
-  },
+  { id: "x1", qty: 1, label: "1 sacoche", sub: "Pour vous", highlight: false },
   {
     id: "x2",
     qty: 2,
-    discountPct: 15,
     label: "2 sacoches",
     sub: "Le préféré des couples",
     highlight: true,
@@ -27,21 +21,21 @@ const PACKS = [
   {
     id: "x3",
     qty: 3,
-    discountPct: 25,
     label: "3 sacoches",
     sub: "Pack famille / cadeaux",
     highlight: false,
   },
-];
+].map((m) => ({
+  ...m,
+  discountPct: BUNDLES.find((b) => b.qty === m.qty)?.discountPct ?? 0,
+}));
 
 export function BundlePicker() {
   const add = useCart((s) => s.add);
   const [pack, setPack] = useState(PACKS[1]);
   const [color, setColor] = useState(SACOCHE.colors[0]);
 
-  const unit = Math.round(
-    SACOCHE.priceCents * (1 - pack.discountPct / 100),
-  );
+  const unit = packUnitPriceCents(pack.qty);
   const total = unit * pack.qty;
   const fullPrice = SACOCHE.priceCents * pack.qty;
   const savings = fullPrice - total;
@@ -106,9 +100,7 @@ export function BundlePicker() {
               </div>
               <div className="mt-5 flex items-baseline gap-2">
                 <span className="text-2xl font-bold tabular-nums">
-                  {formatMoney(
-                    Math.round(SACOCHE.priceCents * (1 - p.discountPct / 100)),
-                  )}
+                  {formatMoney(packUnitPriceCents(p.qty))}
                 </span>
                 <span className="text-xs text-[var(--color-muted)]">/ unité</span>
               </div>
@@ -116,18 +108,11 @@ export function BundlePicker() {
                 <p className="mt-1 text-xs text-[var(--color-muted)]">
                   Total :{" "}
                   <span className="font-semibold text-[var(--color-foreground)]">
-                    {formatMoney(
-                      Math.round(SACOCHE.priceCents * (1 - p.discountPct / 100)) *
-                        p.qty,
-                    )}
+                    {formatMoney(packUnitPriceCents(p.qty) * p.qty)}
                   </span>{" "}
                   · vous économisez{" "}
                   {formatMoney(
-                    SACOCHE.priceCents * p.qty -
-                      Math.round(
-                        SACOCHE.priceCents * (1 - p.discountPct / 100),
-                      ) *
-                        p.qty,
+                    SACOCHE.priceCents * p.qty - packUnitPriceCents(p.qty) * p.qty,
                   )}
                 </p>
               )}

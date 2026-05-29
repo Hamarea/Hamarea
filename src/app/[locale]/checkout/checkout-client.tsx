@@ -84,11 +84,10 @@ export function CheckoutClient() {
         body: JSON.stringify({
           email: address.email,
           shippingMethod: shipping,
+          address,
+          // Only identifiers + quantities — the server recomputes prices.
           lines: lines.map((l) => ({
-            name: l.name,
-            image: l.image,
-            unitPriceCents: l.unitPriceCents,
-            currency: l.currency,
+            variantId: l.variantId,
             quantity: l.quantity,
           })),
         }),
