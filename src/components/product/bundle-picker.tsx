@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/stores/cart";
+import { useCartUI } from "@/stores/cart-ui";
 import { formatMoney } from "@/lib/utils";
 import { SACOCHE } from "@/lib/product";
 
@@ -36,6 +37,7 @@ const PACKS = [
 
 export function BundlePicker() {
   const add = useCart((s) => s.add);
+  const openDrawer = useCartUI((s) => s.openDrawer);
   const [pack, setPack] = useState(PACKS[1]);
   const [color, setColor] = useState(SACOCHE.colors[0]);
 
@@ -58,6 +60,7 @@ export function BundlePicker() {
       quantity: pack.qty,
       options: { color: color.name, pack: String(pack.qty) },
     });
+    openDrawer();
   };
 
   return (
@@ -154,7 +157,8 @@ export function BundlePicker() {
                 type="button"
                 onClick={() => setColor(c)}
                 aria-label={c.name}
-                className={`h-8 w-8 rounded-full ring-2 transition-all ${
+                aria-pressed={active}
+                className={`h-11 w-11 rounded-full ring-2 transition-all ${
                   active
                     ? "ring-[var(--color-primary-600)] scale-110"
                     : "ring-[var(--color-border)]"

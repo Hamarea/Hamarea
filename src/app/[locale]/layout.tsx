@@ -5,6 +5,7 @@ import { Inter, Fraunces } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
+import { CartDrawer } from "@/components/shop/cart-drawer";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
@@ -37,6 +38,7 @@ export default async function LocaleLayout({
           <ShopHeader />
           <main className="min-h-[calc(100vh-4rem)]">{children}</main>
           <ShopFooter />
+          <CartDrawer />
         </NextIntlClientProvider>
       </body>
     </html>

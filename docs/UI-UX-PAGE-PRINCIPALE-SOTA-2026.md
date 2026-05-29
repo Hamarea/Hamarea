@@ -346,25 +346,28 @@ moment de l'offre. La sticky bar comble l'intervalle.
 
 ## 13. Backlog priorisé UI/UX
 
+Légende : ✅ fait · ◐ partiel · ☐ à faire (dépendance externe/décision).
+
 **P0 — conversion immédiate, faible coût**
-- [ ] Corriger le **H1** (bénéfice + coquille « Clippez »).
-- [ ] **Header landing épuré** (retirer « trouvez un magasin », limiter la nav).
-- [ ] **Cibles tactiles ≥ 44 px** (swatches, steppers, CTA mobile).
-- [ ] Sous les CTA : **icônes paiement + garantie + port offert 39 €** (visuels).
-- [ ] **Posters** sur les reels.
+- ✅ Corriger le **H1** (« Filmez sous l'eau. Ressortez au sec. » + accent contrasté).
+- ✅ **Header landing épuré** (retrait « trouver une boutique » et recherche ; menu mobile fonctionnel).
+- ✅ **Cibles tactiles** agrandies (swatches 40–44 px, steppers 44 px).
+- ✅ Sous les CTA : **réassurance + marques de paiement** (port offert/retours/garantie/sécurisé).
+- ☐ **Posters** sur les reels *(nécessite des images poster — assets à fournir)*.
 
 **P1 — leviers structurants**
-- [ ] **Mini-cart drawer** + **paiement express** (Apple/Google Pay).
-- [ ] **Avis-photo/UGC** + **remonter la preuve** près du hero.
-- [ ] **Barre de progression « port offert »** + **BNPL** dans la BuyBox/Bundle.
-- [ ] **Split hero** desktop (média + achat) en A/B test.
-- [ ] Cohérence de l'**histoire de remise**.
+- ◐ **Mini-cart drawer** livré (slide-in, progress port offert, “Commander”) ; **paiement express** Apple/Google Pay à brancher (Stripe Express Checkout — clés + domaine).
+- ☐ **Avis-photo/UGC** + remonter la preuve *(nécessite une vraie source d'avis)*.
+- ✅ **Barre de progression « port offert »** (drawer) + ligne **paiement en 3×** (BuyBox).
+- ☐ **Split hero** desktop *(test A/B ; direction artistique full-bleed conservée)*.
+- ◐ Cohérence remise (bannière neutralisée ; à finaliser côté données Omnibus).
+- ✅ Bonus : **“Acheter maintenant”** (achat direct) ajouté à la BuyBox.
 
 **P2 — finition & marchés**
-- [ ] **i18n réelle** de la landing.
-- [ ] Comparatif **compact mobile** ; zigzag média sur USP/HowItWorks.
-- [ ] **Stock réel** (remplacer la fausse rareté) ; presse sourcée ou retirée.
-- [ ] Page **succès** soignée (peak-end).
+- ☐ **i18n réelle** de la landing *(chantier de traduction fr/en/es/de)*.
+- ◐ Comparatif **compact mobile** ✅ ; zigzag média USP/HowItWorks ☐.
+- ◐ **Stock réel** : « édition limitée » retirée ✅ ; presse à sourcer ☐.
+- ✅ Page **succès** soignée (étapes « et maintenant ? » + réassurance).
 
 ---
 

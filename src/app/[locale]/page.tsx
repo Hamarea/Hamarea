@@ -90,12 +90,13 @@ export default async function HomePage({
               Bestseller de l&apos;été
             </span>
             <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,4rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] drop-shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
-              Filmez. Clipper.
+              Filmez sous l&apos;eau.
               <br />
-              <span className="text-[var(--color-accent-300,#fda4af)]">Plongez.</span>
+              <span className="text-[var(--color-secondary-200)]">Ressortez au sec.</span>
             </h1>
             <p className="mt-3 text-sm text-white/90 md:text-base">
-              Votre smartphone reste au sec. Sacoche certifiée IPX8 jusqu&apos;à 30 m.
+              Sacoche certifiée IPX8 jusqu&apos;à 30 m. Écran tactile, compatible
+              iPhone &amp; Android.
             </p>
             <div className="mt-5">
               <BuyBox variant="hero" compact />
