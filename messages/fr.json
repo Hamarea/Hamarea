@@ -219,5 +219,9 @@
   "legal": {
     "placeholder": "Cette page sera bientôt complétée. En attendant, contactez-nous pour toute question.",
     "lastUpdated": "Dernière mise à jour : {date}"
+  },
+  "pages": {
+    "aboutBody": "Hamarea sélectionne avec soin des produits et accessoires durables, pensés pour durer. Chaque pièce est choisie pour la qualité de ses matériaux, son origine, et la justesse de son design.",
+    "contactBody": "hello@hamarea.com — réponse sous 24-48h ouvrées."
   }
 }

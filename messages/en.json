@@ -219,5 +219,9 @@
   "legal": {
     "placeholder": "This page will be filled in shortly. Reach out if you have any question.",
     "lastUpdated": "Last updated: {date}"
+  },
+  "pages": {
+    "aboutBody": "Hamarea carefully selects durable products and accessories, built to last. Every piece is chosen for the quality of its materials, its origin, and the rightness of its design.",
+    "contactBody": "hello@hamarea.com — reply within 24-48 business hours."
   }
 }
