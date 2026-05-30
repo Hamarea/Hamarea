@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/utils";
 
@@ -59,20 +60,22 @@ export default async function OrdersPage() {
         <ul className="space-y-3">
           {orders.map((o) => (
             <li key={o.id}>
-              <Card className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium">{o.number}</p>
-                  <p className="text-xs text-[var(--color-muted)]">
-                    {new Date(o.created_at).toLocaleDateString()}
+              <Link href={`/account/orders/${o.id}` as never} className="block">
+                <Card className="flex items-center justify-between p-4 transition-colors hover:bg-[var(--color-primary-50)]">
+                  <div>
+                    <p className="font-medium">{o.number}</p>
+                    <p className="text-xs text-[var(--color-muted)]">
+                      {new Date(o.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Badge variant={STATUS_VARIANT[o.status] ?? "default"}>
+                    {t(`account.orderStatus.${o.status}` as never)}
+                  </Badge>
+                  <p className="font-semibold">
+                    {formatMoney(o.total_cents, o.currency)}
                   </p>
-                </div>
-                <Badge variant={STATUS_VARIANT[o.status] ?? "default"}>
-                  {t(`account.orderStatus.${o.status}` as never)}
-                </Badge>
-                <p className="font-semibold">
-                  {formatMoney(o.total_cents, o.currency)}
-                </p>
-              </Card>
+                </Card>
+              </Link>
             </li>
           ))}
         </ul>

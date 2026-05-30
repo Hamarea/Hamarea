@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { getProductBySlug } from "@/lib/queries";
 import { ImageGallery } from "@/components/shop/image-gallery";
 import { VariantPicker } from "@/components/shop/variant-picker";
+import { WishlistButton } from "@/components/shop/wishlist-button";
 
 export default async function ProductPage({
   params,
@@ -66,6 +67,7 @@ export default async function ProductPage({
               variants={p.variants}
               locale={locale}
             />
+            <WishlistButton productId={p.id} />
           </div>
 
           <section className="mt-10 border-t border-[var(--color-border)] pt-6">

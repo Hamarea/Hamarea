@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/utils";
 
@@ -72,8 +73,15 @@ export default async function AdminOrdersPage() {
               </tr>
             ) : (
               orders.map((o) => (
-                <tr key={o.id} className="border-b border-[var(--color-border)]">
-                  <td className="px-4 py-3 font-mono text-xs">{o.number}</td>
+                <tr key={o.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]">
+                  <td className="px-4 py-3 font-mono text-xs">
+                    <Link
+                      href={`/admin/orders/${o.id}` as never}
+                      className="text-[var(--color-primary-600)] hover:underline"
+                    >
+                      {o.number}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3">{o.email}</td>
                   <td className="px-4 py-3">
                     <Badge variant={STATUS_VARIANT[o.status] ?? "default"}>
