@@ -14,6 +14,7 @@ import {
   Star,
   ShieldCheck,
   Settings,
+  Truck,
 } from "lucide-react";
 
 const isSupabaseConfigured = () =>
@@ -70,6 +71,7 @@ export default async function AdminLayout({
   const items = [
     { href: "/admin", label: t("admin.dashboard"), icon: LayoutDashboard },
     { href: "/admin/products", label: t("admin.products"), icon: Package },
+    { href: "/admin/suppliers", label: "Fournisseurs", icon: Truck },
     { href: "/admin/orders", label: t("admin.orders"), icon: ShoppingBag },
     { href: "/admin/customers", label: t("admin.customers"), icon: Users },
     { href: "/admin/stock", label: t("admin.stock"), icon: Boxes },

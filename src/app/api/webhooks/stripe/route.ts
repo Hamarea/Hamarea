@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { sendEmail, orderConfirmationHtml } from "@/lib/email";
+import { trackPurchaseServer } from "@/lib/tracking";
 
 /**
  * Stripe webhook.
@@ -160,6 +161,16 @@ async function markOrderPaid(
       html: orderConfirmationHtml({ orderNumber: null, amountCents, currency }),
     });
   }
+
+  // Best-effort server-side Purchase conversion (no-op without CAPI creds).
+  // event_id = order id so it dedups against the browser pixel.
+  await trackPurchaseServer({
+    eventId: orderId,
+    email: email ?? null,
+    valueCents: amountCents,
+    currency,
+    sourceUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+  });
 }
 
 export async function POST(req: Request) {
