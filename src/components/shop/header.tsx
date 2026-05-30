@@ -1,29 +1,31 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { ShoppingBag, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/stores/cart";
 import { useCartUI } from "@/stores/cart-ui";
+import { getProductCopy } from "@/lib/product-content";
 import { LocaleSwitcher } from "./locale-switcher";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { href: "/#acheter", label: "La sacoche" },
-  { href: "/#avis", label: "Avis" },
-  { href: "/#faq", label: "FAQ" },
-];
-
 export function ShopHeader() {
   const t = useTranslations();
+  const nav = getProductCopy(useLocale()).nav;
   const pathname = usePathname();
   const isHome = pathname === "/";
   const count = useCart((s) => s.count());
   const openDrawer = useCartUI((s) => s.openDrawer);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const NAV = [
+    { href: "/#acheter", label: nav.sacoche },
+    { href: "/#avis", label: nav.avis },
+    { href: "/#faq", label: nav.faq },
+  ];
 
   useEffect(() => {
     if (!isHome) {
@@ -87,7 +89,7 @@ export function ShopHeader() {
               overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
             )}
           >
-            {t("nav.about")}
+            {nav.about}
           </Link>
         </nav>
 
@@ -160,7 +162,7 @@ export function ShopHeader() {
                 onClick={() => setMenuOpen(false)}
                 className="block rounded-md px-3 py-3 hover:bg-white"
               >
-                {t("nav.about")}
+                {nav.about}
               </Link>
             </li>
             <li>
@@ -169,7 +171,7 @@ export function ShopHeader() {
                 onClick={() => setMenuOpen(false)}
                 className="block rounded-md px-3 py-3 hover:bg-white"
               >
-                {t("nav.contact")}
+                {nav.contact}
               </Link>
             </li>
           </ul>

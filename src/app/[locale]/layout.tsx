@@ -7,6 +7,7 @@ import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
 import { CartDrawer } from "@/components/shop/cart-drawer";
 import { MotionProvider } from "@/components/motion-provider";
+import { getProductCopy } from "@/lib/product-content";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
@@ -28,6 +29,7 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
   const messages = await getMessages();
+  const copy = getProductCopy(locale);
 
   return (
     <html lang={locale} className={`${inter.variable} ${fraunces.variable}`}>
@@ -38,10 +40,10 @@ export default async function LocaleLayout({
               href="#main"
               className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-foreground)] focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]"
             >
-              Aller au contenu
+              {copy.skipToContent}
             </a>
             <div className="relative z-10 -mb-px bg-[var(--color-primary-900)] py-1.5 text-center text-[11px] font-medium uppercase tracking-wider text-white">
-              🌊 Livraison offerte dès 39€ · Retours gratuits 30j · Garantie 2 ans
+              {copy.banner}
             </div>
             <ShopHeader />
             <main id="main" tabIndex={-1} className="min-h-[calc(100vh-4rem)]">

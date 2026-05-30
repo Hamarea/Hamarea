@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { Volume2, VolumeX, Play } from "lucide-react";
 import { SACOCHE } from "@/lib/product";
+import { getProductCopy } from "@/lib/product-content";
 import { Reveal } from "@/components/ui/reveal";
+
+type ReelLabels = { play: string; soundOn: string; soundOff: string };
 
 export function VideoReel() {
   const reels: ReadonlyArray<{ src: string; caption?: string }> = SACOCHE.media.reels;
+  const copy = getProductCopy(useLocale()).reel;
   if (reels.length === 0) return null;
 
   return (
@@ -14,14 +19,10 @@ export function VideoReel() {
       <div className="container-page">
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/60">
-            En action
+            {copy.eyebrow}
           </p>
-          <h2 className="mt-2 font-display text-3xl md:text-4xl">
-            Voyez par vous-même.
-          </h2>
-          <p className="mt-3 text-sm text-white/70">
-            Pas de retouche, pas de mise en scène. Juste la sacoche, dans la vraie vie.
-          </p>
+          <h2 className="mt-2 font-display text-3xl md:text-4xl">{copy.heading}</h2>
+          <p className="mt-3 text-sm text-white/70">{copy.sub}</p>
         </Reveal>
 
         <div className="mt-10 -mx-4 overflow-x-auto px-4 pb-4 [scrollbar-width:thin] md:overflow-visible md:px-0">
@@ -33,7 +34,7 @@ export function VideoReel() {
                 delay={i * 0.08}
                 className="w-[78vw] shrink-0 snap-center sm:w-[60vw] md:w-auto"
               >
-                <ReelPlayer src={r.src} caption={r.caption} />
+                <ReelPlayer src={r.src} caption={copy.captions[i]} labels={copy} />
               </Reveal>
             ))}
           </ul>
@@ -46,9 +47,11 @@ export function VideoReel() {
 function ReelPlayer({
   src,
   caption,
+  labels,
 }: {
   src: string;
   caption?: string;
+  labels: ReelLabels;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
@@ -119,7 +122,7 @@ function ReelPlayer({
           type="button"
           onClick={togglePlay}
           className="absolute inset-0 grid place-items-center bg-black/30 backdrop-blur-[2px]"
-          aria-label="Lire"
+          aria-label={labels.play}
         >
           <span className="grid h-16 w-16 place-items-center rounded-full bg-white/90 text-[var(--color-foreground)]">
             <Play className="ml-1 h-7 w-7" />
@@ -131,7 +134,7 @@ function ReelPlayer({
       <button
         type="button"
         onClick={toggleSound}
-        aria-label={muted ? "Activer le son" : "Couper le son"}
+        aria-label={muted ? labels.soundOn : labels.soundOff}
         className="absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/70"
       >
         {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}

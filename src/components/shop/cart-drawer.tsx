@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import { X, Minus, Plus, ShoppingBag, ShieldCheck, Truck, Lock } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useCart } from "@/stores/cart";
 import { useCartUI } from "@/stores/cart-ui";
 import { formatMoney } from "@/lib/utils";
 import { SHIPPING } from "@/lib/product";
+import { getProductCopy } from "@/lib/product-content";
 
 /**
  * Slide-in mini-cart. Mounted once in the locale layout; opens on add-to-cart
@@ -22,6 +24,8 @@ export function CartDrawer() {
   const remove = useCart((s) => s.remove);
   const subtotal = useCart((s) => s.subtotalCents());
   const count = useCart((s) => s.count());
+  const locale = useLocale();
+  const t = getProductCopy(locale).cart;
 
   const panelRef = useRef<HTMLElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
@@ -87,17 +91,19 @@ export function CartDrawer() {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Votre panier"
+        aria-label={t.title}
         className={`fixed inset-y-0 right-0 z-[70] flex w-full max-w-md flex-col bg-[var(--color-surface)] shadow-2xl transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <header className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
-          <p className="font-display text-lg">Votre panier ({count})</p>
+          <p className="font-display text-lg">
+            {t.title} ({count})
+          </p>
           <button
             ref={closeBtnRef}
             onClick={close}
-            aria-label="Fermer le panier"
+            aria-label={t.close}
             className="grid h-11 w-11 place-items-center rounded-full hover:bg-[var(--color-bg)]"
           >
             <X className="h-5 w-5" />
@@ -107,23 +113,23 @@ export function CartDrawer() {
         {lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
             <ShoppingBag className="h-10 w-10 text-[var(--color-muted)]" />
-            <p className="text-[var(--color-muted)]">Votre panier est vide.</p>
-            <Button onClick={close}>Continuer mes achats</Button>
+            <p className="text-[var(--color-muted)]">{t.empty}</p>
+            <Button onClick={close}>{t.continue}</Button>
           </div>
         ) : (
           <>
             <div className="border-b border-[var(--color-border)] px-5 py-3">
               {toFree > 0 ? (
                 <p className="text-xs text-[var(--color-muted)]">
-                  Plus que{" "}
+                  {t.toFreePrefix}{" "}
                   <strong className="text-[var(--color-foreground)]">
-                    {formatMoney(toFree)}
+                    {formatMoney(toFree, "EUR", locale)}
                   </strong>{" "}
-                  pour la livraison offerte
+                  {t.toFreeSuffix}
                 </p>
               ) : (
                 <p className="text-xs font-medium text-[var(--color-secondary-600)]">
-                  🎉 Livraison offerte débloquée
+                  {t.freeUnlocked}
                 </p>
               )}
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-bg)]">
@@ -151,13 +157,13 @@ export function CartDrawer() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{l.name}</p>
                     <p className="text-xs text-[var(--color-muted)]">
-                      {formatMoney(l.unitPriceCents, l.currency)}
+                      {formatMoney(l.unitPriceCents, l.currency, locale)}
                     </p>
                     <div className="mt-2 inline-flex items-center rounded-md border border-[var(--color-border)]">
                       <button
                         className="grid h-11 w-11 place-items-center"
                         onClick={() => setQty(l.variantId, l.quantity - 1)}
-                        aria-label="Diminuer la quantité"
+                        aria-label={t.decreaseQty}
                       >
                         <Minus className="h-3.5 w-3.5" />
                       </button>
@@ -167,7 +173,7 @@ export function CartDrawer() {
                       <button
                         className="grid h-11 w-11 place-items-center"
                         onClick={() => setQty(l.variantId, l.quantity + 1)}
-                        aria-label="Augmenter la quantité"
+                        aria-label={t.increaseQty}
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>
@@ -177,7 +183,7 @@ export function CartDrawer() {
                     onClick={() => remove(l.variantId)}
                     className="self-start text-xs text-[var(--color-muted)] hover:text-[var(--color-danger)]"
                   >
-                    Retirer
+                    {t.remove}
                   </button>
                 </li>
               ))}
@@ -185,31 +191,31 @@ export function CartDrawer() {
 
             <footer className="border-t border-[var(--color-border)] p-5">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--color-muted)]">Sous-total</span>
+                <span className="text-[var(--color-muted)]">{t.subtotal}</span>
                 <span className="font-display text-lg font-bold tabular-nums">
-                  {formatMoney(subtotal)}
+                  {formatMoney(subtotal, "EUR", locale)}
                 </span>
               </div>
               <Button asChild size="lg" className="mt-4 w-full">
                 <Link href="/checkout" onClick={close}>
-                  Commander
+                  {t.checkout}
                 </Link>
               </Button>
               <button
                 onClick={close}
                 className="mt-2 w-full text-center text-xs text-[var(--color-muted)] hover:underline"
               >
-                Continuer mes achats
+                {t.continue}
               </button>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px] text-[var(--color-muted)]">
                 <span className="inline-flex items-center gap-1">
-                  <Lock className="h-3 w-3" /> Paiement sécurisé
+                  <Lock className="h-3 w-3" /> {t.securePay}
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <Truck className="h-3 w-3" /> Port offert dès 39€
+                  <Truck className="h-3 w-3" /> {t.freeShip}
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <ShieldCheck className="h-3 w-3" /> Garantie 2 ans
+                  <ShieldCheck className="h-3 w-3" /> {t.warranty}
                 </span>
               </div>
             </footer>

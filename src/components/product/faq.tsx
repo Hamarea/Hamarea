@@ -1,28 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
-import { SACOCHE } from "@/lib/product";
+import { getProductCopy } from "@/lib/product-content";
 import { Reveal } from "@/components/ui/reveal";
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
   const reduce = useReducedMotion();
+  const copy = getProductCopy(useLocale()).faq;
 
   return (
     <section id="faq" className="container-page max-w-3xl py-16 md:py-20 scroll-mt-20">
       <Reveal className="text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--color-primary-600)]">
-          Questions fréquentes
+          {copy.eyebrow}
         </p>
-        <h2 className="mt-2 font-display text-3xl md:text-4xl">
-          Tout ce qu&apos;il faut savoir.
-        </h2>
+        <h2 className="mt-2 font-display text-3xl md:text-4xl">{copy.heading}</h2>
       </Reveal>
 
       <ul className="mt-10 divide-y divide-[var(--color-border)] rounded-2xl border border-[var(--color-border)] bg-white">
-        {SACOCHE.faq.map((f, i) => {
+        {copy.items.map((f, i) => {
           const isOpen = open === i;
           const panelInner = (
             <div className="px-5 pb-5 text-sm text-[var(--color-muted)]">{f.a}</div>
