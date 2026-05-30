@@ -118,5 +118,9 @@
   "legal": {
     "placeholder": "Diese Seite wird bald ergänzt. Bitte melden Sie sich bei Fragen.",
     "lastUpdated": "Letzte Aktualisierung: {date}"
+  },
+  "pages": {
+    "aboutBody": "Hamarea wählt sorgfältig langlebige Produkte und Accessoires aus, gemacht für die Dauer. Jedes Stück wird nach der Qualität seiner Materialien, seiner Herkunft und der Stimmigkeit seines Designs ausgewählt.",
+    "contactBody": "hello@hamarea.com — Antwort innerhalb von 24-48 Werkstunden."
   }
 }
