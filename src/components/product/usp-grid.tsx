@@ -1,5 +1,6 @@
 import { Droplets, Fingerprint, Smartphone, Anchor } from "lucide-react";
-import { SACOCHE } from "@/lib/product";
+import { getLocale } from "next-intl/server";
+import { getProductCopy } from "@/lib/product-content";
 import { Reveal } from "@/components/ui/reveal";
 
 const ICONS = {
@@ -9,20 +10,19 @@ const ICONS = {
   anchor: Anchor,
 } as const;
 
-export function UspGrid() {
+export async function UspGrid() {
+  const copy = getProductCopy(await getLocale());
   return (
     <section className="container-page py-16 md:py-20">
       <Reveal className="mx-auto max-w-2xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[var(--color-primary-600)]">
-          Pourquoi Hamarea
+          {copy.usp.eyebrow}
         </p>
-        <h2 className="mt-2 font-display text-3xl md:text-4xl">
-          Conçue pour résister là où les autres lâchent.
-        </h2>
+        <h2 className="mt-2 font-display text-3xl md:text-4xl">{copy.usp.heading}</h2>
       </Reveal>
       <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {SACOCHE.usps.map((u, i) => {
-          const Icon = ICONS[u.icon as keyof typeof ICONS] ?? Droplets;
+        {copy.usp.items.map((u, i) => {
+          const Icon = ICONS[u.icon] ?? Droplets;
           return (
             <Reveal
               as="li"

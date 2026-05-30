@@ -83,6 +83,48 @@
     "continueShopping": "Continuer mes achats",
     "remove": "Retirer"
   },
+  "checkout": {
+    "previewMode": "Mode aperçu — définissez <code>STRIPE_SECRET_KEY</code> dans <code>.env.local</code> pour activer le paiement.",
+    "contactTitle": "Vos coordonnées",
+    "emailLabel": "E-mail",
+    "emailHint": "Pour le reçu et le suivi. L'adresse de livraison est saisie à l'étape suivante, sur la page sécurisée Stripe.",
+    "emailPlaceholder": "vous@exemple.com",
+    "shippingTitle": "Livraison",
+    "toFree": "Plus que <strong>{amount}</strong> pour la livraison offerte.",
+    "freeUnlocked": "🎉 Livraison offerte débloquée.",
+    "shippingStandard": "Livraison standard (3-5j)",
+    "shippingExpress": "Livraison express (1-2j)",
+    "free": "Offert",
+    "summary": "Récapitulatif",
+    "shippingFree": "Offerte",
+    "redirecting": "Redirection…",
+    "pay": "Payer {amount}",
+    "securePayment": "Paiement sécurisé par Stripe · CB · Apple Pay · Google Pay",
+    "viewProduct": "Voir le produit",
+    "emptyCart": "Votre panier est vide.",
+    "paymentError": "Erreur paiement",
+    "success": {
+      "thanks": "Merci pour votre commande ! 🎉",
+      "confirmed": "Votre paiement a été confirmé. Un e-mail récapitulatif vous a été envoyé.",
+      "step1Title": "Confirmation",
+      "step1Body": "Un e-mail récapitulatif arrive dans votre boîte.",
+      "step2Title": "Préparation",
+      "step2Body": "Votre commande est préparée avec soin.",
+      "step3Title": "Expédition",
+      "step3Body": "Vous recevez un lien de suivi dès l'envoi.",
+      "ref": "Réf. :",
+      "backHome": "Retour à l'accueil",
+      "viewOrders": "Voir mes commandes",
+      "question": "Une question ? Notre équipe répond sous 24 h · ",
+      "contactLink": "Nous contacter"
+    },
+    "cancel": {
+      "title": "Paiement annulé",
+      "body": "Votre panier est conservé. Vous pouvez réessayer quand vous voulez.",
+      "resume": "Reprendre le paiement",
+      "viewCart": "Voir mon panier"
+    }
+  },
   "auth": {
     "loginTitle": "Connexion",
     "signupTitle": "Créer un compte",

@@ -1,4 +1,5 @@
 import { SACOCHE } from "@/lib/product";
+import { getProductCopy } from "@/lib/product-content";
 
 /**
  * Structured data for the landing page.
@@ -9,7 +10,14 @@ import { SACOCHE } from "@/lib/product";
  * risks a Google manual action AND breaches the EU Omnibus Directive on fake
  * reviews. Flip the flag on only once real reviews feed this component.
  */
-export function ProductJsonLd({ siteUrl }: { siteUrl: string }) {
+export function ProductJsonLd({
+  siteUrl,
+  locale,
+}: {
+  siteUrl: string;
+  locale: string;
+}) {
+  const copy = getProductCopy(locale);
   const enableReviews =
     process.env.NEXT_PUBLIC_ENABLE_REVIEW_SCHEMA === "true";
 
@@ -18,8 +26,8 @@ export function ProductJsonLd({ siteUrl }: { siteUrl: string }) {
   const product: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: SACOCHE.name,
-    description: SACOCHE.tagline,
+    name: copy.productName,
+    description: copy.hero.subtitle,
     image: SACOCHE.colors.map((c) => `${siteUrl}${c.imageUrl}`),
     brand: { "@type": "Brand", name: "Hamarea" },
     sku: SACOCHE.id,
@@ -77,10 +85,10 @@ export function ProductJsonLd({ siteUrl }: { siteUrl: string }) {
       bestRating: 5,
       worstRating: 1,
     };
-    product.review = SACOCHE.reviews.map((r) => ({
+    product.review = copy.testimonials.reviews.map((r, i) => ({
       "@type": "Review",
       author: { "@type": "Person", name: r.author },
-      datePublished: r.date,
+      datePublished: SACOCHE.reviews[i]?.date,
       reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
       name: r.title,
       reviewBody: r.body,
@@ -91,15 +99,15 @@ export function ProductJsonLd({ siteUrl }: { siteUrl: string }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Accueil", item: siteUrl },
-      { "@type": "ListItem", position: 2, name: SACOCHE.name, item: siteUrl },
+      { "@type": "ListItem", position: 1, name: copy.nav.home, item: siteUrl },
+      { "@type": "ListItem", position: 2, name: copy.productName, item: siteUrl },
     ],
   };
 
   const faq = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: SACOCHE.faq.map((f) => ({
+    mainEntity: copy.faq.items.map((f) => ({
       "@type": "Question",
       name: f.q,
       acceptedAnswer: { "@type": "Answer", text: f.a },

@@ -83,6 +83,48 @@
     "continueShopping": "Continue shopping",
     "remove": "Remove"
   },
+  "checkout": {
+    "previewMode": "Preview mode — set <code>STRIPE_SECRET_KEY</code> in <code>.env.local</code> to enable payment.",
+    "contactTitle": "Your details",
+    "emailLabel": "Email",
+    "emailHint": "For the receipt and tracking. The shipping address is entered at the next step, on Stripe's secure page.",
+    "emailPlaceholder": "you@example.com",
+    "shippingTitle": "Shipping",
+    "toFree": "Only <strong>{amount}</strong> away from free shipping.",
+    "freeUnlocked": "🎉 Free shipping unlocked.",
+    "shippingStandard": "Standard delivery (3-5 days)",
+    "shippingExpress": "Express delivery (1-2 days)",
+    "free": "Free",
+    "summary": "Summary",
+    "shippingFree": "Free",
+    "redirecting": "Redirecting…",
+    "pay": "Pay {amount}",
+    "securePayment": "Secure payment by Stripe · Card · Apple Pay · Google Pay",
+    "viewProduct": "View the product",
+    "emptyCart": "Your cart is empty.",
+    "paymentError": "Payment error",
+    "success": {
+      "thanks": "Thank you for your order! 🎉",
+      "confirmed": "Your payment is confirmed. A summary email has been sent to you.",
+      "step1Title": "Confirmation",
+      "step1Body": "A summary email is on its way to your inbox.",
+      "step2Title": "Preparation",
+      "step2Body": "Your order is being carefully prepared.",
+      "step3Title": "Shipping",
+      "step3Body": "You'll get a tracking link as soon as it ships.",
+      "ref": "Ref.:",
+      "backHome": "Back to home",
+      "viewOrders": "View my orders",
+      "question": "A question? Our team replies within 24h · ",
+      "contactLink": "Contact us"
+    },
+    "cancel": {
+      "title": "Payment cancelled",
+      "body": "Your cart is saved. You can try again whenever you like.",
+      "resume": "Resume payment",
+      "viewCart": "View my cart"
+    }
+  },
   "auth": {
     "loginTitle": "Sign in",
     "signupTitle": "Create an account",

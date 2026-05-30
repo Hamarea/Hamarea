@@ -19,6 +19,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { CountUp } from "@/components/ui/count-up";
 import { SACOCHE } from "@/lib/product";
+import { getProductCopy } from "@/lib/product-content";
 
 export async function generateMetadata({
   params,
@@ -26,12 +27,12 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const copy = getProductCopy(locale);
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const path = locale === "fr" ? "/" : `/${locale}`;
   return {
-    title: "Hamarea — Sacoche étanche pour smartphone | IPX8 jusqu'à 30m",
-    description:
-      "Filmez, swipez, plongez. Sacoche waterproof certifiée IPX8 jusqu'à 30 m. Compatible iPhone & Android. Écran tactile sous l'eau. 3 couleurs.",
+    title: `${copy.productName} — IPX8 30 m`,
+    description: copy.hero.subtitle,
     alternates: {
       canonical: path,
       languages: {
@@ -43,9 +44,8 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      title: "Hamarea — Sacoche étanche pour smartphone",
-      description:
-        "Protégez votre smartphone partout : plage, piscine, kayak, randonnée. IPX8 30 m, écran tactile sous l'eau.",
+      title: copy.productName,
+      description: copy.hero.subtitle,
       url: `${base}${path}`,
       images: ["/hero.jpg"],
       type: "website",
@@ -62,10 +62,11 @@ export default async function HomePage({
   setRequestLocale(locale);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const copy = getProductCopy(locale);
 
   return (
     <>
-      <ProductJsonLd siteUrl={siteUrl} />
+      <ProductJsonLd siteUrl={siteUrl} locale={locale} />
       <ScrollProgress />
 
       {/* HERO full-bleed (passe sous le header sticky) */}
@@ -92,20 +93,19 @@ export default async function HomePage({
             <Reveal>
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
-                Bestseller de l&apos;été
+                {copy.hero.badge}
               </span>
             </Reveal>
             <Reveal delay={0.08}>
               <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,4rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] drop-shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
-                Filmez sous l&apos;eau.
+                {copy.hero.titleLine1}
                 <br />
-                <span className="text-[var(--color-secondary-200)]">Ressortez au sec.</span>
+                <span className="text-[var(--color-secondary-200)]">{copy.hero.titleLine2}</span>
               </h1>
             </Reveal>
             <Reveal delay={0.16}>
               <p className="mt-3 text-sm text-white/90 md:text-base">
-                Sacoche certifiée IPX8 jusqu&apos;à 30 m. Écran tactile, compatible
-                iPhone &amp; Android.
+                {copy.hero.subtitle}
               </p>
             </Reveal>
             <Reveal delay={0.24} className="mt-5">
@@ -138,18 +138,18 @@ export default async function HomePage({
         />
         <Reveal className="container-page relative z-10 text-center">
           <h2 className="mx-auto max-w-2xl font-display text-3xl md:text-5xl">
-            Prêt à protéger votre smartphone pour de bon ?
+            {copy.closing.heading}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-white/85">
-            Rejoignez les{" "}
-            <CountUp to={SACOCHE.unitsSold} suffix="+" className="font-semibold tabular-nums" />{" "}
-            clients qui ne sortent plus sans leur sacoche Hamarea.
+            {copy.closing.joinPrefix}
+            <CountUp to={SACOCHE.unitsSold} suffix="+" className="font-semibold tabular-nums" />
+            {copy.closing.joinSuffix}
           </p>
           <a
             href="#acheter"
             className="mt-8 inline-flex items-center justify-center rounded-full bg-white px-8 py-4 font-semibold text-[var(--color-foreground)] transition-transform hover:scale-105 active:scale-95"
           >
-            Je commande la mienne →
+            {copy.closing.cta}
           </a>
         </Reveal>
       </section>

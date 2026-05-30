@@ -1,21 +1,23 @@
 import { ShieldCheck, Truck, RotateCcw, Lock } from "lucide-react";
+import { getProductCopy } from "@/lib/product-content";
 
 /** Trust microcopy row, placed under primary CTAs. */
-export function Reassurance({ dark = false }: { dark?: boolean }) {
+export function Reassurance({ dark = false, locale }: { dark?: boolean; locale: string }) {
   const tone = dark ? "text-white/80" : "text-[var(--color-muted)]";
+  const r = getProductCopy(locale).reassurance;
   return (
     <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] ${tone}`}>
       <span className="inline-flex items-center gap-1">
-        <Truck className="h-3.5 w-3.5" /> Port offert dès 39€
+        <Truck className="h-3.5 w-3.5" /> {r.freeShip}
       </span>
       <span className="inline-flex items-center gap-1">
-        <RotateCcw className="h-3.5 w-3.5" /> Retours 30j
+        <RotateCcw className="h-3.5 w-3.5" /> {r.returns}
       </span>
       <span className="inline-flex items-center gap-1">
-        <ShieldCheck className="h-3.5 w-3.5" /> Garantie 2 ans
+        <ShieldCheck className="h-3.5 w-3.5" /> {r.warranty}
       </span>
       <span className="inline-flex items-center gap-1">
-        <Lock className="h-3.5 w-3.5" /> Paiement sécurisé
+        <Lock className="h-3.5 w-3.5" /> {r.securePay}
       </span>
     </div>
   );

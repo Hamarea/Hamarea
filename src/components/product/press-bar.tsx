@@ -1,10 +1,13 @@
+import { getLocale } from "next-intl/server";
 import { SACOCHE } from "@/lib/product";
+import { getProductCopy } from "@/lib/product-content";
 
-export function PressBar() {
+export async function PressBar() {
+  const copy = getProductCopy(await getLocale());
   return (
     <section className="py-10">
       <p className="text-center text-xs font-semibold uppercase tracking-[0.32em] text-[var(--color-muted)]">
-        Ils en parlent
+        {copy.press.eyebrow}
       </p>
       <div className="marquee-mask mt-4 overflow-hidden">
         <div className="animate-marquee flex w-max">

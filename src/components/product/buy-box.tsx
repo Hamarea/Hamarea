@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 import { Check, ShoppingBag, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
@@ -9,6 +10,7 @@ import { useCartUI } from "@/stores/cart-ui";
 import { useSelectedColor, useSelectedColor_current } from "@/stores/selected-color";
 import { formatMoney } from "@/lib/utils";
 import { SACOCHE } from "@/lib/product";
+import { getProductCopy } from "@/lib/product-content";
 import { PaymentMarks, Reassurance } from "@/components/product/reassurance";
 
 export function BuyBox({
@@ -21,20 +23,25 @@ export function BuyBox({
   const add = useCart((s) => s.add);
   const openDrawer = useCartUI((s) => s.openDrawer);
   const router = useRouter();
+  const locale = useLocale();
+  const copy = getProductCopy(locale);
   const color = useSelectedColor_current();
   const setColorId = useSelectedColor((s) => s.setId);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
+  const colorName = copy.colors.names[color.id];
+
   const buildLine = (): CartLine => ({
     variantId: color.variantId,
     productId: SACOCHE.id,
     slug: SACOCHE.slug,
-    name: `${SACOCHE.name} — ${color.name}`,
+    name: `${copy.productName} — ${colorName}`,
     image: color.imageUrl,
     unitPriceCents: SACOCHE.priceCents,
     currency: SACOCHE.currency,
     quantity: qty,
+    // Canonical (FR) colour name so the server can resolve price via colorByName.
     options: { color: color.name },
   });
 
@@ -62,7 +69,7 @@ export function BuyBox({
 
   const pad = compact ? "p-4" : "p-5 md:p-6";
   const priceSize = compact ? "text-2xl" : "text-3xl";
-  const swatchSize = compact ? "h-10 w-10" : "h-11 w-11";
+  const swatchSize = "h-11 w-11";
   const btnSize: "md" | "lg" = compact ? "md" : "lg";
   const gap = compact ? "mt-3" : "mt-5";
 
@@ -88,13 +95,13 @@ export function BuyBox({
           ))}
         </span>
         <span className={dark ? "text-white/85" : "text-[var(--color-muted)]"}>
-          {SACOCHE.rating}/5 · {SACOCHE.ratingCount.toLocaleString("fr-FR")} avis
+          {SACOCHE.rating}/5 · {SACOCHE.ratingCount.toLocaleString(locale)} {copy.buyBox.ratingSuffix}
         </span>
       </div>
 
       <div className="mt-2 flex items-baseline gap-2">
         <span className={`font-display ${priceSize} font-bold tabular-nums`}>
-          {formatMoney(SACOCHE.priceCents)}
+          {formatMoney(SACOCHE.priceCents, SACOCHE.currency, locale)}
         </span>
         {SACOCHE.compareAtCents && (
           <>
@@ -103,7 +110,7 @@ export function BuyBox({
                 dark ? "text-white/60" : "text-[var(--color-muted)]"
               }`}
             >
-              {formatMoney(SACOCHE.compareAtCents)}
+              {formatMoney(SACOCHE.compareAtCents, SACOCHE.currency, locale)}
             </span>
             <span className="rounded-full bg-[var(--color-danger,#dc2626)] px-1.5 py-0.5 text-[10px] font-semibold text-white">
               −{savingsPct}%
@@ -113,7 +120,10 @@ export function BuyBox({
       </div>
 
       <p className={`mt-1 text-[11px] ${dark ? "text-white/70" : "text-[var(--color-muted)]"}`}>
-        ou 3× {formatMoney(installment)} — paiement fractionné disponible
+        {copy.buyBox.installment.replace(
+          "{price}",
+          formatMoney(installment, SACOCHE.currency, locale),
+        )}
       </p>
 
       <div className={gap}>
@@ -122,7 +132,7 @@ export function BuyBox({
             dark ? "text-white/75" : "text-[var(--color-muted)]"
           }`}
         >
-          Couleur : <span className="font-semibold">{color.name}</span>
+          {copy.buyBox.colorLabel} <span className="font-semibold">{colorName}</span>
         </p>
         <div className="mt-1.5 flex gap-1.5">
           {SACOCHE.colors.map((c) => {
@@ -132,7 +142,7 @@ export function BuyBox({
                 key={c.id}
                 type="button"
                 onClick={() => setColorId(c.id)}
-                aria-label={`Couleur ${c.name}`}
+                aria-label={copy.buyBox.colorAria.replace("{name}", copy.colors.names[c.id])}
                 aria-pressed={active}
                 className={`grid ${swatchSize} place-items-center rounded-full ring-2 transition-all ${
                   active
@@ -165,8 +175,8 @@ export function BuyBox({
           <button
             type="button"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="grid h-11 w-10 place-items-center text-lg"
-            aria-label="Diminuer la quantité"
+            className="grid h-11 w-11 place-items-center text-lg"
+            aria-label={copy.buyBox.decreaseQty}
           >
             −
           </button>
@@ -174,8 +184,8 @@ export function BuyBox({
           <button
             type="button"
             onClick={() => setQty((q) => Math.min(10, q + 1))}
-            className="grid h-11 w-10 place-items-center text-lg"
-            aria-label="Augmenter la quantité"
+            className="grid h-11 w-11 place-items-center text-lg"
+            aria-label={copy.buyBox.increaseQty}
           >
             +
           </button>
@@ -183,12 +193,13 @@ export function BuyBox({
         <Button size={btnSize} className="flex-1" onClick={onAdd}>
           {added ? (
             <>
-              <Check className="h-4 w-4" /> Ajouté !
+              <Check className="h-4 w-4" /> {copy.buyBox.added}
             </>
           ) : (
             <>
               <ShoppingBag className="h-4 w-4" />
-              Ajouter — {formatMoney(SACOCHE.priceCents * qty)}
+              {copy.buyBox.addLabel}
+              {formatMoney(SACOCHE.priceCents * qty, SACOCHE.currency, locale)}
             </>
           )}
         </Button>
@@ -201,12 +212,12 @@ export function BuyBox({
           className="mt-2 w-full"
           onClick={onBuyNow}
         >
-          <Zap className="h-4 w-4" /> Acheter maintenant
+          <Zap className="h-4 w-4" /> {copy.buyBox.buyNow}
         </Button>
       )}
 
       <div className={`${compact ? "mt-3" : "mt-4"} space-y-2`}>
-        <Reassurance dark={dark} />
+        <Reassurance dark={dark} locale={locale} />
         {!compact && <PaymentMarks dark={dark} />}
       </div>
     </div>
