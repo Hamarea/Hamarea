@@ -132,7 +132,7 @@ function ReelPlayer({
         type="button"
         onClick={toggleSound}
         aria-label={muted ? "Activer le son" : "Couper le son"}
-        className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/70"
+        className="absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition-colors hover:bg-black/70"
       >
         {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
       </button>

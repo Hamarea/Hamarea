@@ -62,7 +62,7 @@ export function BuyBox({
 
   const pad = compact ? "p-4" : "p-5 md:p-6";
   const priceSize = compact ? "text-2xl" : "text-3xl";
-  const swatchSize = compact ? "h-10 w-10" : "h-11 w-11";
+  const swatchSize = "h-11 w-11";
   const btnSize: "md" | "lg" = compact ? "md" : "lg";
   const gap = compact ? "mt-3" : "mt-5";
 
@@ -165,7 +165,7 @@ export function BuyBox({
           <button
             type="button"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="grid h-11 w-10 place-items-center text-lg"
+            className="grid h-11 w-11 place-items-center text-lg"
             aria-label="Diminuer la quantité"
           >
             −
@@ -174,7 +174,7 @@ export function BuyBox({
           <button
             type="button"
             onClick={() => setQty((q) => Math.min(10, q + 1))}
-            className="grid h-11 w-10 place-items-center text-lg"
+            className="grid h-11 w-11 place-items-center text-lg"
             aria-label="Augmenter la quantité"
           >
             +

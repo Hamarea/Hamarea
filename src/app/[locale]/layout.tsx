@@ -34,11 +34,19 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <MotionProvider>
+            <a
+              href="#main"
+              className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[var(--color-foreground)] focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]"
+            >
+              Aller au contenu
+            </a>
             <div className="relative z-10 -mb-px bg-[var(--color-primary-900)] py-1.5 text-center text-[11px] font-medium uppercase tracking-wider text-white">
               🌊 Livraison offerte dès 39€ · Retours gratuits 30j · Garantie 2 ans
             </div>
             <ShopHeader />
-            <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+            <main id="main" tabIndex={-1} className="min-h-[calc(100vh-4rem)]">
+              {children}
+            </main>
             <ShopFooter />
             <CartDrawer />
           </MotionProvider>

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X, Minus, Plus, ShoppingBag, ShieldCheck, Truck, Lock } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -23,17 +23,48 @@ export function CartDrawer() {
   const subtotal = useCart((s) => s.subtotalCents());
   const count = useCart((s) => s.count());
 
+  const panelRef = useRef<HTMLElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!open) return;
+    // Remember the trigger so focus can return to it on close.
+    restoreRef.current = document.activeElement as HTMLElement | null;
+    // Move focus into the dialog.
+    closeBtnRef.current?.focus();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") {
+        close();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const root = panelRef.current;
+      if (!root) return;
+      const nodes = root.querySelectorAll<HTMLElement>(
+        'a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])',
+      );
+      if (nodes.length === 0) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
+
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+      restoreRef.current?.focus?.();
     };
   }, [open, close]);
 
@@ -53,6 +84,7 @@ export function CartDrawer() {
         }`}
       />
       <aside
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Votre panier"
@@ -63,6 +95,7 @@ export function CartDrawer() {
         <header className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
           <p className="font-display text-lg">Votre panier ({count})</p>
           <button
+            ref={closeBtnRef}
             onClick={close}
             aria-label="Fermer le panier"
             className="grid h-11 w-11 place-items-center rounded-full hover:bg-[var(--color-bg)]"
@@ -122,7 +155,7 @@ export function CartDrawer() {
                     </p>
                     <div className="mt-2 inline-flex items-center rounded-md border border-[var(--color-border)]">
                       <button
-                        className="grid h-9 w-9 place-items-center"
+                        className="grid h-11 w-11 place-items-center"
                         onClick={() => setQty(l.variantId, l.quantity - 1)}
                         aria-label="Diminuer la quantité"
                       >
@@ -132,7 +165,7 @@ export function CartDrawer() {
                         {l.quantity}
                       </span>
                       <button
-                        className="grid h-9 w-9 place-items-center"
+                        className="grid h-11 w-11 place-items-center"
                         onClick={() => setQty(l.variantId, l.quantity + 1)}
                         aria-label="Augmenter la quantité"
                       >

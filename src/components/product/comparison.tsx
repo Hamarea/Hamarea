@@ -26,44 +26,85 @@ export function Comparison() {
           Pourquoi payer 60€ ailleurs pour avoir moins ?
         </p>
       </Reveal>
-      <Reveal delay={0.1} className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white">
-        <table className="w-full text-xs sm:text-sm">
-          <thead className="bg-[var(--color-bg)] text-left">
-            <tr>
-              <th className="px-3 py-3 sm:px-5 sm:py-4 font-semibold">Critère</th>
-              <th className="px-3 py-3 sm:px-5 sm:py-4 text-center font-display text-base font-semibold text-[var(--color-primary-700)]">
-                Hamarea
-              </th>
-              <th className="px-3 py-3 sm:px-5 sm:py-4 text-center font-semibold text-[var(--color-muted)]">
-                Sacoche classique
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {ROWS.map((r, i) => (
-              <tr
-                key={r.feature}
-                className={i % 2 === 0 ? "bg-white" : "bg-[var(--color-bg)]/50"}
-              >
-                <td className="px-3 py-2.5 sm:px-5 sm:py-3">{r.feature}</td>
-                <td className="px-3 py-2.5 sm:px-5 sm:py-3 text-center">
-                  {r.us ? (
-                    <Check className="mx-auto h-5 w-5 text-[var(--color-success,#16a34a)]" />
-                  ) : (
-                    <X className="mx-auto h-5 w-5 text-[var(--color-muted)]" />
-                  )}
-                </td>
-                <td className="px-3 py-2.5 sm:px-5 sm:py-3 text-center">
-                  {r.them ? (
-                    <Check className="mx-auto h-5 w-5 text-[var(--color-success,#16a34a)]" />
-                  ) : (
-                    <X className="mx-auto h-5 w-5 text-[var(--color-danger,#dc2626)]/70" />
-                  )}
-                </td>
+      <Reveal
+        delay={0.1}
+        className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white"
+      >
+        {/* Scroll horizontally under ~360px rather than cramming the columns. */}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[34rem] text-xs sm:text-sm">
+            <caption className="sr-only">
+              Comparatif Hamarea contre une sacoche étanche classique
+            </caption>
+            <thead className="bg-[var(--color-bg)] text-left">
+              <tr>
+                <th scope="col" className="px-3 py-3 sm:px-5 sm:py-4 font-semibold">
+                  Critère
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-3 sm:px-5 sm:py-4 text-center font-display text-base font-semibold text-[var(--color-primary-700)]"
+                >
+                  Hamarea
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-3 sm:px-5 sm:py-4 text-center font-semibold text-[var(--color-muted)]"
+                >
+                  Sacoche classique
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {ROWS.map((r, i) => (
+                <tr
+                  key={r.feature}
+                  className={i % 2 === 0 ? "bg-white" : "bg-[var(--color-bg)]/50"}
+                >
+                  <td className="px-3 py-2.5 sm:px-5 sm:py-3">{r.feature}</td>
+                  <td className="px-3 py-2.5 sm:px-5 sm:py-3 text-center">
+                    {r.us ? (
+                      <>
+                        <Check
+                          aria-hidden
+                          className="mx-auto h-5 w-5 text-[var(--color-success,#16a34a)]"
+                        />
+                        <span className="sr-only">Oui</span>
+                      </>
+                    ) : (
+                      <>
+                        <X
+                          aria-hidden
+                          className="mx-auto h-5 w-5 text-[var(--color-muted)]"
+                        />
+                        <span className="sr-only">Non</span>
+                      </>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 sm:px-5 sm:py-3 text-center">
+                    {r.them ? (
+                      <>
+                        <Check
+                          aria-hidden
+                          className="mx-auto h-5 w-5 text-[var(--color-success,#16a34a)]"
+                        />
+                        <span className="sr-only">Oui</span>
+                      </>
+                    ) : (
+                      <>
+                        <X
+                          aria-hidden
+                          className="mx-auto h-5 w-5 text-[var(--color-danger,#dc2626)]/70"
+                        />
+                        <span className="sr-only">Non</span>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Reveal>
     </section>
   );

@@ -14,15 +14,31 @@ export function StickyBuyBar() {
   const openDrawer = useCartUI((s) => s.openDrawer);
   const color = useSelectedColor_current();
   const setColorId = useSelectedColor((s) => s.setId);
-  const [visible, setVisible] = useState(false);
+  const [pastHero, setPastHero] = useState(false);
+  const [footerInView, setFooterInView] = useState(false);
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 600);
+    const onScroll = () => setPastHero(window.scrollY > 600);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Hide the bar as the footer approaches: it's fixed and would otherwise float
+  // over the closing CTA and the footer's legal links on mobile.
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setFooterInView(entry.isIntersecting),
+      { rootMargin: "0px 0px -40% 0px" },
+    );
+    io.observe(footer);
+    return () => io.disconnect();
+  }, []);
+
+  const visible = pastHero && !footerInView;
 
   const onAdd = () => {
     add({
@@ -43,7 +59,7 @@ export function StickyBuyBar() {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-white/95 px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur transition-transform duration-300 ${
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur transition-transform duration-300 ${
         visible ? "translate-y-0" : "translate-y-full"
       }`}
     >
@@ -69,7 +85,7 @@ export function StickyBuyBar() {
                 onClick={() => setColorId(c.id)}
                 aria-label={`Couleur ${c.name}`}
                 aria-pressed={active}
-                className={`h-10 w-10 rounded-full ring-2 transition-all ${
+                className={`h-11 w-11 rounded-full ring-2 transition-all ${
                   active
                     ? "ring-[var(--color-primary-600)] scale-110"
                     : "ring-[var(--color-border)]"
