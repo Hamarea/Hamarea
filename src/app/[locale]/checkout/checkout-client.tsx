@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useCart } from "@/stores/cart";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,15 +11,18 @@ import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/utils";
 import { SHIPPING } from "@/lib/product";
 
-const SHIPPING_LABELS = {
-  standard: { label: "Livraison standard (3-5j)", cents: SHIPPING.standardCents },
-  express: { label: "Livraison express (1-2j)", cents: SHIPPING.expressCents },
+const SHIPPING_CENTS = {
+  standard: SHIPPING.standardCents,
+  express: SHIPPING.expressCents,
 } as const;
 
-type ShippingMethod = keyof typeof SHIPPING_LABELS;
+type ShippingMethod = keyof typeof SHIPPING_CENTS;
 
 export function CheckoutClient() {
   const router = useRouter();
+  const t = useTranslations("checkout");
+  const tc = useTranslations("cart");
+  const locale = useLocale();
   const lines = useCart((s) => s.lines);
   const subtotal = useCart((s) => s.subtotalCents());
   const [email, setEmail] = useState("");
@@ -27,19 +31,21 @@ export function CheckoutClient() {
   const [error, setError] = useState<string | null>(null);
 
   const shippingCents = useMemo(
-    () =>
-      subtotal >= SHIPPING.freeAboveCents ? 0 : SHIPPING_LABELS[shipping].cents,
+    () => (subtotal >= SHIPPING.freeAboveCents ? 0 : SHIPPING_CENTS[shipping]),
     [subtotal, shipping],
   );
   const total = subtotal + shippingCents;
   const toFree = Math.max(0, SHIPPING.freeAboveCents - subtotal);
 
+  const shippingLabel = (m: ShippingMethod) =>
+    m === "express" ? t("shippingExpress") : t("shippingStandard");
+
   if (lines.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-[var(--color-muted)]">Votre panier est vide.</p>
+        <p className="text-[var(--color-muted)]">{t("emptyCart")}</p>
         <Button className="mt-4" onClick={() => router.push("/")}>
-          Voir le produit
+          {t("viewProduct")}
         </Button>
       </Card>
     );
@@ -68,13 +74,13 @@ export function CheckoutClient() {
       if (!res.ok) {
         const { error: message } = (await res
           .json()
-          .catch(() => ({ error: "Erreur paiement" }))) as { error?: string };
-        throw new Error(message ?? "Erreur paiement");
+          .catch(() => ({ error: t("paymentError") }))) as { error?: string };
+        throw new Error(message ?? t("paymentError"));
       }
       const { url } = (await res.json()) as { url: string };
       window.location.assign(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur paiement");
+      setError(err instanceof Error ? err.message : t("paymentError"));
       setSubmitting(false);
     }
   };
@@ -83,9 +89,9 @@ export function CheckoutClient() {
     <form onSubmit={pay} className="grid gap-6 md:grid-cols-[1fr_360px]">
       <div className="space-y-4">
         <Card className="p-6">
-          <h2 className="mb-4 font-medium">Vos coordonnées</h2>
+          <h2 className="mb-4 font-medium">{t("contactTitle")}</h2>
           <div className="space-y-1.5">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email">{t("emailLabel")}</Label>
             <Input
               id="email"
               name="email"
@@ -94,32 +100,30 @@ export function CheckoutClient() {
               required
               value={email}
               onChange={(ev) => setEmail(ev.target.value)}
-              placeholder="vous@exemple.com"
+              placeholder={t("emailPlaceholder")}
             />
-            <p className="text-xs text-[var(--color-muted)]">
-              Pour le reçu et le suivi. L&apos;adresse de livraison est saisie à
-              l&apos;étape suivante, sur la page sécurisée Stripe.
-            </p>
+            <p className="text-xs text-[var(--color-muted)]">{t("emailHint")}</p>
           </div>
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-4 font-medium">Livraison</h2>
+          <h2 className="mb-4 font-medium">{t("shippingTitle")}</h2>
           {toFree > 0 ? (
             <p className="mb-3 rounded-md bg-[var(--color-primary-50)] px-3 py-2 text-xs text-[var(--color-primary-700)]">
-              Plus que <strong>{formatMoney(toFree)}</strong> pour la livraison
-              offerte.
+              {t.rich("toFree", {
+                amount: formatMoney(toFree, "EUR", locale),
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </p>
           ) : (
             <p className="mb-3 rounded-md bg-[var(--color-secondary-50)] px-3 py-2 text-xs text-[var(--color-secondary-700)]">
-              🎉 Livraison offerte débloquée.
+              {t("freeUnlocked")}
             </p>
           )}
           <div className="space-y-2">
-            {(Object.keys(SHIPPING_LABELS) as ShippingMethod[]).map((m) => {
-              const opt = SHIPPING_LABELS[m];
+            {(Object.keys(SHIPPING_CENTS) as ShippingMethod[]).map((m) => {
               const cents =
-                subtotal >= SHIPPING.freeAboveCents ? 0 : opt.cents;
+                subtotal >= SHIPPING.freeAboveCents ? 0 : SHIPPING_CENTS[m];
               return (
                 <label
                   key={m}
@@ -137,10 +141,10 @@ export function CheckoutClient() {
                       checked={shipping === m}
                       onChange={() => setShipping(m)}
                     />
-                    {opt.label}
+                    {shippingLabel(m)}
                   </span>
                   <span className="font-medium">
-                    {cents === 0 ? "Offert" : formatMoney(cents)}
+                    {cents === 0 ? t("free") : formatMoney(cents, "EUR", locale)}
                   </span>
                 </label>
               );
@@ -157,7 +161,7 @@ export function CheckoutClient() {
 
       <aside>
         <Card className="sticky top-24 p-6">
-          <h3 className="mb-3 font-medium">Récapitulatif</h3>
+          <h3 className="mb-3 font-medium">{t("summary")}</h3>
           <ul className="space-y-2 text-sm">
             {lines.map((l) => (
               <li key={l.variantId} className="flex justify-between gap-2">
@@ -168,24 +172,30 @@ export function CheckoutClient() {
                   </span>
                 </span>
                 <span className="shrink-0 tabular-nums">
-                  {formatMoney(l.unitPriceCents * l.quantity)}
+                  {formatMoney(l.unitPriceCents * l.quantity, l.currency, locale)}
                 </span>
               </li>
             ))}
           </ul>
           <div className="mt-4 space-y-1 border-t border-[var(--color-border)] pt-3 text-sm">
-            <Row label="Sous-total" value={formatMoney(subtotal)} />
+            <Row label={tc("subtotal")} value={formatMoney(subtotal, "EUR", locale)} />
             <Row
-              label="Livraison"
-              value={shippingCents === 0 ? "Offerte" : formatMoney(shippingCents)}
+              label={tc("shipping")}
+              value={
+                shippingCents === 0
+                  ? t("shippingFree")
+                  : formatMoney(shippingCents, "EUR", locale)
+              }
             />
-            <Row label="Total" value={formatMoney(total)} bold />
+            <Row label={tc("total")} value={formatMoney(total, "EUR", locale)} bold />
           </div>
           <Button type="submit" className="mt-5 w-full" disabled={submitting}>
-            {submitting ? "Redirection…" : `Payer ${formatMoney(total)}`}
+            {submitting
+              ? t("redirecting")
+              : t("pay", { amount: formatMoney(total, "EUR", locale) })}
           </Button>
           <p className="mt-3 text-center text-[11px] text-[var(--color-muted)]">
-            Paiement sécurisé par Stripe · CB · Apple Pay · Google Pay
+            {t("securePayment")}
           </p>
         </Card>
       </aside>

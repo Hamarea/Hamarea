@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Trash2, Minus, Plus } from "lucide-react";
 
 export default function CartPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const { lines, setQty, remove, subtotalCents } = useCart();
   const subtotal = subtotalCents();
   const shipping =
@@ -44,7 +45,7 @@ export default function CartPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{l.name}</p>
                     <p className="text-sm text-[var(--color-muted)]">
-                      {formatMoney(l.unitPriceCents, l.currency)}
+                      {formatMoney(l.unitPriceCents, l.currency, locale)}
                     </p>
                   </div>
                   <div className="flex items-center rounded-md border border-[var(--color-border)]">
@@ -67,7 +68,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <p className="w-24 text-right font-semibold">
-                    {formatMoney(l.unitPriceCents * l.quantity, l.currency)}
+                    {formatMoney(l.unitPriceCents * l.quantity, l.currency, locale)}
                   </p>
                   <Button
                     variant="ghost"
@@ -83,22 +84,24 @@ export default function CartPage() {
           </ul>
 
           <Card className="h-fit p-6 sticky top-20">
-            <h2 className="font-display text-xl mb-4">Récapitulatif</h2>
+            <h2 className="font-display text-xl mb-4">{t("checkout.summary")}</h2>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-[var(--color-muted)]">{t("cart.subtotal")}</dt>
-                <dd className="font-medium">{formatMoney(subtotal)}</dd>
+                <dd className="font-medium">{formatMoney(subtotal, "EUR", locale)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-[var(--color-muted)]">{t("cart.shipping")}</dt>
                 <dd className="font-medium">
-                  {shipping === 0 ? t("common.freeShipping") : formatMoney(shipping)}
+                  {shipping === 0
+                    ? t("common.freeShipping")
+                    : formatMoney(shipping, "EUR", locale)}
                 </dd>
               </div>
               <div className="border-t border-[var(--color-border)] pt-3 mt-3 flex justify-between text-base">
                 <dt className="font-semibold">{t("cart.total")}</dt>
                 <dd className="font-bold text-[var(--color-primary-700)]">
-                  {formatMoney(total)}
+                  {formatMoney(total, "EUR", locale)}
                 </dd>
               </div>
             </dl>

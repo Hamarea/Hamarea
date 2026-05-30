@@ -1,14 +1,9 @@
+import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { CheckCircle2, Mail, Package, Truck } from "lucide-react";
 import { ClearCart } from "./clear-cart";
-
-const STEPS = [
-  { icon: Mail, title: "Confirmation", body: "Un e-mail récapitulatif arrive dans votre boîte." },
-  { icon: Package, title: "Préparation", body: "Votre commande est préparée avec soin." },
-  { icon: Truck, title: "Expédition", body: "Vous recevez un lien de suivi dès l'envoi." },
-];
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -16,20 +11,25 @@ export default async function CheckoutSuccessPage({
   searchParams: Promise<{ session_id?: string }>;
 }) {
   const { session_id } = await searchParams;
+  const t = await getTranslations("checkout.success");
+
+  const steps = [
+    { Icon: Mail, title: t("step1Title"), body: t("step1Body") },
+    { Icon: Package, title: t("step2Title"), body: t("step2Body") },
+    { Icon: Truck, title: t("step3Title"), body: t("step3Body") },
+  ];
 
   return (
     <section className="container-page max-w-2xl py-16">
       <ClearCart />
       <Card className="p-8 text-center">
         <CheckCircle2 className="mx-auto h-14 w-14 text-[var(--color-success,#16a34a)]" />
-        <h1 className="mt-4 mb-2 font-display text-3xl">Merci pour votre commande ! 🎉</h1>
-        <p className="text-[var(--color-muted)]">
-          Votre paiement a été confirmé. Un e-mail récapitulatif vous a été envoyé.
-        </p>
+        <h1 className="mt-4 mb-2 font-display text-3xl">{t("thanks")}</h1>
+        <p className="text-[var(--color-muted)]">{t("confirmed")}</p>
 
         <ol className="mt-8 grid gap-4 text-left sm:grid-cols-3">
-          {STEPS.map((s, i) => {
-            const Icon = s.icon;
+          {steps.map((s, i) => {
+            const Icon = s.Icon;
             return (
               <li
                 key={s.title}
@@ -49,22 +49,22 @@ export default async function CheckoutSuccessPage({
 
         {session_id && (
           <p className="mt-6 font-mono text-xs text-[var(--color-muted)]">
-            Réf. : {session_id}
+            {t("ref")} {session_id}
           </p>
         )}
 
         <div className="mt-6 flex justify-center gap-2">
           <Button asChild>
-            <Link href="/">Retour à l&apos;accueil</Link>
+            <Link href="/">{t("backHome")}</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/account/orders">Voir mes commandes</Link>
+            <Link href="/account/orders">{t("viewOrders")}</Link>
           </Button>
         </div>
         <p className="mt-4 text-xs text-[var(--color-muted)]">
-          Une question ? Notre équipe répond sous 24 h ·{" "}
+          {t("question")}
           <Link href="/contact" className="underline">
-            Nous contacter
+            {t("contactLink")}
           </Link>
         </p>
       </Card>
