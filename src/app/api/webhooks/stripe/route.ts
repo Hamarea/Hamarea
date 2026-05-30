@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
+import { sendEmail, orderConfirmationHtml } from "@/lib/email";
+import { trackPurchaseServer } from "@/lib/tracking";
 
 /**
  * Stripe webhook.
@@ -96,6 +98,7 @@ async function markOrderPaid(
     raw: unknown;
     shippingAddress?: AddressJson | null;
     billingAddress?: AddressJson | null;
+    email?: string | null;
   },
 ) {
   const {
@@ -106,6 +109,7 @@ async function markOrderPaid(
     raw,
     shippingAddress,
     billingAddress,
+    email,
   } = params;
 
   const { data: updated, error: updErr } = await sb
@@ -148,6 +152,25 @@ async function markOrderPaid(
   if (rpcErr) {
     console.error("[stripe webhook] stock decrement failed", orderId, rpcErr);
   }
+
+  // Best-effort order confirmation email (no-op when Resend is not configured).
+  if (email) {
+    await sendEmail({
+      to: email,
+      subject: "Votre commande est confirmée",
+      html: orderConfirmationHtml({ orderNumber: null, amountCents, currency }),
+    });
+  }
+
+  // Best-effort server-side Purchase conversion (no-op without CAPI creds).
+  // event_id = order id so it dedups against the browser pixel.
+  await trackPurchaseServer({
+    eventId: orderId,
+    email: email ?? null,
+    valueCents: amountCents,
+    currency,
+    sourceUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+  });
 }
 
 export async function POST(req: Request) {
@@ -217,6 +240,7 @@ export async function POST(req: Request) {
         raw: session,
         shippingAddress: shipping,
         billingAddress: billing,
+        email: loose.customer_details?.email ?? session.customer_email ?? null,
       });
     }
   } else if (event.type === "payment_intent.succeeded") {
@@ -229,6 +253,7 @@ export async function POST(req: Request) {
         amountCents: pi.amount,
         currency: pi.currency,
         raw: pi,
+        email: pi.receipt_email ?? null,
       });
     }
   }

@@ -101,5 +101,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|.*\\..*).*)"],
+  // Exclude `_next`, `api`, the OAuth/recovery `auth` callback, and any file
+  // with an extension. `/auth/*` must bypass the intl middleware so the PKCE
+  // code exchange is not swallowed by a locale redirect.
+  matcher: ["/((?!_next|api|auth|.*\\..*).*)"],
 };

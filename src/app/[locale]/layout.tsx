@@ -8,6 +8,8 @@ import { ShopFooter } from "@/components/shop/footer";
 import { CartDrawer } from "@/components/shop/cart-drawer";
 import { MotionProvider } from "@/components/motion-provider";
 import { getProductCopy } from "@/lib/product-content";
+import { ConsentBanner } from "@/components/consent/consent-banner";
+import { Analytics } from "@/components/analytics";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
@@ -51,6 +53,8 @@ export default async function LocaleLayout({
             </main>
             <ShopFooter />
             <CartDrawer />
+            <ConsentBanner />
+            <Analytics />
           </MotionProvider>
         </NextIntlClientProvider>
       </body>

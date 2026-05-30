@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { saveSite, saveShipping } from "./actions";
 
@@ -106,9 +107,12 @@ export default async function AdminSettingsPage() {
         <Card className="p-6">
           <h2 className="font-medium mb-2">Équipe &amp; rôles</h2>
           <p className="text-sm text-[var(--color-muted)]">
-            Gestion des rôles (admin / staff / customer) sur{" "}
-            <code>profiles.role</code> — interface à venir. Pour l&apos;instant,
-            promouvoir un utilisateur en SQL :
+            La gestion des rôles (admin / staff / customer) se fait désormais dans{" "}
+            <Link href="/admin/customers" className="text-[var(--color-primary-600)] underline">
+              Clients
+            </Link>{" "}
+            (réservé aux administrateurs). Le tout premier admin doit être promu une
+            seule fois en SQL :
           </p>
           <code className="mt-2 block rounded bg-[var(--color-bg)] px-2 py-1 text-xs">
             update profiles set role = &apos;admin&apos; where email = &apos;moi@hamarea.com&apos;;
