@@ -47,6 +47,12 @@ export default async function AccountLayout({
         >
           {t("account.wishlist")}
         </Link>
+        <Link
+          href="/account/security"
+          className="block rounded-md px-3 py-2 hover:bg-[var(--color-primary-50)]"
+        >
+          Sécurité
+        </Link>
         <div className="pt-4">
           <LogoutButton />
         </div>

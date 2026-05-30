@@ -1,26 +1,21 @@
 import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
-
-type Row = {
-  id: string;
-  email: string | null;
-  full_name: string | null;
-  role: string;
-  created_at: string;
-};
+import { getActor } from "@/lib/auth";
+import { CustomerRow, type CustomerView } from "./customer-row";
 
 export default async function AdminCustomersPage() {
   const t = await getTranslations();
   const supabase = await createClient();
+  const actor = await getActor();
+  const canManage = actor?.role === "admin";
 
-  let rows: Row[] = [];
+  let rows: CustomerView[] = [];
   try {
     const { data } = await (supabase as unknown as {
       from: (t: string) => {
         select: (q: string) => {
-          order: (k: string, opts: { ascending: boolean }) => Promise<{ data: Row[] | null }>;
+          order: (k: string, opts: { ascending: boolean }) => Promise<{ data: CustomerView[] | null }>;
         };
       };
     })
@@ -34,7 +29,12 @@ export default async function AdminCustomersPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl mb-6">{t("admin.customers")}</h1>
+      <h1 className="font-display text-3xl mb-2">{t("admin.customers")}</h1>
+      <p className="mb-6 text-sm text-[var(--color-muted)]">
+        {canManage
+          ? "Vous pouvez promouvoir un client en staff ou admin."
+          : "La gestion des rôles est réservée aux administrateurs."}
+      </p>
       <Card>
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
@@ -54,26 +54,12 @@ export default async function AdminCustomersPage() {
               </tr>
             ) : (
               rows.map((c) => (
-                <tr key={c.id} className="border-b border-[var(--color-border)]">
-                  <td className="px-4 py-3 font-medium">{c.full_name ?? "—"}</td>
-                  <td className="px-4 py-3">{c.email}</td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      variant={
-                        c.role === "admin"
-                          ? "accent"
-                          : c.role === "staff"
-                          ? "secondary"
-                          : "outline"
-                      }
-                    >
-                      {c.role}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--color-muted)]">
-                    {new Date(c.created_at).toLocaleDateString()}
-                  </td>
-                </tr>
+                <CustomerRow
+                  key={c.id}
+                  customer={c}
+                  canManage={canManage}
+                  isSelf={c.id === actor?.id}
+                />
               ))
             )}
           </tbody>
