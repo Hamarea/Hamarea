@@ -7,6 +7,8 @@ import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
 import { CartDrawer } from "@/components/shop/cart-drawer";
 import { MotionProvider } from "@/components/motion-provider";
+import { ConsentBanner } from "@/components/consent/consent-banner";
+import { Analytics } from "@/components/analytics";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
@@ -41,6 +43,8 @@ export default async function LocaleLayout({
             <main className="min-h-[calc(100vh-4rem)]">{children}</main>
             <ShopFooter />
             <CartDrawer />
+            <ConsentBanner />
+            <Analytics />
           </MotionProvider>
         </NextIntlClientProvider>
       </body>

@@ -11,6 +11,7 @@ const ProductSchema = z.object({
   name_en: z.string().trim().max(200).optional().nullable(),
   brand: z.string().trim().max(120).optional().nullable(),
   slug: z.string().trim().max(200).optional().nullable(),
+  supplier_id: z.string().uuid().optional().or(z.literal("")).nullable(),
   status: z.enum(["draft", "active", "archived"]).default("draft"),
 });
 
@@ -35,6 +36,7 @@ export async function createProduct(formData: FormData) {
     name_en: (formData.get("name_en") as string) || null,
     brand: (formData.get("brand") as string) || null,
     slug: (formData.get("slug") as string) || null,
+    supplier_id: (formData.get("supplier_id") as string) || null,
     status: formData.get("status") || "draft",
   });
 
@@ -49,6 +51,7 @@ export async function createProduct(formData: FormData) {
     slug,
     name_i18n,
     brand: data.brand,
+    supplier_id: data.supplier_id || null,
     status: data.status,
   });
   if (error) {

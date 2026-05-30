@@ -23,18 +23,32 @@ export default async function AdminProductsPage() {
   const supabase = await createClient();
 
   let products: ProductRow[] = [];
+  let suppliers: { id: string; name: string }[] = [];
   try {
-    const { data } = await (supabase as unknown as {
+    const sb = supabase as unknown as {
       from: (t: string) => {
         select: (q: string) => {
           order: (k: string, opts: { ascending: boolean }) => Promise<{ data: ProductRow[] | null }>;
         };
       };
-    })
+    };
+    const { data } = await sb
       .from("products")
       .select("id, slug, name_i18n, status, brand, created_at")
       .order("created_at", { ascending: false });
     products = data ?? [];
+
+    const { data: sup } = await (supabase as unknown as {
+      from: (t: string) => {
+        select: (q: string) => {
+          order: (k: string, opts: { ascending: boolean }) => Promise<{ data: { id: string; name: string }[] | null }>;
+        };
+      };
+    })
+      .from("suppliers")
+      .select("id, name")
+      .order("name", { ascending: true });
+    suppliers = sup ?? [];
   } catch {
     products = [];
   }
@@ -66,6 +80,22 @@ export default async function AdminProductsPage() {
             <div className="space-y-1.5">
               <Label htmlFor="brand">Marque (optionnel)</Label>
               <Input id="brand" name="brand" maxLength={120} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="supplier_id">Fournisseur (optionnel)</Label>
+              <select
+                id="supplier_id"
+                name="supplier_id"
+                defaultValue=""
+                className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-white px-3 text-sm"
+              >
+                <option value="">— Aucun —</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="status">Statut</Label>
