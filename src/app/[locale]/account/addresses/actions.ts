@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import type { FormState } from "@/lib/form-state";
 
 const AddressSchema = z.object({
   type: z.enum(["shipping", "billing"]).default("shipping"),
@@ -42,29 +43,39 @@ async function clearDefaults(sb: AddrClient, userId: string) {
   await sb.from("addresses").update({ is_default: false }).eq("user_id", userId);
 }
 
-export async function addAddress(formData: FormData) {
-  const actor = await requireUser();
-  const data = AddressSchema.parse({
-    type: formData.get("type") || "shipping",
-    full_name: formData.get("full_name"),
-    line1: formData.get("line1"),
-    line2: (formData.get("line2") as string) || null,
-    city: formData.get("city"),
-    zip: formData.get("zip"),
-    state: (formData.get("state") as string) || null,
-    country: formData.get("country"),
-    phone: (formData.get("phone") as string) || null,
-    is_default: formData.get("is_default") === "on",
-  });
+export async function addAddress(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const actor = await requireUser();
+    const data = AddressSchema.parse({
+      type: formData.get("type") || "shipping",
+      full_name: formData.get("full_name"),
+      line1: formData.get("line1"),
+      line2: (formData.get("line2") as string) || null,
+      city: formData.get("city"),
+      zip: formData.get("zip"),
+      state: (formData.get("state") as string) || null,
+      country: formData.get("country"),
+      phone: (formData.get("phone") as string) || null,
+      is_default: formData.get("is_default") === "on",
+    });
 
-  const supabase = (await createClient()) as unknown as AddrClient;
-  if (data.is_default) await clearDefaults(supabase, actor.id);
+    const supabase = (await createClient()) as unknown as AddrClient;
+    if (data.is_default) await clearDefaults(supabase, actor.id);
 
-  const { error } = await supabase
-    .from("addresses")
-    .insert({ ...data, user_id: actor.id });
-  if (error) throw new Error(error.message ?? "insert_failed");
-  revalidatePath("/account/addresses");
+    const { error } = await supabase
+      .from("addresses")
+      .insert({ ...data, user_id: actor.id });
+    if (error) return { error: "Ajout impossible. Réessaie." };
+    revalidatePath("/account/addresses");
+    return { ok: true };
+  } catch {
+    return {
+      error: "Champs invalides (le pays doit faire 2 lettres, ex. FR).",
+    };
+  }
 }
 
 export async function deleteAddress(formData: FormData) {

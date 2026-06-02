@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/utils";
@@ -97,7 +98,7 @@ export default async function AdminCouponsPage() {
 
         <Card className="p-6">
           <h2 className="mb-4 font-medium">Nouveau coupon</h2>
-          <form action={createCoupon} className="space-y-3">
+          <ActionForm action={createCoupon} className="space-y-3" successMessage="Coupon créé." resetOnSuccess>
             <div className="space-y-1.5">
               <Label htmlFor="code">Code</Label>
               <Input id="code" name="code" required minLength={2} maxLength={40} placeholder="BIENVENUE10" />
@@ -125,7 +126,7 @@ export default async function AdminCouponsPage() {
               <Input id="min_subtotal_cents" name="min_subtotal_cents" type="number" min={0} defaultValue={0} />
             </div>
             <SubmitButton>Créer</SubmitButton>
-          </form>
+          </ActionForm>
         </Card>
       </div>
     </div>

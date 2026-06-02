@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
+import type { FormState } from "@/lib/form-state";
 
 const CouponSchema = z.object({
   code: z
@@ -27,38 +28,49 @@ type LooseClient = {
   };
 };
 
-export async function createCoupon(formData: FormData) {
-  const actor = await requirePermission("coupons.write");
-  const data = CouponSchema.parse({
-    code: formData.get("code"),
-    type: formData.get("type"),
-    value: formData.get("value"),
-    min_subtotal_cents: formData.get("min_subtotal_cents") || 0,
-  });
+export async function createCoupon(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const actor = await requirePermission("coupons.write");
+    const data = CouponSchema.parse({
+      code: formData.get("code"),
+      type: formData.get("type"),
+      value: formData.get("value"),
+      min_subtotal_cents: formData.get("min_subtotal_cents") || 0,
+    });
 
-  if (data.type === "percent" && data.value > 100) {
-    throw new Error("percent_out_of_range");
-  }
+    if (data.type === "percent" && data.value > 100) {
+      return { error: "Un pourcentage ne peut pas dépasser 100." };
+    }
 
-  const supabase = (await createClient()) as unknown as LooseClient;
-  const { error } = await supabase.from("coupons").insert({
-    code: data.code,
-    type: data.type,
-    value: data.value,
-    min_subtotal_cents: data.min_subtotal_cents,
-    active: true,
-  });
-  if (error) {
-    if (error.code === "23505") throw new Error("Ce code existe déjà.");
-    throw new Error(error.message ?? "create_failed");
+    const supabase = (await createClient()) as unknown as LooseClient;
+    const { error } = await supabase.from("coupons").insert({
+      code: data.code,
+      type: data.type,
+      value: data.value,
+      min_subtotal_cents: data.min_subtotal_cents,
+      active: true,
+    });
+    if (error) {
+      if (error.code === "23505") return { error: "Ce code existe déjà." };
+      return { error: "Création impossible." };
+    }
+    await logAudit({
+      actorId: actor.id,
+      action: "coupon.create",
+      entity: "coupon",
+      data: { code: data.code, type: data.type, value: data.value },
+    });
+    revalidatePath("/admin/coupons");
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg === "forbidden" || msg === "unauthorized")
+      return { error: "Action non autorisée." };
+    return { error: "Champs invalides." };
   }
-  await logAudit({
-    actorId: actor.id,
-    action: "coupon.create",
-    entity: "coupon",
-    data: { code: data.code, type: data.type, value: data.value },
-  });
-  revalidatePath("/admin/coupons");
 }
 
 export async function toggleCoupon(formData: FormData) {

@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { ActionForm } from "@/components/ui/action-form";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Plus } from "lucide-react";
@@ -98,7 +99,7 @@ export default async function AdminProductsPage({
           <Plus className="h-4 w-4" /> Nouveau produit
         </summary>
         <Card className="mt-3 p-6">
-          <form action={createProduct} className="grid gap-3 sm:grid-cols-2">
+          <ActionForm action={createProduct} className="grid gap-3 sm:grid-cols-2" successMessage="Produit créé." resetOnSuccess>
             <div className="space-y-1.5">
               <Label htmlFor="name_fr">Nom (FR)</Label>
               <Input id="name_fr" name="name_fr" required maxLength={200} />
@@ -149,7 +150,7 @@ export default async function AdminProductsPage({
             <div className="flex items-end">
               <SubmitButton>Créer le produit</SubmitButton>
             </div>
-          </form>
+          </ActionForm>
           <p className="mt-3 text-xs text-[var(--color-muted)]">
             Crée la fiche produit. Variantes, prix et images : édition détaillée à
             ajouter (table <code>product_variants</code> / <code>product_images</code>).

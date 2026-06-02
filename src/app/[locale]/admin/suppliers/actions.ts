@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
+import type { FormState } from "@/lib/form-state";
 
 const SupplierSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -30,32 +31,43 @@ type LooseClient = {
   };
 };
 
-export async function createSupplier(formData: FormData) {
-  const actor = await requirePermission("suppliers.write");
-  const data = SupplierSchema.parse({
-    name: formData.get("name"),
-    contact_email: (formData.get("contact_email") as string) || null,
-    phone: (formData.get("phone") as string) || null,
-    country: (formData.get("country") as string) || null,
-    notes: (formData.get("notes") as string) || null,
-  });
+export async function createSupplier(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const actor = await requirePermission("suppliers.write");
+    const data = SupplierSchema.parse({
+      name: formData.get("name"),
+      contact_email: (formData.get("contact_email") as string) || null,
+      phone: (formData.get("phone") as string) || null,
+      country: (formData.get("country") as string) || null,
+      notes: (formData.get("notes") as string) || null,
+    });
 
-  const supabase = (await createClient()) as unknown as LooseClient;
-  const { error } = await supabase.from("suppliers").insert({
-    name: data.name,
-    contact_email: data.contact_email || null,
-    phone: data.phone,
-    country: data.country || null,
-    notes: data.notes,
-  });
-  if (error) throw new Error(error.message ?? "create_failed");
-  await logAudit({
-    actorId: actor.id,
-    action: "supplier.create",
-    entity: "supplier",
-    data: { name: data.name, country: data.country || null },
-  });
-  revalidatePath("/admin/suppliers");
+    const supabase = (await createClient()) as unknown as LooseClient;
+    const { error } = await supabase.from("suppliers").insert({
+      name: data.name,
+      contact_email: data.contact_email || null,
+      phone: data.phone,
+      country: data.country || null,
+      notes: data.notes,
+    });
+    if (error) return { error: "Création impossible." };
+    await logAudit({
+      actorId: actor.id,
+      action: "supplier.create",
+      entity: "supplier",
+      data: { name: data.name, country: data.country || null },
+    });
+    revalidatePath("/admin/suppliers");
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg === "forbidden" || msg === "unauthorized")
+      return { error: "Action non autorisée." };
+    return { error: "Champs invalides." };
+  }
 }
 
 export async function deleteSupplier(formData: FormData) {
