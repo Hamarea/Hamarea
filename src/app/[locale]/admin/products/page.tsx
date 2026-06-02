@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Plus } from "lucide-react";
@@ -147,7 +147,7 @@ export default async function AdminProductsPage({
               </select>
             </div>
             <div className="flex items-end">
-              <Button type="submit">Créer le produit</Button>
+              <SubmitButton>Créer le produit</SubmitButton>
             </div>
           </form>
           <p className="mt-3 text-xs text-[var(--color-muted)]">
@@ -164,10 +164,10 @@ export default async function AdminProductsPage({
           placeholder="Slug ou marque…"
           className="max-w-xs"
         />
-        <Button type="submit">Rechercher</Button>
+        <SubmitButton>Rechercher</SubmitButton>
       </form>
 
-      <Card>
+      <Card className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
             <tr className="text-left">
@@ -212,9 +212,9 @@ export default async function AdminProductsPage({
                           </option>
                         ))}
                       </select>
-                      <Button type="submit" variant="ghost" size="sm">
+                      <SubmitButton variant="ghost" size="sm">
                         OK
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </td>
                   <td className="px-4 py-3 text-[var(--color-muted)]">
