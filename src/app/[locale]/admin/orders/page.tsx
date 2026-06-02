@@ -99,7 +99,16 @@ export default async function AdminOrdersPage({
 
   return (
     <div>
-      <h1 className="font-display text-3xl mb-6">{t("admin.orders")}</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="font-display text-3xl">{t("admin.orders")}</h1>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
+          href="/api/admin/export/orders"
+          className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--color-border)] px-3 text-sm hover:bg-[var(--color-bg)]"
+        >
+          Export CSV
+        </a>
+      </div>
 
       <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
         <Input
