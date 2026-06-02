@@ -14,6 +14,7 @@ import {
   setInventory,
   addImage,
   deleteImage,
+  uploadImage,
 } from "./actions";
 
 const STATUSES = ["draft", "active", "archived"] as const;
@@ -318,7 +319,28 @@ export default async function AdminProductEdit({
         </div>
 
         <div className="mt-5 border-t border-[var(--color-border)] pt-4">
-          <h3 className="mb-2 text-sm font-medium">Ajouter une image (URL)</h3>
+          <h3 className="mb-2 text-sm font-medium">Téléverser une image</h3>
+          <form action={uploadImage} className="flex flex-wrap items-end gap-3">
+            <input type="hidden" name="productId" value={product.id} />
+            <input
+              type="file"
+              name="file"
+              accept="image/*"
+              required
+              className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-primary-600)] file:px-3 file:py-1.5 file:text-white"
+            />
+            <Button type="submit" size="sm">
+              Téléverser
+            </Button>
+          </form>
+          <p className="mt-1 text-xs text-[var(--color-muted)]">
+            JPEG, PNG, WebP, AVIF — 5 Mo max. Nécessite le bucket Storage
+            « product-images » (SQL fourni).
+          </p>
+        </div>
+
+        <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+          <h3 className="mb-2 text-sm font-medium">… ou ajouter par URL</h3>
           <form action={addImage} className="flex flex-wrap items-end gap-3">
             <input type="hidden" name="productId" value={product.id} />
             <div className="space-y-1">
