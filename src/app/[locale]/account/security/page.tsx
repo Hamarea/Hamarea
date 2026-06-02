@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { MfaSetup } from "@/components/account/mfa-setup";
 
 export default function AccountSecurityPage() {
   const [password, setPassword] = useState("");
@@ -80,6 +81,10 @@ export default function AccountSecurityPage() {
           </Button>
         </form>
       </Card>
+
+      <div className="mt-6">
+        <MfaSetup />
+      </div>
     </div>
   );
 }
