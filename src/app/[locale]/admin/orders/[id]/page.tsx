@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/utils";
-import { updateOrderStatus, upsertShipment } from "../actions";
+import { updateOrderStatus, upsertShipment, createRefund } from "../actions";
 import { ArrowLeft } from "lucide-react";
 
 const STATUSES = [
@@ -287,6 +287,41 @@ export default async function AdminOrderDetail({
               </div>
               <Button type="submit" variant="secondary" className="w-full">
                 Enregistrer le suivi
+              </Button>
+            </form>
+          </Card>
+
+          <Card className="border-[var(--color-danger)]/40 p-5">
+            <h2 className="mb-1 font-medium text-[var(--color-danger)]">
+              Remboursement
+            </h2>
+            <p className="mb-3 text-xs text-[var(--color-muted)]">
+              Déclenche un remboursement Stripe réel (si un paiement existe) et
+              l&apos;enregistre dans l&apos;historique.
+            </p>
+            <form action={createRefund} className="space-y-3">
+              <input type="hidden" name="orderId" value={order.id} />
+              <div className="space-y-1.5">
+                <Label htmlFor="amount">Montant ({order.currency})</Label>
+                <Input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  defaultValue={(order.total_cents / 100).toFixed(2)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="reason">Raison (optionnel)</Label>
+                <Input id="reason" name="reason" maxLength={500} />
+              </div>
+              <Button
+                type="submit"
+                variant="outline"
+                className="w-full border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10"
+              >
+                Rembourser
               </Button>
             </form>
           </Card>
