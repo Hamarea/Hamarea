@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { ActionForm } from "@/components/ui/action-form";
 import { createClient } from "@/lib/supabase/server";
 import { createSupplier, deleteSupplier } from "./actions";
 
@@ -82,7 +83,7 @@ export default async function AdminSuppliersPage() {
 
         <Card className="p-6">
           <h2 className="mb-4 font-medium">Nouveau fournisseur</h2>
-          <form action={createSupplier} className="space-y-3">
+          <ActionForm action={createSupplier} className="space-y-3" successMessage="Fournisseur ajouté." resetOnSuccess>
             <div className="space-y-1.5">
               <Label htmlFor="name">Nom</Label>
               <Input id="name" name="name" required maxLength={160} />
@@ -110,7 +111,7 @@ export default async function AdminSuppliersPage() {
               />
             </div>
             <SubmitButton>Ajouter</SubmitButton>
-          </form>
+          </ActionForm>
         </Card>
       </div>
     </div>

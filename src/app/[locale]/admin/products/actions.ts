@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
+import type { FormState } from "@/lib/form-state";
 import { logAudit } from "@/lib/audit";
 
 const ProductSchema = z.object({
@@ -30,42 +31,54 @@ type LooseClient = {
   };
 };
 
-export async function createProduct(formData: FormData) {
-  const actor = await requirePermission("products.write");
-  const data = ProductSchema.parse({
-    name_fr: formData.get("name_fr"),
-    name_en: (formData.get("name_en") as string) || null,
-    brand: (formData.get("brand") as string) || null,
-    slug: (formData.get("slug") as string) || null,
-    supplier_id: (formData.get("supplier_id") as string) || null,
-    status: formData.get("status") || "draft",
-  });
+export async function createProduct(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const actor = await requirePermission("products.write");
+    const data = ProductSchema.parse({
+      name_fr: formData.get("name_fr"),
+      name_en: (formData.get("name_en") as string) || null,
+      brand: (formData.get("brand") as string) || null,
+      slug: (formData.get("slug") as string) || null,
+      supplier_id: (formData.get("supplier_id") as string) || null,
+      status: formData.get("status") || "draft",
+    });
 
-  const slug = (data.slug && slugify(data.slug)) || slugify(data.name_fr);
-  if (!slug) throw new Error("invalid_slug");
+    const slug = (data.slug && slugify(data.slug)) || slugify(data.name_fr);
+    if (!slug) return { error: "Nom ou slug invalide." };
 
-  const name_i18n: Record<string, string> = { fr: data.name_fr };
-  if (data.name_en) name_i18n.en = data.name_en;
+    const name_i18n: Record<string, string> = { fr: data.name_fr };
+    if (data.name_en) name_i18n.en = data.name_en;
 
-  const supabase = (await createClient()) as unknown as LooseClient;
-  const { error } = await supabase.from("products").insert({
-    slug,
-    name_i18n,
-    brand: data.brand,
-    supplier_id: data.supplier_id || null,
-    status: data.status,
-  });
-  if (error) {
-    if (error.code === "23505") throw new Error("Un produit avec ce slug existe déjà.");
-    throw new Error(error.message ?? "create_failed");
+    const supabase = (await createClient()) as unknown as LooseClient;
+    const { error } = await supabase.from("products").insert({
+      slug,
+      name_i18n,
+      brand: data.brand,
+      supplier_id: data.supplier_id || null,
+      status: data.status,
+    });
+    if (error) {
+      if (error.code === "23505")
+        return { error: "Un produit avec ce slug existe déjà." };
+      return { error: "Création impossible." };
+    }
+    await logAudit({
+      actorId: actor.id,
+      action: "product.create",
+      entity: "product",
+      data: { slug, status: data.status },
+    });
+    revalidatePath("/admin/products");
+    return { ok: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg === "forbidden" || msg === "unauthorized")
+      return { error: "Action non autorisée." };
+    return { error: "Champs invalides." };
   }
-  await logAudit({
-    actorId: actor.id,
-    action: "product.create",
-    entity: "product",
-    data: { slug, status: data.status },
-  });
-  revalidatePath("/admin/products");
 }
 
 export async function setProductStatus(formData: FormData) {

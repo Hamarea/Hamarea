@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { addAddress, deleteAddress, setDefaultAddress } from "./actions";
@@ -106,7 +107,7 @@ export default async function AddressesPage() {
 
         <Card className="p-6">
           <h2 className="mb-4 font-medium">Ajouter une adresse</h2>
-          <form action={addAddress} className="space-y-3">
+          <ActionForm action={addAddress} className="space-y-3" successMessage="Adresse ajoutée." resetOnSuccess>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="type">Type</Label>
@@ -173,7 +174,7 @@ export default async function AddressesPage() {
               Définir comme adresse par défaut
             </label>
             <SubmitButton>Ajouter</SubmitButton>
-          </form>
+          </ActionForm>
         </Card>
       </div>
     </div>
