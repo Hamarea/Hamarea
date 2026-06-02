@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft, Trash2 } from "lucide-react";
@@ -178,7 +178,7 @@ export default async function AdminProductEdit({
             </select>
           </div>
           <div className="flex items-end">
-            <Button type="submit">Enregistrer</Button>
+            <SubmitButton>Enregistrer</SubmitButton>
           </div>
         </form>
       </Card>
@@ -224,16 +224,16 @@ export default async function AdminProductEdit({
                       <input type="checkbox" name="active" defaultChecked={v.active} className="h-4 w-4" />
                       Actif
                     </label>
-                    <Button type="submit" size="sm" variant="secondary">
+                    <SubmitButton size="sm" variant="secondary">
                       Enregistrer
-                    </Button>
+                    </SubmitButton>
                   </form>
                   <form action={deleteVariant} className="pb-1">
                     <input type="hidden" name="productId" value={product.id} />
                     <input type="hidden" name="variantId" value={v.id} />
-                    <Button type="submit" size="sm" variant="ghost" aria-label="Supprimer la variante">
+                    <SubmitButton size="sm" variant="ghost" aria-label="Supprimer la variante">
                       <Trash2 className="h-4 w-4 text-[var(--color-danger)]" />
-                    </Button>
+                    </SubmitButton>
                   </form>
                 </div>
                 {label && (
@@ -251,9 +251,9 @@ export default async function AdminProductEdit({
                     <Label className="text-xs">Seuil d&apos;alerte</Label>
                     <Input name="reorder_point" type="number" min="0" defaultValue={inv?.reorder_point ?? 5} className="w-24" />
                   </div>
-                  <Button type="submit" size="sm" variant="outline">
+                  <SubmitButton size="sm" variant="outline">
                     Mettre à jour le stock
-                  </Button>
+                  </SubmitButton>
                   {inv && (
                     <span className="pb-2 text-xs text-[var(--color-muted)]">
                       Réservé : {inv.reserved}
@@ -285,9 +285,9 @@ export default async function AdminProductEdit({
               <input type="checkbox" name="active" defaultChecked className="h-4 w-4" />
               Actif
             </label>
-            <Button type="submit" size="sm">
+            <SubmitButton size="sm">
               Ajouter
-            </Button>
+            </SubmitButton>
           </form>
         </div>
       </Card>
@@ -310,9 +310,9 @@ export default async function AdminProductEdit({
               <form action={deleteImage} className="mt-1">
                 <input type="hidden" name="productId" value={product.id} />
                 <input type="hidden" name="imageId" value={img.id} />
-                <Button type="submit" size="sm" variant="ghost" className="w-full">
+                <SubmitButton size="sm" variant="ghost" className="w-full">
                   Supprimer
-                </Button>
+                </SubmitButton>
               </form>
             </div>
           ))}
@@ -329,9 +329,9 @@ export default async function AdminProductEdit({
               required
               className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-primary-600)] file:px-3 file:py-1.5 file:text-white"
             />
-            <Button type="submit" size="sm">
+            <SubmitButton size="sm">
               Téléverser
-            </Button>
+            </SubmitButton>
           </form>
           <p className="mt-1 text-xs text-[var(--color-muted)]">
             JPEG, PNG, WebP, AVIF — 5 Mo max. Nécessite le bucket Storage
@@ -355,9 +355,9 @@ export default async function AdminProductEdit({
               <Label className="text-xs">Position</Label>
               <Input name="position" type="number" min="0" defaultValue={images.length} className="w-20" />
             </div>
-            <Button type="submit" size="sm">
+            <SubmitButton size="sm">
               Ajouter
-            </Button>
+            </SubmitButton>
           </form>
           <p className="mt-2 text-xs text-[var(--color-muted)]">
             Images par URL pour l&apos;instant. Upload de fichiers (Supabase Storage) :
