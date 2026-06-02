@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Settings,
   Truck,
+  ScrollText,
 } from "lucide-react";
 
 const isSupabaseConfigured = () =>
@@ -79,6 +80,7 @@ export default async function AdminLayout({
     { href: "/admin/reviews", label: t("admin.reviews"), icon: Star },
     { href: "/admin/moderation", label: t("admin.moderation"), icon: ShieldCheck },
     { href: "/admin/settings", label: t("admin.settings"), icon: Settings },
+    { href: "/admin/audit", label: "Audit", icon: ScrollText },
   ];
 
   return (

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 
 const RoleSchema = z.object({
   userId: z.string().uuid(),
@@ -31,6 +32,14 @@ export async function setUserRole(input: { userId: string; role: string }) {
     .update({ role: data.role, updated_at: new Date().toISOString() })
     .eq("id", data.userId);
   if (error) throw new Error(error.message ?? "role_update_failed");
+
+  await logAudit({
+    actorId: actor.id,
+    action: "customer.role_change",
+    entity: "profile",
+    entityId: data.userId,
+    data: { role: data.role },
+  });
 
   revalidatePath("/admin/customers");
 }
