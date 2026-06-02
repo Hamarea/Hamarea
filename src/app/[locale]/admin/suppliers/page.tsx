@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { createSupplier, deleteSupplier } from "./actions";
 
@@ -42,7 +42,7 @@ export default async function AdminSuppliersPage() {
       </p>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <Card>
+        <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
               <tr className="text-left">
@@ -68,9 +68,9 @@ export default async function AdminSuppliersPage() {
                     <td className="px-4 py-3 text-right">
                       <form action={deleteSupplier}>
                         <input type="hidden" name="id" value={s.id} />
-                        <Button type="submit" variant="ghost" size="sm">
+                        <SubmitButton type="submit" variant="ghost" size="sm">
                           Supprimer
-                        </Button>
+                        </SubmitButton>
                       </form>
                     </td>
                   </tr>
@@ -109,7 +109,7 @@ export default async function AdminSuppliersPage() {
                 className="w-full resize-y rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)]"
               />
             </div>
-            <Button type="submit">Ajouter</Button>
+            <SubmitButton>Ajouter</SubmitButton>
           </form>
         </Card>
       </div>
