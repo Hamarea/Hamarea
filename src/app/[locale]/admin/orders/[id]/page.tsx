@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/utils";
@@ -231,9 +231,9 @@ export default async function AdminOrderDetail({
                   </option>
                 ))}
               </select>
-              <Button type="submit" className="w-full">
+              <SubmitButton className="w-full">
                 Mettre à jour le statut
-              </Button>
+              </SubmitButton>
             </form>
           </Card>
 
@@ -285,9 +285,9 @@ export default async function AdminOrderDetail({
                   <option value="delivered">Livré</option>
                 </select>
               </div>
-              <Button type="submit" variant="secondary" className="w-full">
+              <SubmitButton variant="secondary" className="w-full">
                 Enregistrer le suivi
-              </Button>
+              </SubmitButton>
             </form>
           </Card>
 
@@ -316,13 +316,12 @@ export default async function AdminOrderDetail({
                 <Label htmlFor="reason">Raison (optionnel)</Label>
                 <Input id="reason" name="reason" maxLength={500} />
               </div>
-              <Button
-                type="submit"
+              <SubmitButton
                 variant="outline"
                 className="w-full border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10"
               >
                 Rembourser
-              </Button>
+              </SubmitButton>
             </form>
           </Card>
         </div>

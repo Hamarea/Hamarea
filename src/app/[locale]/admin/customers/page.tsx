@@ -79,7 +79,7 @@ export default async function AdminCustomersPage({
         <Button type="submit">Rechercher</Button>
       </form>
 
-      <Card>
+      <Card className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
             <tr className="text-left">
