@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 
 const SupplierSchema = z.object({
@@ -31,7 +31,7 @@ type LooseClient = {
 };
 
 export async function createSupplier(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("suppliers.write");
   const data = SupplierSchema.parse({
     name: formData.get("name"),
     contact_email: (formData.get("contact_email") as string) || null,
@@ -59,7 +59,7 @@ export async function createSupplier(formData: FormData) {
 }
 
 export async function deleteSupplier(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("suppliers.write");
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = (await createClient()) as unknown as LooseClient;
   const { error } = await supabase.from("suppliers").delete().eq("id", id);

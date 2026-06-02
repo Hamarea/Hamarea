@@ -4,13 +4,15 @@ import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { setUserRole } from "./actions";
+import { setUserRole, setUserPermissions } from "./actions";
+import { ALL_PERMISSIONS, PERMISSION_LABELS } from "@/lib/permissions";
 
 export type CustomerView = {
   id: string;
   email: string | null;
   full_name: string | null;
   role: "customer" | "staff" | "admin";
+  permissions: string[] | null;
   created_at: string;
 };
 
@@ -29,7 +31,14 @@ export function CustomerRow({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  const [perms, setPerms] = useState<string[]>(customer.permissions ?? []);
+  const [permPending, startPermTransition] = useTransition();
+  const [permSaved, setPermSaved] = useState(false);
+
   const dirty = role !== customer.role;
+  const savedPerms = customer.permissions ?? [];
+  const permsDirty =
+    JSON.stringify([...perms].sort()) !== JSON.stringify([...savedPerms].sort());
 
   const save = () => {
     setError(null);
@@ -43,8 +52,28 @@ export function CustomerRow({
     });
   };
 
+  const togglePerm = (p: string) => {
+    setPermSaved(false);
+    setPerms((cur) =>
+      cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p],
+    );
+  };
+
+  const savePerms = () => {
+    setError(null);
+    setPermSaved(false);
+    startPermTransition(async () => {
+      try {
+        await setUserPermissions({ userId: customer.id, permissions: perms });
+        setPermSaved(true);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "error");
+      }
+    });
+  };
+
   return (
-    <tr className="border-b border-[var(--color-border)]">
+    <tr className="border-b border-[var(--color-border)] align-top">
       <td className="px-4 py-3 font-medium">{customer.full_name ?? "—"}</td>
       <td className="px-4 py-3">{customer.email}</td>
       <td className="px-4 py-3">
@@ -82,6 +111,48 @@ export function CustomerRow({
             {customer.role}
             {isSelf ? " (vous)" : ""}
           </Badge>
+        )}
+
+        {canManage && customer.role === "staff" && (
+          <div className="mt-3 rounded-md border border-[var(--color-border)] p-2">
+            <p className="mb-1 text-xs font-medium text-[var(--color-muted)]">
+              Permissions
+            </p>
+            <div className="grid gap-1">
+              {ALL_PERMISSIONS.map((p) => (
+                <label key={p} className="flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={perms.includes(p)}
+                    onChange={() => togglePerm(p)}
+                    disabled={permPending}
+                    className="h-3.5 w-3.5"
+                  />
+                  {PERMISSION_LABELS[p]}
+                </label>
+              ))}
+            </div>
+            {permsDirty && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={savePerms}
+                disabled={permPending}
+                className="mt-2"
+              >
+                {permPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Enregistrer les permissions"
+                )}
+              </Button>
+            )}
+            {permSaved && (
+              <span className="ml-2 text-xs text-[var(--color-secondary-700)]">
+                ✓ Enregistré
+              </span>
+            )}
+          </div>
         )}
       </td>
       <td className="px-4 py-3 text-[var(--color-muted)]">

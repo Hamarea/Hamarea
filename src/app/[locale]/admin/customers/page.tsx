@@ -40,7 +40,7 @@ export default async function AdminCustomersPage({
   try {
     let qb = (supabase as unknown as { from: (t: string) => ListBuilder })
       .from("profiles")
-      .select("id, email, full_name, role, created_at", { count: "exact" });
+      .select("id, email, full_name, role, permissions, created_at", { count: "exact" });
     if (q) qb = qb.or(`full_name.ilike.%${q}%,email.ilike.%${q}%`);
     const { data, count } = await qb
       .order("created_at", { ascending: false })

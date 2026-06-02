@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
 import { logAudit } from "@/lib/audit";
 
@@ -31,7 +31,7 @@ type LooseClient = {
 };
 
 export async function createProduct(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = ProductSchema.parse({
     name_fr: formData.get("name_fr"),
     name_en: (formData.get("name_en") as string) || null,
@@ -69,7 +69,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function setProductStatus(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = StatusSchema.parse({
     id: formData.get("id"),
     status: formData.get("status"),
