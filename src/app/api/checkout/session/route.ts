@@ -5,6 +5,7 @@ import { getStripe } from "@/lib/stripe";
 import { SACOCHE, SHIPPING, colorByName, unitPriceForPack } from "@/lib/product";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimitHit } from "@/lib/rate-limit";
 
 /**
  * The client may send ONLY references (which product, colour, pack, quantity).
@@ -77,6 +78,18 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: "Stripe non configuré (définissez STRIPE_SECRET_KEY)." },
       { status: 503 },
+    );
+  }
+
+  // Basic abuse throttle by IP: 10 checkout attempts / minute (fail-open).
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
+  if (!(await rateLimitHit(`checkout:${ip}`, 10, 60))) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessaie dans une minute." },
+      { status: 429 },
     );
   }
 

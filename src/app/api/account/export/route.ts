@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimitHit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,14 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  // Throttle exports: 5 / hour / user (fail-open).
+  if (!(await rateLimitHit(`export:${user.id}`, 5, 3600))) {
+    return NextResponse.json(
+      { error: "Trop de demandes d'export. Réessaie plus tard." },
+      { status: 429 },
+    );
   }
 
   const sb = supabase as unknown as LooseQuery;
