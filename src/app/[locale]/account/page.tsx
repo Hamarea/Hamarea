@@ -44,7 +44,7 @@ export default async function AccountHomePage() {
     <div>
       <h1 className="font-display text-3xl mb-6">{t("account.profile")}</h1>
       <Card className="max-w-xl p-6">
-        <ActionForm action={updateProfile} className="space-y-5" successMessage="Profil enregistré.">
+        <ActionForm action={updateProfile} className="space-y-5" successMessage={t("account.saved")}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="full_name">{t("auth.fullName")}</Label>
@@ -57,7 +57,7 @@ export default async function AccountHomePage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Téléphone</Label>
+              <Label htmlFor="phone">{t("account.phone")}</Label>
               <Input
                 id="phone"
                 name="phone"
@@ -68,7 +68,7 @@ export default async function AccountHomePage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="locale">Langue</Label>
+              <Label htmlFor="locale">{t("account.language")}</Label>
               <select
                 id="locale"
                 name="locale"
@@ -82,7 +82,7 @@ export default async function AccountHomePage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="currency">Devise</Label>
+              <Label htmlFor="currency">{t("account.currency")}</Label>
               <select
                 id="currency"
                 name="currency"
@@ -103,7 +103,7 @@ export default async function AccountHomePage() {
               defaultChecked={profile?.marketing_opt_in ?? false}
               className="h-4 w-4 rounded border-[var(--color-border)]"
             />
-            J&apos;accepte de recevoir les offres et nouveautés par e-mail.
+            {t("account.marketingOptIn")}
           </label>
 
           <div className="border-t border-[var(--color-border)] pt-4">
@@ -119,7 +119,7 @@ export default async function AccountHomePage() {
             </dl>
           </div>
 
-          <SubmitButton>Enregistrer</SubmitButton>
+          <SubmitButton>{t("account.save")}</SubmitButton>
         </ActionForm>
       </Card>
     </div>

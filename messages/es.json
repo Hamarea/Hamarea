@@ -93,7 +93,7 @@
     }
   },
   "auth": { "loginTitle": "Iniciar sesión", "signupTitle": "Crear cuenta", "email": "Email", "password": "Contraseña", "fullName": "Nombre completo", "forgotPassword": "¿Olvidaste tu contraseña?", "submit": "Continuar", "googleLogin": "Continuar con Google", "noAccount": "¿No tienes cuenta?", "hasAccount": "¿Ya tienes cuenta?" },
-  "account": { "myOrders": "Mis pedidos", "addresses": "Direcciones", "profile": "Perfil", "wishlist": "Favoritos", "orderStatus": { "pending": "Pendiente", "paid": "Pagado", "processing": "Preparando", "shipped": "Enviado", "delivered": "Entregado", "cancelled": "Cancelado", "refunded": "Reembolsado" } },
+  "account": { "myOrders": "Mis pedidos", "addresses": "Direcciones", "profile": "Perfil", "wishlist": "Favoritos", "security": "Seguridad", "privacy": "Privacidad", "phone": "Teléfono", "language": "Idioma", "currency": "Moneda", "marketingOptIn": "Acepto recibir ofertas y novedades por correo electrónico.", "save": "Guardar", "saved": "Perfil guardado.", "orderStatus": { "pending": "Pendiente", "paid": "Pagado", "processing": "Preparando", "shipped": "Enviado", "delivered": "Entregado", "cancelled": "Cancelado", "refunded": "Reembolsado" } },
   "admin": { "dashboard": "Panel", "products": "Productos", "orders": "Pedidos", "customers": "Clientes", "stock": "Stock", "categories": "Categorías", "coupons": "Cupones", "reviews": "Opiniones", "moderation": "Moderación", "settings": "Ajustes" },
   "moderation": {
     "title": "Moderación de opiniones",
