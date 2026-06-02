@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Plus } from "lucide-react";
 import { createProduct, setProductStatus } from "./actions";
@@ -17,31 +18,55 @@ type ProductRow = {
 };
 
 const STATUSES = ["draft", "active", "archived"] as const;
+const PAGE_SIZE = 25;
 
-export default async function AdminProductsPage() {
+type ListBuilder = {
+  select: (q: string, opts?: { count?: "exact" }) => ListBuilder;
+  or: (f: string) => ListBuilder;
+  order: (k: string, o: { ascending: boolean }) => ListBuilder;
+  range: (
+    from: number,
+    to: number,
+  ) => Promise<{ data: ProductRow[] | null; count: number | null }>;
+};
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
   const t = await getTranslations();
   const supabase = await createClient();
+  const sp = await searchParams;
+
+  const q = (sp.q ?? "").trim();
+  const page = Math.max(1, parseInt(sp.page ?? "1", 10) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   let products: ProductRow[] = [];
+  let total = 0;
   let suppliers: { id: string; name: string }[] = [];
   try {
-    const sb = supabase as unknown as {
-      from: (t: string) => {
-        select: (q: string) => {
-          order: (k: string, opts: { ascending: boolean }) => Promise<{ data: ProductRow[] | null }>;
-        };
-      };
-    };
-    const { data } = await sb
+    let qb = (supabase as unknown as { from: (t: string) => ListBuilder })
       .from("products")
-      .select("id, slug, name_i18n, status, brand, created_at")
-      .order("created_at", { ascending: false });
+      .select("id, slug, name_i18n, status, brand, created_at", {
+        count: "exact",
+      });
+    if (q) qb = qb.or(`slug.ilike.%${q}%,brand.ilike.%${q}%`);
+    const { data, count } = await qb
+      .order("created_at", { ascending: false })
+      .range(from, to);
     products = data ?? [];
+    total = count ?? 0;
 
     const { data: sup } = await (supabase as unknown as {
       from: (t: string) => {
         select: (q: string) => {
-          order: (k: string, opts: { ascending: boolean }) => Promise<{ data: { id: string; name: string }[] | null }>;
+          order: (
+            k: string,
+            opts: { ascending: boolean },
+          ) => Promise<{ data: { id: string; name: string }[] | null }>;
         };
       };
     })
@@ -52,6 +77,15 @@ export default async function AdminProductsPage() {
   } catch {
     products = [];
   }
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const linkTo = (p: number) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (p > 1) params.set("page", String(p));
+    const s = params.toString();
+    return `/admin/products${s ? `?${s}` : ""}`;
+  };
 
   return (
     <div>
@@ -123,6 +157,16 @@ export default async function AdminProductsPage() {
         </Card>
       </details>
 
+      <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
+        <Input
+          name="q"
+          defaultValue={q}
+          placeholder="Slug ou marque…"
+          className="max-w-xs"
+        />
+        <Button type="submit">Rechercher</Button>
+      </form>
+
       <Card>
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
@@ -138,7 +182,7 @@ export default async function AdminProductsPage() {
             {products.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-12 text-center text-[var(--color-muted)]">
-                  Aucun produit. Crée ton premier produit pour démarrer.
+                  Aucun produit.
                 </td>
               </tr>
             ) : (
@@ -177,6 +221,30 @@ export default async function AdminProductsPage() {
           </tbody>
         </table>
       </Card>
+
+      <div className="mt-4 flex items-center justify-between text-sm text-[var(--color-muted)]">
+        <span>
+          {total} produit(s) · page {page}/{totalPages}
+        </span>
+        <div className="flex gap-2">
+          {page > 1 && (
+            <Link
+              href={linkTo(page - 1) as never}
+              className="rounded-md border border-[var(--color-border)] px-3 py-1.5 hover:bg-[var(--color-bg)]"
+            >
+              ← Précédent
+            </Link>
+          )}
+          {page < totalPages && (
+            <Link
+              href={linkTo(page + 1) as never}
+              className="rounded-md border border-[var(--color-border)] px-3 py-1.5 hover:bg-[var(--color-bg)]"
+            >
+              Suivant →
+            </Link>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

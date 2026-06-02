@@ -13,6 +13,10 @@ export default function AccountSecurityPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailMsg, setEmailMsg] = useState<string | null>(null);
+  const [emailErr, setEmailErr] = useState<string | null>(null);
+  const [emailLoading, setEmailLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,6 +38,26 @@ export default function AccountSecurityPage() {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onChangeEmail(e: React.FormEvent) {
+    e.preventDefault();
+    setEmailErr(null);
+    setEmailMsg(null);
+    setEmailLoading(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ email });
+      if (error) throw error;
+      setEmailMsg(
+        "E-mail de confirmation envoyé à la nouvelle adresse. Le changement sera effectif après validation du lien.",
+      );
+      setEmail("");
+    } catch (err) {
+      setEmailErr(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setEmailLoading(false);
     }
   }
 
@@ -78,6 +102,32 @@ export default function AccountSecurityPage() {
 
           <Button type="submit" disabled={loading}>
             {loading ? "…" : "Mettre à jour"}
+          </Button>
+        </form>
+      </Card>
+
+      <Card className="mt-6 max-w-md p-6">
+        <h2 className="mb-4 font-medium">Changer l&apos;adresse e-mail</h2>
+        <form onSubmit={onChangeEmail} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="new-email">Nouvelle adresse e-mail</Label>
+            <Input
+              id="new-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+            />
+          </div>
+          {emailErr && (
+            <p className="text-sm text-[var(--color-danger)]">{emailErr}</p>
+          )}
+          {emailMsg && (
+            <p className="text-sm text-[var(--color-secondary-700)]">{emailMsg}</p>
+          )}
+          <Button type="submit" disabled={emailLoading}>
+            {emailLoading ? "…" : "Envoyer le lien de confirmation"}
           </Button>
         </form>
       </Card>
