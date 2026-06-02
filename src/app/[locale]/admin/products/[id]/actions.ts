@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { slugify } from "@/lib/utils";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { randomUUID } from "node:crypto";
 
 type Result = { data: unknown; error: { message?: string; code?: string } | null };
 type Chain = {
@@ -301,6 +303,64 @@ export async function deleteImage(formData: FormData) {
   await logAudit({
     actorId: actor.id,
     action: "image.delete",
+    entity: "product",
+    entityId: productId,
+  });
+  revalidate(productId);
+}
+
+// --- Image upload (Supabase Storage) ---------------------------------------
+const BUCKET = "product-images";
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
+];
+
+export async function uploadImage(formData: FormData) {
+  const actor = await requirePermission("products.write");
+  const productId = z.string().uuid().parse(formData.get("productId"));
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Aucun fichier sélectionné.");
+  }
+  if (file.size > 5_000_000) throw new Error("Fichier trop volumineux (max 5 Mo).");
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error("Format non supporté (JPEG, PNG, WebP, AVIF, GIF).");
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Stockage non configuré (SUPABASE_SERVICE_ROLE_KEY).");
+  }
+
+  const ext =
+    (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") ||
+    "jpg";
+  const path = `${productId}/${randomUUID()}.${ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const admin = createAdminClient();
+  const { error: upErr } = await admin.storage
+    .from(BUCKET)
+    .upload(path, buffer, { contentType: file.type, upsert: false });
+  if (upErr) throw new Error(upErr.message ?? "upload_failed");
+
+  const publicUrl = admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+
+  const sb = await db();
+  const { error } = await sb.from("product_images").insert({
+    product_id: productId,
+    storage_path: publicUrl,
+    alt_i18n: {},
+    position: 0,
+  });
+  if (error) throw new Error(error.message ?? "image_record_failed");
+
+  await logAudit({
+    actorId: actor.id,
+    action: "image.upload",
     entity: "product",
     entityId: productId,
   });
