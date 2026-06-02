@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 
 const ORDER_STATUSES = [
   "pending",
@@ -44,7 +45,7 @@ type LooseClient = {
 };
 
 export async function updateOrderStatus(formData: FormData) {
-  await requireStaff();
+  const actor = await requireStaff();
   const data = StatusSchema.parse({
     orderId: formData.get("orderId"),
     status: formData.get("status"),
@@ -57,12 +58,20 @@ export async function updateOrderStatus(formData: FormData) {
     .eq("id", data.orderId);
   if (error) throw new Error(error.message ?? "status_update_failed");
 
+  await logAudit({
+    actorId: actor.id,
+    action: "order.status_change",
+    entity: "order",
+    entityId: data.orderId,
+    data: { status: data.status },
+  });
+
   revalidatePath(`/admin/orders/${data.orderId}`);
   revalidatePath("/admin/orders");
 }
 
 export async function upsertShipment(formData: FormData) {
-  await requireStaff();
+  const actor = await requireStaff();
   const data = ShipmentSchema.parse({
     orderId: formData.get("orderId"),
     carrier: (formData.get("carrier") as string) || null,
@@ -103,6 +112,18 @@ export async function upsertShipment(formData: FormData) {
       .insert({ order_id: data.orderId, ...row });
     if (error) throw new Error(error.message ?? "shipment_insert_failed");
   }
+
+  await logAudit({
+    actorId: actor.id,
+    action: "order.shipment_upsert",
+    entity: "order",
+    entityId: data.orderId,
+    data: {
+      carrier: data.carrier,
+      tracking_number: data.tracking_number,
+      status: data.status,
+    },
+  });
 
   revalidatePath(`/admin/orders/${data.orderId}`);
 }

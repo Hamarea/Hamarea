@@ -53,6 +53,12 @@ export default async function AccountLayout({
         >
           Sécurité
         </Link>
+        <Link
+          href="/account/privacy"
+          className="block rounded-md px-3 py-2 hover:bg-[var(--color-primary-50)]"
+        >
+          Confidentialité
+        </Link>
         <div className="pt-4">
           <LogoutButton />
         </div>
