@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfile } from "./actions";
 
@@ -118,7 +118,7 @@ export default async function AccountHomePage() {
             </dl>
           </div>
 
-          <Button type="submit">Enregistrer</Button>
+          <SubmitButton>Enregistrer</SubmitButton>
         </form>
       </Card>
     </div>

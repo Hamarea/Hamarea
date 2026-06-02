@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 
 const CouponSchema = z.object({
   code: z
@@ -27,7 +28,7 @@ type LooseClient = {
 };
 
 export async function createCoupon(formData: FormData) {
-  await requireStaff();
+  const actor = await requirePermission("coupons.write");
   const data = CouponSchema.parse({
     code: formData.get("code"),
     type: formData.get("type"),
@@ -51,11 +52,17 @@ export async function createCoupon(formData: FormData) {
     if (error.code === "23505") throw new Error("Ce code existe déjà.");
     throw new Error(error.message ?? "create_failed");
   }
+  await logAudit({
+    actorId: actor.id,
+    action: "coupon.create",
+    entity: "coupon",
+    data: { code: data.code, type: data.type, value: data.value },
+  });
   revalidatePath("/admin/coupons");
 }
 
 export async function toggleCoupon(formData: FormData) {
-  await requireStaff();
+  const actor = await requirePermission("coupons.write");
   const id = z.string().uuid().parse(formData.get("id"));
   const active = formData.get("active") === "true";
   const supabase = (await createClient()) as unknown as LooseClient;
@@ -64,5 +71,12 @@ export async function toggleCoupon(formData: FormData) {
     .update({ active: !active, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message ?? "toggle_failed");
+  await logAudit({
+    actorId: actor.id,
+    action: "coupon.toggle",
+    entity: "coupon",
+    entityId: id,
+    data: { active: !active },
+  });
   revalidatePath("/admin/coupons");
 }

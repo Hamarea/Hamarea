@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { addAddress, deleteAddress, setDefaultAddress } from "./actions";
@@ -86,16 +86,16 @@ export default async function AddressesPage() {
                     {!a.is_default && (
                       <form action={setDefaultAddress}>
                         <input type="hidden" name="id" value={a.id} />
-                        <Button type="submit" variant="ghost" size="sm">
+                        <SubmitButton variant="ghost" size="sm">
                           Définir par défaut
-                        </Button>
+                        </SubmitButton>
                       </form>
                     )}
                     <form action={deleteAddress}>
                       <input type="hidden" name="id" value={a.id} />
-                      <Button type="submit" variant="destructive" size="sm">
+                      <SubmitButton variant="destructive" size="sm">
                         Supprimer
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 </div>
@@ -172,7 +172,7 @@ export default async function AddressesPage() {
               />
               Définir comme adresse par défaut
             </label>
-            <Button type="submit">Ajouter</Button>
+            <SubmitButton>Ajouter</SubmitButton>
           </form>
         </Card>
       </div>

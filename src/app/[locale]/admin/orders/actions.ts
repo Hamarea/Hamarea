@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
+import { getStripe } from "@/lib/stripe";
 
 const ORDER_STATUSES = [
   "pending",
@@ -44,7 +46,7 @@ type LooseClient = {
 };
 
 export async function updateOrderStatus(formData: FormData) {
-  await requireStaff();
+  const actor = await requirePermission("orders.write");
   const data = StatusSchema.parse({
     orderId: formData.get("orderId"),
     status: formData.get("status"),
@@ -57,12 +59,20 @@ export async function updateOrderStatus(formData: FormData) {
     .eq("id", data.orderId);
   if (error) throw new Error(error.message ?? "status_update_failed");
 
+  await logAudit({
+    actorId: actor.id,
+    action: "order.status_change",
+    entity: "order",
+    entityId: data.orderId,
+    data: { status: data.status },
+  });
+
   revalidatePath(`/admin/orders/${data.orderId}`);
   revalidatePath("/admin/orders");
 }
 
 export async function upsertShipment(formData: FormData) {
-  await requireStaff();
+  const actor = await requirePermission("orders.write");
   const data = ShipmentSchema.parse({
     orderId: formData.get("orderId"),
     carrier: (formData.get("carrier") as string) || null,
@@ -103,6 +113,103 @@ export async function upsertShipment(formData: FormData) {
       .insert({ order_id: data.orderId, ...row });
     if (error) throw new Error(error.message ?? "shipment_insert_failed");
   }
+
+  await logAudit({
+    actorId: actor.id,
+    action: "order.shipment_upsert",
+    entity: "order",
+    entityId: data.orderId,
+    data: {
+      carrier: data.carrier,
+      tracking_number: data.tracking_number,
+      status: data.status,
+    },
+  });
+
+  revalidatePath(`/admin/orders/${data.orderId}`);
+}
+
+const RefundSchema = z.object({
+  orderId: z.string().uuid(),
+  amount: z.coerce.number().positive().max(1_000_000),
+  reason: z.string().trim().max(500).optional().or(z.literal("")).nullable(),
+});
+
+type RefundClient = {
+  from: (t: string) => {
+    select: (q: string) => {
+      eq: (
+        k: string,
+        v: string,
+      ) => {
+        maybeSingle: () => Promise<{
+          data: { stripe_payment_intent_id: string | null; total_cents: number } | null;
+        }>;
+      };
+    };
+    insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }>;
+    update: (row: Record<string, unknown>) => {
+      eq: (k: string, v: string) => Promise<{ error: { message?: string } | null }>;
+    };
+  };
+};
+
+export async function createRefund(formData: FormData) {
+  const actor = await requirePermission("orders.refund");
+  const data = RefundSchema.parse({
+    orderId: formData.get("orderId"),
+    amount: formData.get("amount"),
+    reason: (formData.get("reason") as string) || null,
+  });
+  const amountCents = Math.round(data.amount * 100);
+
+  const supabase = (await createClient()) as unknown as RefundClient;
+  const { data: order } = await supabase
+    .from("orders")
+    .select("stripe_payment_intent_id, total_cents")
+    .eq("id", data.orderId)
+    .maybeSingle();
+  if (!order) throw new Error("order_not_found");
+  if (amountCents > order.total_cents) {
+    throw new Error("Le montant dépasse le total de la commande.");
+  }
+
+  // Real Stripe refund when a payment intent exists; otherwise just record it
+  // (covers manual / off-Stripe refunds).
+  let providerRefundId: string | null = null;
+  const stripe = getStripe();
+  if (stripe && order.stripe_payment_intent_id) {
+    const refund = await stripe.refunds.create({
+      payment_intent: order.stripe_payment_intent_id,
+      amount: amountCents,
+    });
+    providerRefundId = refund.id;
+  }
+
+  const { error } = await supabase.from("refunds").insert({
+    order_id: data.orderId,
+    amount_cents: amountCents,
+    reason: data.reason || null,
+    provider_refund_id: providerRefundId,
+    created_by: actor.id,
+  });
+  if (error) throw new Error(error.message ?? "refund_failed");
+
+  // Full refund → flip the order to refunded.
+  if (amountCents >= order.total_cents) {
+    await supabase
+      .from("orders")
+      .update({ status: "refunded", updated_at: new Date().toISOString() })
+      .eq("id", data.orderId);
+  }
+
+  await logAudit({
+    actorId: actor.id,
+    action: "order.refund",
+    entity: "order",
+    entityId: data.orderId,
+    data: { amount_cents: amountCents, provider_refund_id: providerRefundId },
+  });
 
   revalidatePath(`/admin/orders/${data.orderId}`);
 }

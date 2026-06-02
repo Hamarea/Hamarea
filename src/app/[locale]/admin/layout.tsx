@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect as nextRedirect } from "next/navigation";
 import { redirect } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Settings,
   Truck,
+  ScrollText,
 } from "lucide-react";
 
 const isSupabaseConfigured = () =>
@@ -25,9 +26,12 @@ const isSupabaseConfigured = () =>
 
 export default async function AdminLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const supabaseConfigured = isSupabaseConfigured();
 
   // Backstop: in production without Supabase, /admin must not be reachable.
@@ -65,6 +69,20 @@ export default async function AdminLayout({
       redirect({ href: "/", locale: "fr" });
     }
     userEmail = user!.email ?? "—";
+
+    // MFA step-up gate — no-lockout: enforced only once THIS account has a
+    // verified factor. Fail-open on any error so admins are never locked out.
+    let needsStepUp = false;
+    try {
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      needsStepUp = Boolean(
+        aal && aal.nextLevel === "aal2" && aal.currentLevel === "aal1",
+      );
+    } catch {
+      needsStepUp = false;
+    }
+    if (needsStepUp) nextRedirect(`/${locale}/mfa?next=/admin`);
   }
 
   const t = await getTranslations();
@@ -79,6 +97,7 @@ export default async function AdminLayout({
     { href: "/admin/reviews", label: t("admin.reviews"), icon: Star },
     { href: "/admin/moderation", label: t("admin.moderation"), icon: ShieldCheck },
     { href: "/admin/settings", label: t("admin.settings"), icon: Settings },
+    { href: "/admin/audit", label: "Audit", icon: ScrollText },
   ];
 
   return (

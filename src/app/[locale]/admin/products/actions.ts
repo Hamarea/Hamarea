@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
+import { logAudit } from "@/lib/audit";
 
 const ProductSchema = z.object({
   name_fr: z.string().trim().min(1).max(200),
@@ -30,7 +31,7 @@ type LooseClient = {
 };
 
 export async function createProduct(formData: FormData) {
-  await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = ProductSchema.parse({
     name_fr: formData.get("name_fr"),
     name_en: (formData.get("name_en") as string) || null,
@@ -58,11 +59,17 @@ export async function createProduct(formData: FormData) {
     if (error.code === "23505") throw new Error("Un produit avec ce slug existe déjà.");
     throw new Error(error.message ?? "create_failed");
   }
+  await logAudit({
+    actorId: actor.id,
+    action: "product.create",
+    entity: "product",
+    data: { slug, status: data.status },
+  });
   revalidatePath("/admin/products");
 }
 
 export async function setProductStatus(formData: FormData) {
-  await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = StatusSchema.parse({
     id: formData.get("id"),
     status: formData.get("status"),
@@ -73,5 +80,12 @@ export async function setProductStatus(formData: FormData) {
     .update({ status: data.status, updated_at: new Date().toISOString() })
     .eq("id", data.id);
   if (error) throw new Error(error.message ?? "status_failed");
+  await logAudit({
+    actorId: actor.id,
+    action: "product.status_change",
+    entity: "product",
+    entityId: data.id,
+    data: { status: data.status },
+  });
   revalidatePath("/admin/products");
 }

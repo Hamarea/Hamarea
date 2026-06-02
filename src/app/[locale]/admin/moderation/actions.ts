@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { requirePermission } from "@/lib/auth";
 
 const ModerateSchema = z.object({
   id: z.string().uuid(),
@@ -20,6 +21,7 @@ type RpcClient = {
 };
 
 export async function moderateReview(input: ModerateInput) {
+  await requirePermission("moderation.write");
   const data = ModerateSchema.parse(input);
   const supabase = await createClient();
 

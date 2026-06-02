@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 
 const SupplierSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -30,7 +31,7 @@ type LooseClient = {
 };
 
 export async function createSupplier(formData: FormData) {
-  await requireStaff();
+  const actor = await requirePermission("suppliers.write");
   const data = SupplierSchema.parse({
     name: formData.get("name"),
     contact_email: (formData.get("contact_email") as string) || null,
@@ -48,14 +49,26 @@ export async function createSupplier(formData: FormData) {
     notes: data.notes,
   });
   if (error) throw new Error(error.message ?? "create_failed");
+  await logAudit({
+    actorId: actor.id,
+    action: "supplier.create",
+    entity: "supplier",
+    data: { name: data.name, country: data.country || null },
+  });
   revalidatePath("/admin/suppliers");
 }
 
 export async function deleteSupplier(formData: FormData) {
-  await requireStaff();
+  const actor = await requirePermission("suppliers.write");
   const id = z.string().uuid().parse(formData.get("id"));
   const supabase = (await createClient()) as unknown as LooseClient;
   const { error } = await supabase.from("suppliers").delete().eq("id", id);
   if (error) throw new Error(error.message ?? "delete_failed");
+  await logAudit({
+    actorId: actor.id,
+    action: "supplier.delete",
+    entity: "supplier",
+    entityId: id,
+  });
   revalidatePath("/admin/suppliers");
 }
