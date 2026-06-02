@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 
 const SiteSchema = z.object({
@@ -35,7 +35,7 @@ async function saveKey(key: string, value: Record<string, unknown>) {
 }
 
 export async function saveSite(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("settings.write");
   const data = SiteSchema.parse({
     name: formData.get("name"),
     supportEmail: formData.get("supportEmail"),
@@ -51,7 +51,7 @@ export async function saveSite(formData: FormData) {
 }
 
 export async function saveShipping(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("settings.write");
   const data = ShippingSchema.parse({
     freeAbove: formData.get("freeAbove"),
     flatRate: formData.get("flatRate"),

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { getStripe } from "@/lib/stripe";
 
@@ -46,7 +46,7 @@ type LooseClient = {
 };
 
 export async function updateOrderStatus(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("orders.write");
   const data = StatusSchema.parse({
     orderId: formData.get("orderId"),
     status: formData.get("status"),
@@ -72,7 +72,7 @@ export async function updateOrderStatus(formData: FormData) {
 }
 
 export async function upsertShipment(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("orders.write");
   const data = ShipmentSchema.parse({
     orderId: formData.get("orderId"),
     carrier: (formData.get("carrier") as string) || null,
@@ -155,7 +155,7 @@ type RefundClient = {
 };
 
 export async function createRefund(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("orders.refund");
   const data = RefundSchema.parse({
     orderId: formData.get("orderId"),
     amount: formData.get("amount"),

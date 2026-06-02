@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, ALL_PERMISSIONS } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 
 const RoleSchema = z.object({
@@ -41,5 +41,34 @@ export async function setUserRole(input: { userId: string; role: string }) {
     data: { role: data.role },
   });
 
+  revalidatePath("/admin/customers");
+}
+
+const PermsSchema = z.object({
+  userId: z.string().uuid(),
+  permissions: z.array(z.enum(ALL_PERMISSIONS as [string, ...string[]])),
+});
+
+export async function setUserPermissions(input: {
+  userId: string;
+  permissions: string[];
+}) {
+  const actor = await requireAdmin();
+  const data = PermsSchema.parse(input);
+
+  const supabase = (await createClient()) as unknown as LooseClient;
+  const { error } = await supabase
+    .from("profiles")
+    .update({ permissions: data.permissions, updated_at: new Date().toISOString() })
+    .eq("id", data.userId);
+  if (error) throw new Error(error.message ?? "permissions_update_failed");
+
+  await logAudit({
+    actorId: actor.id,
+    action: "customer.permissions",
+    entity: "profile",
+    entityId: data.userId,
+    data: { permissions: data.permissions },
+  });
   revalidatePath("/admin/customers");
 }

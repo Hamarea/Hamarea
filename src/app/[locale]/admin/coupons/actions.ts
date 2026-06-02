@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 
 const CouponSchema = z.object({
@@ -28,7 +28,7 @@ type LooseClient = {
 };
 
 export async function createCoupon(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("coupons.write");
   const data = CouponSchema.parse({
     code: formData.get("code"),
     type: formData.get("type"),
@@ -62,7 +62,7 @@ export async function createCoupon(formData: FormData) {
 }
 
 export async function toggleCoupon(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("coupons.write");
   const id = z.string().uuid().parse(formData.get("id"));
   const active = formData.get("active") === "true";
   const supabase = (await createClient()) as unknown as LooseClient;

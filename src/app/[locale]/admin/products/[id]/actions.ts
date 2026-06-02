@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { slugify } from "@/lib/utils";
 
@@ -42,7 +42,7 @@ const ProductSchema = z.object({
 });
 
 export async function updateProduct(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = ProductSchema.parse({
     id: formData.get("id"),
     name_fr: formData.get("name_fr"),
@@ -99,7 +99,7 @@ const VariantSchema = z.object({
 });
 
 export async function createVariant(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = VariantSchema.parse({
     productId: formData.get("productId"),
     sku: formData.get("sku"),
@@ -139,7 +139,7 @@ const VariantUpdateSchema = z.object({
 });
 
 export async function updateVariant(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = VariantUpdateSchema.parse({
     productId: formData.get("productId"),
     variantId: formData.get("variantId"),
@@ -173,7 +173,7 @@ export async function updateVariant(formData: FormData) {
 }
 
 export async function deleteVariant(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const productId = z.string().uuid().parse(formData.get("productId"));
   const variantId = z.string().uuid().parse(formData.get("variantId"));
   const sb = await db();
@@ -197,7 +197,7 @@ const InventorySchema = z.object({
 });
 
 export async function setInventory(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = InventorySchema.parse({
     productId: formData.get("productId"),
     variantId: formData.get("variantId"),
@@ -267,7 +267,7 @@ const ImageSchema = z.object({
 });
 
 export async function addImage(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const data = ImageSchema.parse({
     productId: formData.get("productId"),
     url: formData.get("url"),
@@ -292,7 +292,7 @@ export async function addImage(formData: FormData) {
 }
 
 export async function deleteImage(formData: FormData) {
-  const actor = await requireStaff();
+  const actor = await requirePermission("products.write");
   const productId = z.string().uuid().parse(formData.get("productId"));
   const imageId = z.string().uuid().parse(formData.get("imageId"));
   const sb = await db();
