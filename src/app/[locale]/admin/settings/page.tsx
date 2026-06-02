@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { saveSite, saveShipping } from "./actions";
@@ -65,7 +65,7 @@ export default async function AdminSettingsPage() {
                 maxLength={200}
               />
             </div>
-            <Button type="submit">Enregistrer</Button>
+            <SubmitButton>Enregistrer</SubmitButton>
           </form>
         </Card>
 
@@ -100,7 +100,7 @@ export default async function AdminSettingsPage() {
                 {(shipping.flatRate / 100).toFixed(2)} € actuellement.
               </p>
             </div>
-            <Button type="submit">Enregistrer</Button>
+            <SubmitButton>Enregistrer</SubmitButton>
           </form>
         </Card>
 

@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/utils";
@@ -44,7 +44,7 @@ export default async function AdminCouponsPage() {
       <h1 className="font-display text-3xl mb-6">{t("admin.coupons")}</h1>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <Card>
+        <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
               <tr className="text-left">
@@ -83,9 +83,9 @@ export default async function AdminCouponsPage() {
                       <form action={toggleCoupon}>
                         <input type="hidden" name="id" value={c.id} />
                         <input type="hidden" name="active" value={String(c.active)} />
-                        <Button type="submit" variant="ghost" size="sm">
+                        <SubmitButton type="submit" variant="ghost" size="sm">
                           {c.active ? "Désactiver" : "Activer"}
-                        </Button>
+                        </SubmitButton>
                       </form>
                     </td>
                   </tr>
@@ -124,7 +124,7 @@ export default async function AdminCouponsPage() {
               <Label htmlFor="min_subtotal_cents">Minimum panier (centimes)</Label>
               <Input id="min_subtotal_cents" name="min_subtotal_cents" type="number" min={0} defaultValue={0} />
             </div>
-            <Button type="submit">Créer</Button>
+            <SubmitButton>Créer</SubmitButton>
           </form>
         </Card>
       </div>
