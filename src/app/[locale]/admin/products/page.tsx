@@ -189,7 +189,12 @@ export default async function AdminProductsPage({
               products.map((p) => (
                 <tr key={p.id} className="border-b border-[var(--color-border)]">
                   <td className="px-4 py-3 font-medium">
-                    {p.name_i18n?.fr ?? p.slug}
+                    <Link
+                      href={`/admin/products/${p.id}` as never}
+                      className="text-[var(--color-primary-600)] hover:underline"
+                    >
+                      {p.name_i18n?.fr ?? p.slug}
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-[var(--color-muted)]">{p.slug}</td>
                   <td className="px-4 py-3">{p.brand ?? "—"}</td>
