@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { ActionForm } from "@/components/ui/action-form";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfile } from "./actions";
 
@@ -43,7 +44,7 @@ export default async function AccountHomePage() {
     <div>
       <h1 className="font-display text-3xl mb-6">{t("account.profile")}</h1>
       <Card className="max-w-xl p-6">
-        <form action={updateProfile} className="space-y-5">
+        <ActionForm action={updateProfile} className="space-y-5" successMessage="Profil enregistré.">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="full_name">{t("auth.fullName")}</Label>
@@ -119,7 +120,7 @@ export default async function AccountHomePage() {
           </div>
 
           <SubmitButton>Enregistrer</SubmitButton>
-        </form>
+        </ActionForm>
       </Card>
     </div>
   );
