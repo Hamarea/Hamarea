@@ -4,7 +4,6 @@ import { z } from "zod";
 import { getStripe } from "@/lib/stripe";
 import { SACOCHE } from "@/lib/product";
 import {
-  SHIP_TO,
   createPendingOrder,
   priceCart,
   shippingCentsFor,
@@ -14,15 +13,14 @@ import { createClient } from "@/lib/supabase/server";
 import { rateLimitHit } from "@/lib/rate-limit";
 
 /**
- * Hosted Stripe Checkout (card + Apple Pay / Google Pay / Link on the Stripe
- * page). The client may send ONLY references (which product, colour, pack,
- * quantity); the price is ALWAYS recomputed server-side via `priceCart` so a
- * tampered amount can never reach Stripe.
+ * Deferred PaymentIntent for the on-page Express Checkout Element
+ * (Apple Pay / Google Pay / Link — "pay directly with your phone").
  *
- * When Supabase is configured a pending order is persisted up front and its id
- * is propagated to Stripe (session + PaymentIntent metadata) so the webhook can
- * reconcile the payment. The address is collected by Stripe Checkout and
- * written back onto the order by the webhook.
+ * The browser sends ONLY references + the email/shipping method chosen in the
+ * wallet sheet; the amount is recomputed server-side via `priceCart` (same
+ * source of truth as the hosted Checkout). The wallet collects the shipping
+ * address, which Stripe attaches to the PaymentIntent — the existing webhook
+ * (`payment_intent.succeeded`) reconciles the order from `metadata.order_id`.
  */
 const LineSchema = z.object({
   productId: z.string().min(1).max(100),
@@ -32,15 +30,10 @@ const LineSchema = z.object({
 });
 
 const BodySchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional(),
   shippingMethod: z.enum(["standard", "express"]).default("standard"),
   lines: z.array(LineSchema).min(1).max(50),
 });
-
-const SHIPPING_LABEL = {
-  standard: "Livraison standard (3-5j)",
-  express: "Livraison express (1-2j)",
-} as const;
 
 export async function POST(req: Request) {
   const stripe = getStripe();
@@ -51,12 +44,11 @@ export async function POST(req: Request) {
     );
   }
 
-  // Basic abuse throttle by IP: 10 checkout attempts / minute (fail-open).
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
     "unknown";
-  if (!(await rateLimitHit(`checkout:${ip}`, 10, 60))) {
+  if (!(await rateLimitHit(`pi:${ip}`, 10, 60))) {
     return NextResponse.json(
       { error: "Trop de tentatives. Réessaie dans une minute." },
       { status: 429 },
@@ -74,18 +66,15 @@ export async function POST(req: Request) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
   const currency = SACOCHE.currency.toLowerCase();
 
-  // Build line items from the trusted catalogue. Reject anything unknown.
   const priced = priceCart(body.lines, origin);
   if (!priced.ok) {
     return NextResponse.json({ error: priced.error }, { status: 400 });
   }
-  const { lineItems, orderItems, subtotalCents } = priced.cart;
+  const { orderItems, subtotalCents } = priced.cart;
   const shippingCents = shippingCentsFor(subtotalCents, body.shippingMethod);
   const totalCents = subtotalCents + shippingCents;
 
-  // --- Order persistence (best-effort) -------------------------------------
-  // Only when Supabase is configured. Failures are logged but never block the
-  // payment — the sale must not be lost.
+  // Persist a pending order so the webhook can reconcile it (best-effort).
   let orderId: string | null = null;
   const hasDb = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -98,7 +87,7 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser();
     orderId = await createPendingOrder(createAdminClient(), {
       userId: user?.id ?? null,
-      email: body.email,
+      email: body.email ?? "",
       currency: SACOCHE.currency,
       subtotalCents,
       shippingCents,
@@ -107,51 +96,33 @@ export async function POST(req: Request) {
     });
   }
 
-  const metadata: Record<string, string> = { source: "landing", email: body.email };
-  const piMetadata: Record<string, string> = { source: "landing" };
-  if (orderId) {
-    metadata.order_id = orderId;
-    piMetadata.order_id = orderId;
-  }
+  const metadata: Record<string, string> = { source: "express" };
+  if (orderId) metadata.order_id = orderId;
 
-  // Idempotency: same payload submitted twice (double-click) reuses the session.
+  // Idempotency: identical payload (retry) reuses the same PaymentIntent.
   const idempotencyKey = createHash("sha256")
     .update(
-      JSON.stringify({ email: body.email, m: body.shippingMethod, l: body.lines }),
+      JSON.stringify({
+        e: body.email ?? "",
+        m: body.shippingMethod,
+        l: body.lines,
+        t: totalCents,
+      }),
     )
     .digest("hex");
 
   try {
-    const session = await stripe.checkout.sessions.create(
+    const intent = await stripe.paymentIntents.create(
       {
-        mode: "payment",
-        locale: "auto",
-        customer_email: body.email,
-        line_items: lineItems,
-        allow_promotion_codes: true,
-        billing_address_collection: "auto",
-        phone_number_collection: { enabled: true },
-        shipping_address_collection: { allowed_countries: [...SHIP_TO] },
-        shipping_options: [
-          {
-            shipping_rate_data: {
-              type: "fixed_amount",
-              fixed_amount: { amount: shippingCents, currency },
-              display_name:
-                shippingCents === 0
-                  ? "Livraison offerte"
-                  : SHIPPING_LABEL[body.shippingMethod],
-            },
-          },
-        ],
+        amount: totalCents,
+        currency,
+        automatic_payment_methods: { enabled: true },
         metadata,
-        payment_intent_data: { metadata: piMetadata },
-        success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/checkout/cancel`,
+        ...(body.email ? { receipt_email: body.email } : {}),
       },
       { idempotencyKey },
     );
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ clientSecret: intent.client_secret, orderId });
   } catch (err) {
     const message = err instanceof Error ? err.message : "stripe error";
     return NextResponse.json({ error: message }, { status: 502 });

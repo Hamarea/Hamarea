@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/utils";
 import { SHIPPING } from "@/lib/product";
+import { ExpressCheckout } from "@/components/checkout/express-checkout";
 
 const SHIPPING_CENTS = {
   standard: SHIPPING.standardCents,
@@ -88,6 +89,8 @@ export function CheckoutClient() {
   return (
     <form onSubmit={pay} className="grid gap-6 md:grid-cols-[1fr_360px]">
       <div className="space-y-4">
+        <ExpressCheckout shippingMethod={shipping} />
+
         <Card className="p-6">
           <h2 className="mb-4 font-medium">{t("contactTitle")}</h2>
           <div className="space-y-1.5">

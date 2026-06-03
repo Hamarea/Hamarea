@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing";
 import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
 import { CartDrawer } from "@/components/shop/cart-drawer";
+import { WhatsAppButton } from "@/components/shop/whatsapp-button";
 import { MotionProvider } from "@/components/motion-provider";
 import { getProductCopy } from "@/lib/product-content";
 import { ConsentBanner } from "@/components/consent/consent-banner";
@@ -53,6 +54,7 @@ export default async function LocaleLayout({
             </main>
             <ShopFooter />
             <CartDrawer />
+            <WhatsAppButton />
             <ConsentBanner />
             <Analytics />
           </MotionProvider>
