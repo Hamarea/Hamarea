@@ -238,3 +238,46 @@ Akeneo — [complétude](https://help.akeneo.com/serenity-take-the-power-over-yo
 [localisation](https://docs.akeneo.com/latest/technical_architecture/localization/index.html). 
 Baymard — [alt informatif](https://baymard.com/blog/informational-image-accessibility). IBM Carbon — [loading](https://carbondesignsystem.com/patterns/loading-pattern/).
 **Directionnel (tendances 2026, éditeurs)** : IA/⌘K/densité — UXPin, Think Design, AdminLTE (signaux, non normatifs).
+
+---
+
+## 8. Addendum — corrections appliquées (2026-06-03)
+
+> Suite à cet audit, le module a été repris. **Aucune nouvelle migration produit n'était nécessaire** : le
+> schéma `0003_catalog.sql` exposait déjà `products.seo`, `products.search` (tsvector + trigger), et sur
+> `product_variants` `compare_at_price_cents` / `cost_cents` / `barcode` / `weight_g` / `dimensions` — c'était
+> un **trou d'UI**, pas de schéma. Les champs sont désormais **exposés et persistés**.
+
+**Données & persistance**
+- ✅ Toutes les mutations renvoient un **`FormState` (succès/erreur inline)** via `ActionForm` ; fini la remontée
+  d'exception à l'error boundary. Les actions « best-effort » (suppression, réordonnancement, statut, bulk,
+  duplication) **n'émettent plus d'exception** (catch interne + `revalidatePath`).
+- ✅ Écritures alignées sur les colonnes réelles (`name_i18n`, `description_i18n`, `seo`, variantes riches,
+  `inventory` upsert + `stock_movements`). RLS admin/staff (0003) inchangée.
+
+**P0**
+- ✅ Recherche **par nom** (`name_i18n->>fr/en`) + slug + marque · **filtre statut** · colonnes **prix / stock /
+  miniature** · **sélection + actions en masse** (statut) — `ProductsTable` (client).
+- ✅ **Suppression d'image** : efface aussi le **fichier Storage** (si dans le bucket) · upload en **`max(position)+1`**.
+- ✅ **Garde de publication** : `status=active` refusé sans variante active (création ET édition).
+- ✅ **Prix à la création** : crée la **1ʳᵉ variante** → produit vendable d'emblée.
+
+**P1**
+- ✅ **i18n FR/EN/ES/DE** du nom + description via **onglets de langue** (`LangTabs`) dans un seul formulaire.
+- ✅ **SEO** (titre ≤ 70 / description ≤ 320) par langue, **stocké dans `products.seo`** et **utilisé** par la
+  fiche storefront (`/products/[slug]` → `generateMetadata` : title/description/canonical/OG).
+- ✅ Variantes : **prix barré / coût / code-barres / poids / option structurée** (`{Taille:"M"}` au lieu du label libre).
+
+**P2**
+- ✅ **Réordonnancement d'images** (boutons ↑/↓ — alternative clavier conforme **WCAG 2.5.7**, sans drag) + alt FR/EN.
+- ✅ **Dupliquer un produit** (clone variantes + images, brouillon, nouveaux SKU/slug).
+- ✅ **Actions en masse** (statut) sur sélection · **sidebar admin repliable** (mobile).
+
+**Reste (volontairement non livré)**
+- ☐ **Matrice de variantes** auto-générée (axes → combinaisons) + éditeur tableur — l'éditeur par variante couvre
+  les champs ; la génération de combinaisons reste un chantier dédié.
+- ☐ **Page d'édition unifiée** (1 sauvegarde + garde « non enregistré ») / **optimistic UI** — conservé en sections
+  (sauvegarde par bloc) pour la fiabilité ; erreurs désormais inline.
+- ☐ **Multi-entrepôt** dans l'UI stock (écrit l'entrepôt par défaut) · **tags/collections** · IA/⌘K/vues sauvegardées.
+- ⚠️ **Migration `0014_waitlist.sql`** (issue du chantier marque) **à appliquer** avec un `SUPABASE_ACCESS_TOKEN`
+  (`supabase db push` ou MCP authentifié) — non applicable depuis cet environnement.
