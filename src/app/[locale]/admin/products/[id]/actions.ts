@@ -611,3 +611,122 @@ export async function duplicateProduct(formData: FormData): Promise<void> {
     /* swallow */
   }
 }
+
+// --- Variant matrix generator ----------------------------------------------
+const MAX_COMBINATIONS = 100;
+
+/** Cartesian product of option axes → ordered combination objects. */
+function cartesian(axes: { name: string; values: string[] }[]): Record<string, string>[] {
+  return axes.reduce<Record<string, string>[]>(
+    (acc, axis) => {
+      const out: Record<string, string>[] = [];
+      for (const combo of acc) for (const v of axis.values) out.push({ ...combo, [axis.name]: v });
+      return out;
+    },
+    [{}],
+  );
+}
+
+/** Order-independent canonical key for an option_values map (for de-duping). */
+function comboKey(ov: Record<string, unknown>): string {
+  return JSON.stringify(
+    Object.entries(ov)
+      .map(([k, v]) => [k.toLowerCase().trim(), String(v).toLowerCase().trim()])
+      .sort(),
+  );
+}
+
+/**
+ * Generate one variant per option combination (size × colour …). Up to 3 axes,
+ * ≤100 combinations; combinations that already exist are skipped (no dup SKUs).
+ */
+export async function generateVariants(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const actor = await requirePermission("products.write");
+    const productId = z.string().uuid().parse(formData.get("productId"));
+    const basePrice = z.coerce.number().min(0).max(1_000_000).parse(formData.get("basePrice"));
+    const prefixRaw = ((formData.get("skuPrefix") as string) || "").trim();
+
+    const axes: { name: string; values: string[] }[] = [];
+    for (let i = 1; i <= 3; i++) {
+      const name = ((formData.get(`optionName${i}`) as string) || "").trim();
+      const values = ((formData.get(`optionValues${i}`) as string) || "")
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+      if (name && values.length > 0) axes.push({ name, values: [...new Set(values)] });
+    }
+    if (axes.length === 0) return err("Renseigne au moins une option avec des valeurs.");
+
+    const combos = cartesian(axes);
+    if (combos.length > MAX_COMBINATIONS) {
+      return err(`Trop de combinaisons (${combos.length}). Maximum ${MAX_COMBINATIONS}.`);
+    }
+
+    const sb = await db();
+
+    // Existing combos + a sensible SKU prefix.
+    const { data: prod } = await sb.from("products").select("slug").eq("id", productId).maybeSingle();
+    const slug = (prod as { slug: string } | null)?.slug ?? "var";
+    const prefix = (prefixRaw || slug).toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 16) || "VAR";
+
+    const { data: existing } = await sb
+      .from("product_variants")
+      .select("option_values, position")
+      .eq("product_id", productId);
+    const rows = (existing as { option_values: Record<string, unknown>; position: number }[] | null) ?? [];
+    const existingKeys = new Set(rows.map((r) => comboKey(r.option_values ?? {})));
+    let position = rows.reduce((m, r) => Math.max(m, r.position ?? 0), -1) + 1;
+
+    let created = 0;
+    for (const combo of combos) {
+      if (existingKeys.has(comboKey(combo))) continue;
+      const token = Object.values(combo)
+        .map((v) => slugify(v).toUpperCase().replace(/-/g, ""))
+        .join("-")
+        .slice(0, 90);
+      let sku = `${prefix}-${token}`.slice(0, 120);
+      let attempt = await sb.from("product_variants").insert({
+        product_id: productId,
+        sku,
+        price_cents: cents(basePrice),
+        option_values: combo,
+        active: true,
+        position: position++,
+      });
+      if (attempt.error?.code === "23505") {
+        // SKU collision — retry once with a short random suffix.
+        sku = `${sku.slice(0, 113)}-${randomUUID().slice(0, 4)}`;
+        attempt = await sb.from("product_variants").insert({
+          product_id: productId,
+          sku,
+          price_cents: cents(basePrice),
+          option_values: combo,
+          active: true,
+          position: position++,
+        });
+      }
+      if (!attempt.error) {
+        created++;
+        existingKeys.add(comboKey(combo));
+      }
+    }
+
+    await logAudit({
+      actorId: actor.id,
+      action: "variant.generate",
+      entity: "product",
+      entityId: productId,
+      data: { axes: axes.map((a) => a.name), created },
+    });
+    revalidate(productId);
+    return created > 0
+      ? ok()
+      : err("Aucune nouvelle combinaison — toutes existent déjà.");
+  } catch (e) {
+    return err(toMessage(e));
+  }
+}

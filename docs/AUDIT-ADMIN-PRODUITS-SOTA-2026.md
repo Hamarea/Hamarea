@@ -272,12 +272,14 @@ Baymard — [alt informatif](https://baymard.com/blog/informational-image-access
 - ✅ **Réordonnancement d'images** (boutons ↑/↓ — alternative clavier conforme **WCAG 2.5.7**, sans drag) + alt FR/EN.
 - ✅ **Dupliquer un produit** (clone variantes + images, brouillon, nouveaux SKU/slug).
 - ✅ **Actions en masse** (statut) sur sélection · **sidebar admin repliable** (mobile).
+- ✅ **Matrice de variantes** (`generateVariants`) : génération auto des combinaisons (≤ 3 axes, ≤ 100), SKU
+  dérivés + uniques, **combinaisons déjà présentes ignorées** (pas de doublon).
+- ✅ **Garde « modifications non enregistrées »** sur le formulaire Contenu (beforeunload).
 
 **Reste (volontairement non livré)**
-- ☐ **Matrice de variantes** auto-générée (axes → combinaisons) + éditeur tableur — l'éditeur par variante couvre
-  les champs ; la génération de combinaisons reste un chantier dédié.
-- ☐ **Page d'édition unifiée** (1 sauvegarde + garde « non enregistré ») / **optimistic UI** — conservé en sections
-  (sauvegarde par bloc) pour la fiabilité ; erreurs désormais inline.
+- ☐ **Éditeur tableur** de la matrice (copier/coller cellule) + **page d'édition unifiée** (1 seule sauvegarde) /
+  **optimistic UI** — la sauvegarde reste **par bloc** (fiable, erreurs inline) ; le garde « non enregistré »
+  couvre déjà le bloc Contenu.
 - ☐ **Multi-entrepôt** dans l'UI stock (écrit l'entrepôt par défaut) · **tags/collections** · IA/⌘K/vues sauvegardées.
 - ⚠️ **Migration `0014_waitlist.sql`** (issue du chantier marque) **à appliquer** avec un `SUPABASE_ACCESS_TOKEN`
   (`supabase db push` ou MCP authentifié) — non applicable depuis cet environnement.

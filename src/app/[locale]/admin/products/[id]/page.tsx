@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionForm } from "@/components/ui/action-form";
 import { LangTabs } from "@/components/admin/lang-tabs";
+import { UnsavedGuard } from "@/components/admin/unsaved-guard";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { routing } from "@/i18n/routing";
@@ -15,6 +16,7 @@ import {
   createVariant,
   updateVariant,
   deleteVariant,
+  generateVariants,
   setInventory,
   addImage,
   deleteImage,
@@ -203,6 +205,7 @@ export default async function AdminProductEdit({
         <h2 className="mb-4 font-medium">Contenu &amp; SEO</h2>
         <ActionForm action={updateProduct} successMessage="Enregistré." className="space-y-4">
           <input type="hidden" name="id" value={product.id} />
+          <UnsavedGuard />
           <LangTabs panels={langPanels} />
 
           <div className="grid gap-3 border-t border-[var(--color-border)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -304,6 +307,35 @@ export default async function AdminProductEdit({
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+          <h3 className="mb-2 text-sm font-medium">Générer des variantes (matrice)</h3>
+          <ActionForm
+            action={generateVariants}
+            successMessage="Variantes générées."
+            className="space-y-3"
+          >
+            <input type="hidden" name="productId" value={product.id} />
+            <div className="flex flex-wrap items-end gap-3">
+              <Field label="Préfixe SKU" name="skuPrefix" className="w-32" placeholder="auto (slug)" maxLength={16} />
+              <Field label="Prix de base (EUR)" name="basePrice" type="number" step="0.01" min="0" required className="w-32" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-end gap-2">
+                  <Field label={`Option ${i}`} name={`optionName${i}`} className="w-24" placeholder={i === 1 ? "Taille" : i === 2 ? "Couleur" : ""} maxLength={60} />
+                  <Field label="Valeurs (virgules)" name={`optionValues${i}`} className="flex-1" placeholder={i === 1 ? "S, M, L" : i === 2 ? "Bleu, Rouge" : ""} maxLength={500} />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <SubmitButton size="sm" variant="secondary">Générer les combinaisons</SubmitButton>
+              <span className="text-xs text-[var(--color-muted)]">
+                1 variante par combinaison (max 100) · les combinaisons existantes sont ignorées.
+              </span>
+            </div>
+          </ActionForm>
         </div>
 
         <div className="mt-5 border-t border-[var(--color-border)] pt-4">
