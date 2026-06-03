@@ -2,49 +2,61 @@
 @plugin "tailwindcss-animate";
 
 @theme {
-  /* Brand palette: bleu profond / vert sauge / marron terre */
-  --color-primary-50: #eef3f9;
-  --color-primary-100: #d3def0;
-  --color-primary-200: #a7bde0;
-  --color-primary-300: #7a9bd0;
-  --color-primary-400: #4d7ac0;
-  --color-primary-500: #2c5a9c;
-  --color-primary-600: #1e3a5f;
-  --color-primary-700: #182f4d;
-  --color-primary-800: #11233a;
-  --color-primary-900: #0a1626;
+  /* ───────────────────────────────────────────────────────────────────────
+   * Hamarea — « Énergie Océan » (Just Run & Swim)
+   * Identité sport/océan énergique, registre éditorial (logo serif noir).
+   * Teintes vives = ACCENTS ; variantes 600/700 « text-safe » (≥ 4,5:1 sur
+   * blanc) pour CTA/texte (WCAG 1.4.3). On ne code jamais le sens par la seule
+   * couleur. Tokens conservés (primary/secondary/accent) → tout le site adopte
+   * la nouvelle identité sans réécrire chaque composant.
+   * ─────────────────────────────────────────────────────────────────────── */
 
-  --color-secondary-50: #eef5f0;
-  --color-secondary-100: #d2e3d6;
-  --color-secondary-200: #a5c7ad;
-  --color-secondary-300: #79ab85;
-  --color-secondary-400: #4a7c59;
-  --color-secondary-500: #3e6849;
-  --color-secondary-600: #32543b;
-  --color-secondary-700: #25402d;
-  --color-secondary-800: #192c1f;
-  --color-secondary-900: #0c1610;
+  /* Primaire — LAGON (turquoise) : CTA, liens, fonds profonds */
+  --color-primary-50: #ecfeff;
+  --color-primary-100: #cbf6fd;
+  --color-primary-200: #a2ecf9;
+  --color-primary-300: #62dbef;
+  --color-primary-400: #22c6e0; /* vif (accent) */
+  --color-primary-500: #0aa3c2;
+  --color-primary-600: #0e7490; /* CTA — texte blanc AA ✓ */
+  --color-primary-700: #155e75;
+  --color-primary-800: #134b5e;
+  --color-primary-900: #0a2233; /* abysse-teal — hero/footer sombres */
 
-  --color-accent-50: #f7f0ea;
-  --color-accent-100: #e9d6c4;
-  --color-accent-200: #d3ad89;
-  --color-accent-300: #b78460;
-  --color-accent-400: #8b5a3c;
-  --color-accent-500: #744a31;
-  --color-accent-600: #5d3b27;
-  --color-accent-700: #462c1d;
-  --color-accent-800: #2f1e14;
-  --color-accent-900: #180f0a;
+  /* Secondaire — CORAIL (corail/coucher de soleil) : pop énergique, promo */
+  --color-secondary-50: #fff2ef;
+  --color-secondary-100: #ffe1db;
+  --color-secondary-200: #ffc6bb;
+  --color-secondary-300: #ff9d8b;
+  --color-secondary-400: #ff6f57; /* vif (accent) */
+  --color-secondary-500: #fb5036;
+  --color-secondary-600: #db3a20; /* CTA — texte blanc AA ✓ */
+  --color-secondary-700: #bd2f18;
+  --color-secondary-800: #9a2814;
+  --color-secondary-900: #5c1a0e;
 
-  --color-bg: #faf7f2;
+  /* Tertiaire — SOLEIL (ambre/sable doré) : highlights parcimonieux */
+  --color-accent-50: #fff8eb;
+  --color-accent-100: #fdecc8;
+  --color-accent-200: #fbd88c;
+  --color-accent-300: #f8c14f;
+  --color-accent-400: #f6ad2b; /* vif (texte foncé) */
+  --color-accent-500: #e08a0b;
+  --color-accent-600: #b45309; /* texte blanc AA ✓ */
+  --color-accent-700: #8a3f08;
+  --color-accent-800: #6b3210;
+  --color-accent-900: #3f1d09;
+
+  /* Neutres — SABLE (fond chaud) + ABYSSE (encre) */
+  --color-bg: #f7f5f0;
   --color-surface: #ffffff;
-  --color-foreground: #1f2933;
-  --color-muted: #5b626e;
-  --color-muted-foreground: #5b626e;
-  --color-border: #e5e1d8;
-  --color-success: #4a7c59;
-  --color-warning: #c08a3e;
-  --color-danger: #b23a48;
+  --color-foreground: #0c1b24; /* abysse — encre du logo */
+  --color-muted: #586470;
+  --color-muted-foreground: #586470;
+  --color-border: #e6e1d6;
+  --color-success: #2f9e6f;
+  --color-warning: #d08a1e;
+  --color-danger: #d4352a;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Fraunces", Georgia, serif;
@@ -91,6 +103,29 @@
   .container-page {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
+  /* Label de marque type « JUST RUN & SWIM » (grotesque, lettré) */
+  .brand-eyebrow {
+    @apply inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em];
+    font-family: var(--font-sans);
+  }
+  /* Dégradé océan (Lagon → Corail) pour filets/accents */
+  .brand-gradient {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-primary-400),
+      var(--color-primary-600) 45%,
+      var(--color-secondary-500)
+    );
+  }
+}
+
+/* Wordmark Hamarea recolorable via `currentColor` (masque CSS) */
+.brand-logo {
+  display: inline-block;
+  aspect-ratio: 313 / 54;
+  background-color: currentColor;
+  -webkit-mask: url("/brand/hamarea-logo.svg") center / contain no-repeat;
+  mask: url("/brand/hamarea-logo.svg") center / contain no-repeat;
 }
 
 @keyframes marquee {

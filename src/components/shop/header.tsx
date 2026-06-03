@@ -5,30 +5,32 @@ import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { ShoppingBag, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/brand/logo";
 import { useCart } from "@/stores/cart";
 import { useCartUI } from "@/stores/cart-ui";
-import { getProductCopy } from "@/lib/product-content";
+import { getBrandCopy } from "@/lib/brand-content";
 import { LocaleSwitcher } from "./locale-switcher";
 import { cn } from "@/lib/utils";
 
 export function ShopHeader() {
   const t = useTranslations();
-  const nav = getProductCopy(useLocale()).nav;
+  const nav = getBrandCopy(useLocale()).nav;
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  // Pages that open with a full-bleed dark hero → the header overlays them.
+  const darkHero = pathname === "/" || pathname === "/sacoche";
   const count = useCart((s) => s.count());
   const openDrawer = useCartUI((s) => s.openDrawer);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const NAV = [
-    { href: "/#acheter", label: nav.sacoche },
-    { href: "/#avis", label: nav.avis },
-    { href: "/#faq", label: nav.faq },
+  const NAV: { href: string; label: string }[] = [
+    { href: "/sacoche", label: nav.sacoche },
+    { href: "/#univers", label: nav.univers },
+    { href: "/about", label: nav.about },
   ];
 
   useEffect(() => {
-    if (!isHome) {
+    if (!darkHero) {
       setScrolled(true);
       return;
     }
@@ -36,7 +38,7 @@ export function ShopHeader() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isHome]);
+  }, [darkHero]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -47,7 +49,7 @@ export function ShopHeader() {
     return () => document.removeEventListener("keydown", onKey);
   }, [menuOpen]);
 
-  const overlay = isHome && !scrolled && !menuOpen;
+  const overlay = darkHero && !scrolled && !menuOpen;
 
   return (
     <header
@@ -61,17 +63,15 @@ export function ShopHeader() {
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link
           href="/"
-          className={cn(
-            "font-display text-2xl tracking-tight",
-            overlay ? "text-white" : "text-[var(--color-primary-700)]",
-          )}
+          aria-label="Hamarea"
+          className={cn(overlay ? "text-white" : "text-[var(--color-foreground)]")}
         >
-          Hamarea
+          <Logo className="h-5 md:h-6" />
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
           {NAV.map((it) => (
-            <a
+            <Link
               key={it.href}
               href={it.href}
               className={cn(
@@ -80,17 +80,8 @@ export function ShopHeader() {
               )}
             >
               {it.label}
-            </a>
+            </Link>
           ))}
-          <Link
-            href="/about"
-            className={cn(
-              "transition-opacity hover:opacity-80",
-              overlay ? "text-white/90" : "hover:text-[var(--color-primary-600)]",
-            )}
-          >
-            {nav.about}
-          </Link>
         </nav>
 
         <div className="flex items-center gap-1">
@@ -147,31 +138,22 @@ export function ShopHeader() {
           <ul className="flex flex-col gap-1 text-sm font-medium">
             {NAV.map((it) => (
               <li key={it.href}>
-                <a
+                <Link
                   href={it.href}
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-md px-3 py-3 hover:bg-white"
                 >
                   {it.label}
-                </a>
+                </Link>
               </li>
             ))}
-            <li>
-              <Link
-                href="/about"
-                onClick={() => setMenuOpen(false)}
-                className="block rounded-md px-3 py-3 hover:bg-white"
-              >
-                {nav.about}
-              </Link>
-            </li>
             <li>
               <Link
                 href="/contact"
                 onClick={() => setMenuOpen(false)}
                 className="block rounded-md px-3 py-3 hover:bg-white"
               >
-                {nav.contact}
+                {t("nav.contact")}
               </Link>
             </li>
           </ul>

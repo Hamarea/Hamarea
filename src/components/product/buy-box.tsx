@@ -208,7 +208,7 @@ export function BuyBox({
       {!compact && (
         <Button
           size="lg"
-          variant={dark ? "secondary" : "accent"}
+          variant="secondary"
           className="mt-2 w-full"
           onClick={onBuyNow}
         >

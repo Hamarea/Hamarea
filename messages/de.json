@@ -114,7 +114,7 @@
     "flagBy": "Gemeldet von",
     "errors": { "forbidden": "Nur für das Moderations-Team.", "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen." }
   },
-  "footer": { "rights": "Alle Rechte vorbehalten.", "legal": "Impressum", "terms": "AGB", "privacy": "Datenschutz", "contact": "Kontakt" },
+  "footer": { "rights": "Alle Rechte vorbehalten.", "legal": "Impressum", "terms": "AGB", "privacy": "Datenschutz", "contact": "Kontakt", "withdrawal": "Widerruf 14 Tage" },
   "legal": {
     "placeholder": "Diese Seite wird bald ergänzt. Bitte melden Sie sich bei Fragen.",
     "lastUpdated": "Letzte Aktualisierung: {date}"

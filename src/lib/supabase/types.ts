@@ -356,24 +356,33 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          confirmed_at: string | null
           consent_at: string
           email: string
           id: string
+          interests: string[]
           locale: string
+          source: string
           unsubscribed_at: string | null
         }
         Insert: {
+          confirmed_at?: string | null
           consent_at?: string
           email: string
           id?: string
+          interests?: string[]
           locale?: string
+          source?: string
           unsubscribed_at?: string | null
         }
         Update: {
+          confirmed_at?: string | null
           consent_at?: string
           email?: string
           id?: string
+          interests?: string[]
           locale?: string
+          source?: string
           unsubscribed_at?: string | null
         }
         Relationships: []
