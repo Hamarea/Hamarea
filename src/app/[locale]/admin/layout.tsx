@@ -3,6 +3,7 @@ import { redirect } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { CommandPalette } from "@/components/admin/command-palette";
 import {
   LayoutDashboard,
   Package,
@@ -100,6 +101,12 @@ export default async function AdminLayout({
     { href: "/admin/audit", label: "Audit", icon: <ScrollText className={ic} /> },
   ];
 
+  const paletteItems = [
+    ...items.map((it) => ({ label: it.label, href: it.href })),
+    { label: "Action : nouveau produit", href: "/admin/products" },
+    { label: "Voir la boutique", href: "/" },
+  ];
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)] md:grid md:grid-cols-[240px_1fr]">
       <AdminSidebar
@@ -107,7 +114,12 @@ export default async function AdminLayout({
         userEmail={userEmail}
         supabaseConfigured={supabaseConfigured}
       />
-      <main className="p-6 md:p-10">{children}</main>
+      <main className="p-6 md:p-10">
+        <div className="mb-6 flex justify-end">
+          <CommandPalette items={paletteItems} />
+        </div>
+        {children}
+      </main>
     </div>
   );
 }

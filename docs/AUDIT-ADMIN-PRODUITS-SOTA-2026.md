@@ -275,11 +275,14 @@ Baymard — [alt informatif](https://baymard.com/blog/informational-image-access
 - ✅ **Matrice de variantes** (`generateVariants`) : génération auto des combinaisons (≤ 3 axes, ≤ 100), SKU
   dérivés + uniques, **combinaisons déjà présentes ignorées** (pas de doublon).
 - ✅ **Garde « modifications non enregistrées »** sur le formulaire Contenu (beforeunload).
+- ✅ **Palette de commandes ⌘K** (`CommandPalette`) — navigation entre sections + actions rapides au clavier
+  (tendance admin 2026), montée dans le layout admin.
 
 **Reste (volontairement non livré)**
 - ☐ **Éditeur tableur** de la matrice (copier/coller cellule) + **page d'édition unifiée** (1 seule sauvegarde) /
   **optimistic UI** — la sauvegarde reste **par bloc** (fiable, erreurs inline) ; le garde « non enregistré »
   couvre déjà le bloc Contenu.
-- ☐ **Multi-entrepôt** dans l'UI stock (écrit l'entrepôt par défaut) · **tags/collections** · IA/⌘K/vues sauvegardées.
+- ☐ **Multi-entrepôt** dans l'UI stock (écrit l'entrepôt par défaut) · **tags/collections** · IA (génération
+  description/alt/SEO) · vues sauvegardées.
 - ⚠️ **Migration `0014_waitlist.sql`** (issue du chantier marque) **à appliquer** avec un `SUPABASE_ACCESS_TOKEN`
   (`supabase db push` ou MCP authentifié) — non applicable depuis cet environnement.
