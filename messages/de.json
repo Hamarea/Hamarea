@@ -15,6 +15,7 @@
     "inStock": "Auf Lager",
     "freeShipping": "Kostenloser Versand",
     "loading": "Lädt…",
+    "whatsappChat": "Per WhatsApp chatten",
     "currency": "EUR"
   },
   "nav": { "home": "Start", "shop": "Shop", "categories": "Kategorien", "about": "Über uns", "contact": "Kontakt", "admin": "Admin" },
@@ -70,6 +71,8 @@
     "viewProduct": "Produkt ansehen",
     "emptyCart": "Dein Warenkorb ist leer.",
     "paymentError": "Zahlungsfehler",
+    "expressTitle": "Express-Bezahlung",
+    "orCard": "oder mit Karte zahlen",
     "success": {
       "thanks": "Danke für deine Bestellung! 🎉",
       "confirmed": "Deine Zahlung ist bestätigt. Eine Bestätigungs-E-Mail wurde dir gesendet.",
@@ -92,7 +95,7 @@
       "viewCart": "Warenkorb ansehen"
     }
   },
-  "auth": { "loginTitle": "Anmelden", "signupTitle": "Konto erstellen", "email": "E-Mail", "password": "Passwort", "fullName": "Vollständiger Name", "forgotPassword": "Passwort vergessen?", "submit": "Weiter", "googleLogin": "Mit Google fortfahren", "noAccount": "Noch kein Konto?", "hasAccount": "Bereits registriert?" },
+  "auth": { "loginTitle": "Anmelden", "signupTitle": "Konto erstellen", "email": "E-Mail", "password": "Passwort", "fullName": "Vollständiger Name", "forgotPassword": "Passwort vergessen?", "submit": "Weiter", "googleLogin": "Mit Google fortfahren", "or": "oder", "noAccount": "Noch kein Konto?", "hasAccount": "Bereits registriert?" },
   "account": { "myOrders": "Meine Bestellungen", "addresses": "Adressen", "profile": "Profil", "wishlist": "Wunschliste", "security": "Sicherheit", "privacy": "Datenschutz", "phone": "Telefon", "language": "Sprache", "currency": "Währung", "marketingOptIn": "Ich möchte Angebote und Neuigkeiten per E-Mail erhalten.", "save": "Speichern", "saved": "Profil gespeichert.", "orderStatus": { "pending": "Ausstehend", "paid": "Bezahlt", "processing": "In Bearbeitung", "shipped": "Versandt", "delivered": "Geliefert", "cancelled": "Storniert", "refunded": "Erstattet" } },
   "admin": { "dashboard": "Dashboard", "products": "Produkte", "orders": "Bestellungen", "customers": "Kunden", "stock": "Lager", "categories": "Kategorien", "coupons": "Gutscheine", "reviews": "Bewertungen", "moderation": "Moderation", "settings": "Einstellungen" },
   "moderation": {

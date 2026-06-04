@@ -15,6 +15,7 @@
     "inStock": "En stock",
     "freeShipping": "Envío gratis",
     "loading": "Cargando…",
+    "whatsappChat": "Chatear por WhatsApp",
     "currency": "EUR"
   },
   "nav": { "home": "Inicio", "shop": "Tienda", "categories": "Categorías", "about": "Sobre nosotros", "contact": "Contacto", "admin": "Admin" },
@@ -70,6 +71,8 @@
     "viewProduct": "Ver el producto",
     "emptyCart": "Tu carrito está vacío.",
     "paymentError": "Error de pago",
+    "expressTitle": "Pago exprés",
+    "orCard": "o pagar con tarjeta",
     "success": {
       "thanks": "¡Gracias por tu pedido! 🎉",
       "confirmed": "Tu pago se ha confirmado. Te hemos enviado un email con el resumen.",
@@ -92,7 +95,7 @@
       "viewCart": "Ver mi carrito"
     }
   },
-  "auth": { "loginTitle": "Iniciar sesión", "signupTitle": "Crear cuenta", "email": "Email", "password": "Contraseña", "fullName": "Nombre completo", "forgotPassword": "¿Olvidaste tu contraseña?", "submit": "Continuar", "googleLogin": "Continuar con Google", "noAccount": "¿No tienes cuenta?", "hasAccount": "¿Ya tienes cuenta?" },
+  "auth": { "loginTitle": "Iniciar sesión", "signupTitle": "Crear cuenta", "email": "Email", "password": "Contraseña", "fullName": "Nombre completo", "forgotPassword": "¿Olvidaste tu contraseña?", "submit": "Continuar", "googleLogin": "Continuar con Google", "or": "o", "noAccount": "¿No tienes cuenta?", "hasAccount": "¿Ya tienes cuenta?" },
   "account": { "myOrders": "Mis pedidos", "addresses": "Direcciones", "profile": "Perfil", "wishlist": "Favoritos", "security": "Seguridad", "privacy": "Privacidad", "phone": "Teléfono", "language": "Idioma", "currency": "Moneda", "marketingOptIn": "Acepto recibir ofertas y novedades por correo electrónico.", "save": "Guardar", "saved": "Perfil guardado.", "orderStatus": { "pending": "Pendiente", "paid": "Pagado", "processing": "Preparando", "shipped": "Enviado", "delivered": "Entregado", "cancelled": "Cancelado", "refunded": "Reembolsado" } },
   "admin": { "dashboard": "Panel", "products": "Productos", "orders": "Pedidos", "customers": "Clientes", "stock": "Stock", "categories": "Categorías", "coupons": "Cupones", "reviews": "Opiniones", "moderation": "Moderación", "settings": "Ajustes" },
   "moderation": {
