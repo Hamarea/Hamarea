@@ -117,7 +117,7 @@
     "flagBy": "Reportado por",
     "errors": { "forbidden": "Acción reservada al equipo de moderación.", "generic": "Acción imposible. Inténtalo de nuevo." }
   },
-  "footer": { "rights": "Todos los derechos reservados.", "legal": "Aviso legal", "terms": "Términos", "privacy": "Privacidad", "contact": "Contacto" },
+  "footer": { "rights": "Todos los derechos reservados.", "legal": "Aviso legal", "terms": "Términos", "privacy": "Privacidad", "contact": "Contacto", "withdrawal": "Desistimiento 14 días" },
   "legal": {
     "placeholder": "Esta página se completará pronto. Contáctanos si tienes alguna duda.",
     "lastUpdated": "Última actualización: {date}"

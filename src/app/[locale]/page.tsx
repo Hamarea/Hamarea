@@ -1,25 +1,19 @@
-import Image from "next/image";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
-import { HeroImage } from "@/components/product/hero-image";
-import { BuyBox } from "@/components/product/buy-box";
-import { TrustBar } from "@/components/product/trust-bar";
-import { UspGrid } from "@/components/product/usp-grid";
-import { PressBar } from "@/components/product/press-bar";
-import { HowItWorks } from "@/components/product/how-it-works";
-import { ColorsShowcase } from "@/components/product/colors-showcase";
-import { Comparison } from "@/components/product/comparison";
-import { BundlePicker } from "@/components/product/bundle-picker";
-import { Testimonials } from "@/components/product/testimonials";
-import { Faq } from "@/components/product/faq";
-import { VideoReel } from "@/components/product/video-reel";
-import { StickyBuyBar } from "@/components/product/sticky-buy-bar";
-import { ProductJsonLd } from "@/components/product/product-jsonld";
-import { Reveal } from "@/components/ui/reveal";
+import { Link } from "@/i18n/navigation";
+import { ArrowRight } from "lucide-react";
+import { BrandJsonLd } from "@/components/brand/brand-jsonld";
+import { BrandHero } from "@/components/brand/brand-hero";
+import { BrandMarquee } from "@/components/brand/brand-marquee";
+import { ProductUniverse } from "@/components/brand/product-universe";
+import { HeroProductSpotlight } from "@/components/brand/hero-product-spotlight";
+import { OceanCommitment } from "@/components/brand/ocean-commitment";
+import { Community } from "@/components/brand/community";
+import { Waitlist } from "@/components/brand/waitlist";
+import { BrandStory } from "@/components/brand/brand-story";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
-import { CountUp } from "@/components/ui/count-up";
-import { SACOCHE } from "@/lib/product";
-import { getProductCopy } from "@/lib/product-content";
+import { Reveal } from "@/components/ui/reveal";
+import { getBrandCopy } from "@/lib/brand-content";
 
 export async function generateMetadata({
   params,
@@ -27,27 +21,21 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const copy = getProductCopy(locale);
+  const copy = getBrandCopy(locale);
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const path = locale === "fr" ? "/" : `/${locale}`;
   return {
-    title: `${copy.productName} — IPX8 30 m`,
+    title: `Hamarea — ${copy.tagline}`,
     description: copy.hero.subtitle,
     alternates: {
       canonical: path,
-      languages: {
-        fr: "/",
-        en: "/en",
-        es: "/es",
-        de: "/de",
-        "x-default": "/",
-      },
+      languages: { fr: "/", en: "/en", es: "/es", de: "/de", "x-default": "/" },
     },
     openGraph: {
-      title: copy.productName,
+      title: `Hamarea — ${copy.tagline}`,
       description: copy.hero.subtitle,
       url: `${base}${path}`,
-      images: ["/hero.jpg"],
+      images: ["/brand/og-default.png"],
       type: "website",
     },
   };
@@ -60,101 +48,39 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const copy = getProductCopy(locale);
+  const closing = getBrandCopy(locale).closing;
 
   return (
     <>
-      <ProductJsonLd siteUrl={siteUrl} locale={locale} />
+      <BrandJsonLd siteUrl={siteUrl} locale={locale} />
       <ScrollProgress />
 
-      {/* HERO full-bleed (passe sous le header sticky) */}
-      <section
-        id="acheter"
-        className="relative -mt-16 min-h-[100svh] w-full overflow-hidden bg-[var(--color-primary-900)] text-white"
-      >
-        <HeroImage />
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-black/10"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/70 via-black/30 to-transparent"
-        />
-
-        <div className="container-page relative z-10 grid min-h-[calc(100svh-4rem)] grid-cols-1 items-center gap-8 pt-24 pb-12 md:grid-cols-12 md:pt-28">
-          <div className="md:col-span-5 lg:col-span-4">
-            <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
-                {copy.hero.badge}
-              </span>
-            </Reveal>
-            <Reveal delay={0.08}>
-              <h1 className="mt-3 font-display text-[clamp(2.25rem,5vw,4rem)] font-black uppercase leading-[0.95] tracking-[-0.02em] drop-shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
-                {copy.hero.titleLine1}
-                <br />
-                <span className="text-[var(--color-secondary-200)]">{copy.hero.titleLine2}</span>
-              </h1>
-            </Reveal>
-            <Reveal delay={0.16}>
-              <p className="mt-3 text-sm text-white/90 md:text-base">
-                {copy.hero.subtitle}
-              </p>
-            </Reveal>
-            <Reveal delay={0.24} className="mt-5">
-              <BuyBox variant="hero" compact />
-            </Reveal>
-          </div>
-          <div className="hidden md:col-span-7 md:block lg:col-span-8" aria-hidden />
-        </div>
-      </section>
-
-      <TrustBar />
-      <PressBar />
-      <UspGrid />
-      <HowItWorks />
-      <VideoReel />
-      <ColorsShowcase />
-      <Comparison />
-      <BundlePicker />
-      <Testimonials />
-      <Faq />
+      <BrandHero locale={locale} />
+      <BrandMarquee locale={locale} />
+      <ProductUniverse locale={locale} />
+      <HeroProductSpotlight locale={locale} />
+      <OceanCommitment locale={locale} />
+      <Community locale={locale} />
+      <Waitlist />
+      <BrandStory locale={locale} />
 
       {/* Closing CTA */}
-      <section className="relative overflow-hidden bg-[var(--color-primary-900)] py-20 text-white">
-        <Image
-          src="/hero.jpg"
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover opacity-30"
-        />
-        <Reveal className="container-page relative z-10 text-center">
-          <h2 className="mx-auto max-w-2xl font-display text-3xl md:text-5xl">
-            {copy.closing.heading}
+      <section className="brand-gradient py-16 text-white">
+        <Reveal className="container-page flex flex-col items-center gap-5 text-center">
+          <h2 className="max-w-2xl font-display text-3xl md:text-5xl">
+            {closing.heading}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-white/85">
-            {copy.closing.joinPrefix}
-            <CountUp to={SACOCHE.unitsSold} suffix="+" className="font-semibold tabular-nums" />
-            {copy.closing.joinSuffix}
-          </p>
-          <a
-            href="#acheter"
-            className="mt-8 inline-flex items-center justify-center rounded-full bg-white px-8 py-4 font-semibold text-[var(--color-foreground)] transition-transform hover:scale-105 active:scale-95"
+          <p className="max-w-xl text-white/90">{closing.sub}</p>
+          <Link
+            href="/sacoche"
+            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-8 py-3.5 font-semibold text-[var(--color-foreground)] transition-transform hover:scale-[1.03] active:scale-95"
           >
-            {copy.closing.cta}
-          </a>
+            {closing.cta}
+            <ArrowRight className="h-5 w-5" />
+          </Link>
         </Reveal>
       </section>
-
-      <StickyBuyBar />
     </>
   );
 }
