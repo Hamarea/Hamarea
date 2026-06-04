@@ -4,6 +4,8 @@ import { Link } from "@/i18n/navigation";
 export function ShopFooter() {
   const t = useTranslations();
   const year = new Date().getFullYear();
+  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/[^\d]/g, "");
+  const waHref = waNumber ? `https://wa.me/${waNumber}` : null;
   return (
     <footer className="mt-24 border-t border-[var(--color-border)] bg-[var(--color-primary-700)] text-[var(--color-primary-50)]">
       <div className="container-page grid gap-8 py-12 md:grid-cols-4">
@@ -38,6 +40,18 @@ export function ShopFooter() {
             <li><Link href="/legal/privacy" className="hover:underline">{t("footer.privacy")}</Link></li>
             <li><Link href="/legal/notice" className="hover:underline">{t("footer.legal")}</Link></li>
             <li><Link href="/contact" className="hover:underline">{t("footer.contact")}</Link></li>
+            {waHref && (
+              <li>
+                <a
+                  href={waHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                >
+                  {t("common.whatsappChat")}
+                </a>
+              </li>
+            )}
           </ul>
         </div>
       </div>

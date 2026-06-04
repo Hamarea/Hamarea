@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { OAuthButtons } from "@/components/account/oauth-buttons";
 
 export default function LoginPage() {
   const t = useTranslations();
@@ -82,6 +83,8 @@ export default function LoginPage() {
             {loading ? t("common.loading") : t("auth.submit")}
           </Button>
         </form>
+
+        <OAuthButtons next="/account" />
       </Card>
     </section>
   );

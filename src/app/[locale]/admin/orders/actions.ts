@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { getStripe } from "@/lib/stripe";
+import { sendEmail, shippingNotificationHtml } from "@/lib/email";
 
 const ORDER_STATUSES = [
   "pending",
@@ -39,7 +40,7 @@ type LooseClient = {
     insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }>;
     select: (q: string) => {
       eq: (k: string, v: string) => {
-        maybeSingle: () => Promise<{ data: { id: string } | null }>;
+        maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
       };
     };
   };
@@ -100,18 +101,45 @@ export async function upsertShipment(formData: FormData) {
 
   const { data: existing } = await supabase
     .from("shipments")
-    .select("id")
+    .select("id, status")
     .eq("order_id", data.orderId)
     .maybeSingle();
+  const existingId = (existing as { id?: string } | null)?.id;
+  const existingStatus = (existing as { status?: string } | null)?.status;
 
-  if (existing?.id) {
-    const { error } = await supabase.from("shipments").update(row).eq("id", existing.id);
+  if (existingId) {
+    const { error } = await supabase.from("shipments").update(row).eq("id", existingId);
     if (error) throw new Error(error.message ?? "shipment_update_failed");
   } else {
     const { error } = await supabase
       .from("shipments")
       .insert({ order_id: data.orderId, ...row });
     if (error) throw new Error(error.message ?? "shipment_insert_failed");
+  }
+
+  // Notify the customer once, when the shipment first becomes "shipped".
+  // Best-effort: sendEmail is a no-op when Resend is not configured.
+  if (data.status === "shipped" && existingStatus !== "shipped") {
+    const { data: orderRow } = await supabase
+      .from("orders")
+      .select("email, number")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    const order = orderRow as
+      | { email?: string | null; number?: string | number | null }
+      | null;
+    if (order?.email) {
+      await sendEmail({
+        to: order.email,
+        subject: "Votre commande est expédiée",
+        html: shippingNotificationHtml({
+          orderNumber: order.number != null ? String(order.number) : null,
+          carrier: data.carrier,
+          trackingNumber: data.tracking_number,
+          trackingUrl: data.tracking_url || null,
+        }),
+      });
+    }
   }
 
   await logAudit({

@@ -36,7 +36,7 @@ type AdminDb = {
           v: string,
         ) => {
           select: (cols?: string) => Promise<{
-            data: { id: string }[] | null;
+            data: { id: string; number?: string | number | null }[] | null;
             error: { message?: string } | null;
           }>;
         };
@@ -123,7 +123,7 @@ async function markOrderPaid(
     })
     .eq("id", orderId)
     .neq("status", "paid")
-    .select("id");
+    .select("id, number");
 
   if (updErr) {
     console.error("[stripe webhook] order update failed", orderId, updErr);
@@ -131,6 +131,9 @@ async function markOrderPaid(
   }
   // No row changed → already processed by an earlier event. Skip side effects.
   if (!updated || updated.length === 0) return;
+
+  const orderNumber =
+    (updated[0] as { number?: string | number | null }).number ?? null;
 
   const { error: payErr } = await sb.from("payments").insert({
     order_id: orderId,
@@ -158,7 +161,11 @@ async function markOrderPaid(
     await sendEmail({
       to: email,
       subject: "Votre commande est confirmée",
-      html: orderConfirmationHtml({ orderNumber: null, amountCents, currency }),
+      html: orderConfirmationHtml({
+        orderNumber: orderNumber != null ? String(orderNumber) : null,
+        amountCents,
+        currency,
+      }),
     });
   }
 
@@ -247,12 +254,22 @@ export async function POST(req: Request) {
     const pi = event.data.object as Stripe.PaymentIntent;
     const orderId = pi.metadata?.order_id;
     if (orderId) {
+      // The wallet (Apple/Google Pay) supplies the shipping address; Stripe
+      // attaches it to the PaymentIntent. Persist it onto the order.
+      const shipping = toAddressJson({
+        name: pi.shipping?.name ?? null,
+        email: pi.receipt_email ?? null,
+        phone: pi.shipping?.phone ?? null,
+        address: pi.shipping?.address ?? null,
+      });
       await markOrderPaid(sb, {
         orderId,
         paymentIntentId: pi.id,
         amountCents: pi.amount,
         currency: pi.currency,
         raw: pi,
+        shippingAddress: shipping,
+        billingAddress: shipping,
         email: pi.receipt_email ?? null,
       });
     }
