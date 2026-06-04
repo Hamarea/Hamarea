@@ -67,3 +67,29 @@ export function orderConfirmationHtml(params: {
     <p style="color:#6b7280;font-size:13px;margin-top:24px">— L'équipe ${BRAND}</p>
   </div>`;
 }
+
+export function shippingNotificationHtml(params: {
+  orderNumber?: string | null;
+  carrier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+}): string {
+  const tracking = params.trackingNumber
+    ? `<p>Numéro de suivi : <strong>${params.trackingNumber}</strong>${
+        params.carrier ? ` — ${params.carrier}` : ""
+      }</p>`
+    : "";
+  const button = params.trackingUrl
+    ? `<p><a href="${params.trackingUrl}" style="display:inline-block;background:#1e3a5f;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none">Suivre mon colis</a></p>`
+    : "";
+  return `
+  <div style="font-family:system-ui,sans-serif;max-width:520px;margin:auto;color:#1f2937">
+    <h1 style="font-size:20px">Votre commande est en route ! 📦</h1>
+    <p>Bonne nouvelle${
+      params.orderNumber ? ` — votre commande <strong>${params.orderNumber}</strong>` : ""
+    } vient d'être expédiée.</p>
+    ${tracking}
+    ${button}
+    <p style="color:#6b7280;font-size:13px;margin-top:24px">— L'équipe ${BRAND}</p>
+  </div>`;
+}

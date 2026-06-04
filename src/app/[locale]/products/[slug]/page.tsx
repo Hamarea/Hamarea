@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
@@ -6,6 +7,34 @@ import { getProductBySlug } from "@/lib/queries";
 import { ImageGallery } from "@/components/shop/image-gallery";
 import { VariantPicker } from "@/components/shop/variant-picker";
 import { WishlistButton } from "@/components/shop/wishlist-button";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const p = await getProductBySlug(slug, locale);
+  if (!p) return {};
+  // Use the admin-entered SEO (per locale) when present, else fall back.
+  const title = p.seo?.title?.[locale] ?? p.seo?.title?.fr ?? p.name;
+  const description =
+    p.seo?.description?.[locale] ?? p.seo?.description?.fr ?? p.description ?? undefined;
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const path = locale === "fr" ? `/products/${slug}` : `/${locale}/products/${slug}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      title,
+      description,
+      url: `${base}${path}`,
+      images: p.image_url ? [p.image_url] : [],
+      type: "website",
+    },
+  };
+}
 
 export default async function ProductPage({
   params,

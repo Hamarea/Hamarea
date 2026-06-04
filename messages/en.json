@@ -15,6 +15,7 @@
     "inStock": "In stock",
     "freeShipping": "Free shipping",
     "loading": "Loading…",
+    "whatsappChat": "Chat on WhatsApp",
     "currency": "EUR"
   },
   "nav": {
@@ -103,6 +104,8 @@
     "viewProduct": "View the product",
     "emptyCart": "Your cart is empty.",
     "paymentError": "Payment error",
+    "expressTitle": "Express checkout",
+    "orCard": "or pay by card",
     "success": {
       "thanks": "Thank you for your order! 🎉",
       "confirmed": "Your payment is confirmed. A summary email has been sent to you.",
@@ -134,6 +137,7 @@
     "forgotPassword": "Forgot your password?",
     "submit": "Continue",
     "googleLogin": "Continue with Google",
+    "or": "or",
     "noAccount": "No account yet?",
     "hasAccount": "Already have an account?"
   },
@@ -222,7 +226,8 @@
     "legal": "Legal notice",
     "terms": "Terms",
     "privacy": "Privacy",
-    "contact": "Contact"
+    "contact": "Contact",
+    "withdrawal": "14-day returns"
   },
   "legal": {
     "placeholder": "This page will be filled in shortly. Reach out if you have any question.",

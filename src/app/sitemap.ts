@@ -5,6 +5,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const paths = [
     "",
+    "/sacoche",
     "/products",
     "/categories",
     "/about",
@@ -27,7 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: urlFor(locale, p),
       lastModified: now,
       changeFrequency: "weekly" as const,
-      priority: p === "" ? 1 : p.startsWith("/legal") ? 0.3 : 0.7,
+      priority: p === "" ? 1 : p === "/sacoche" ? 0.9 : p.startsWith("/legal") ? 0.3 : 0.7,
       alternates: {
         languages: Object.fromEntries(
           routing.locales.map((l) => [l, urlFor(l, p)]),
