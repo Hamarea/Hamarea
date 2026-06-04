@@ -282,6 +282,7 @@ export async function deleteVariant(formData: FormData): Promise<void> {
 const InventorySchema = z.object({
   productId: z.string().uuid(),
   variantId: z.string().uuid(),
+  warehouseId: z.string().uuid().optional().or(z.literal("")).nullable(),
   quantity: z.coerce.number().int().min(0).max(1_000_000),
   reorder_point: z.coerce.number().int().min(0).max(1_000_000).default(5),
 });
@@ -295,19 +296,24 @@ export async function setInventory(
     const d = InventorySchema.parse({
       productId: formData.get("productId"),
       variantId: formData.get("variantId"),
+      warehouseId: (formData.get("warehouseId") as string) || null,
       quantity: formData.get("quantity"),
       reorder_point: formData.get("reorder_point") || 5,
     });
 
     const sb = await db();
-    const { data: wh } = await sb
-      .from("warehouses")
-      .select("id")
-      .eq("is_default", true)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    const warehouseId = (wh as { id: string } | null)?.id;
+    // Target the chosen warehouse, else fall back to the default one.
+    let warehouseId = d.warehouseId || null;
+    if (!warehouseId) {
+      const { data: wh } = await sb
+        .from("warehouses")
+        .select("id")
+        .eq("is_default", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      warehouseId = (wh as { id: string } | null)?.id ?? null;
+    }
     if (!warehouseId) return err("Aucun entrepôt par défaut défini.");
 
     const { data: cur } = await sb
@@ -346,7 +352,7 @@ export async function setInventory(
       action: "inventory.set",
       entity: "variant",
       entityId: d.variantId,
-      data: { quantity: d.quantity, delta, reorder_point: d.reorder_point },
+      data: { quantity: d.quantity, delta, reorder_point: d.reorder_point, warehouse_id: warehouseId },
     });
     revalidate(d.productId);
     return ok();

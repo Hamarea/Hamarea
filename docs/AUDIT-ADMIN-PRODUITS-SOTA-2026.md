@@ -277,12 +277,14 @@ Baymard — [alt informatif](https://baymard.com/blog/informational-image-access
 - ✅ **Garde « modifications non enregistrées »** sur le formulaire Contenu (beforeunload).
 - ✅ **Palette de commandes ⌘K** (`CommandPalette`) — navigation entre sections + actions rapides au clavier
   (tendance admin 2026), montée dans le layout admin.
+- ✅ **Multi-entrepôt** : affichage du stock **par entrepôt** + sélecteur d'entrepôt dans le formulaire de stock ;
+  `setInventory` cible l'entrepôt choisi (défaut sinon). Schéma `warehouses`/`inventory` existant, sans migration.
 
 **Reste (volontairement non livré)**
 - ☐ **Éditeur tableur** de la matrice (copier/coller cellule) + **page d'édition unifiée** (1 seule sauvegarde) /
   **optimistic UI** — la sauvegarde reste **par bloc** (fiable, erreurs inline) ; le garde « non enregistré »
   couvre déjà le bloc Contenu.
-- ☐ **Multi-entrepôt** dans l'UI stock (écrit l'entrepôt par défaut) · **tags/collections** · IA (génération
-  description/alt/SEO) · vues sauvegardées.
+- ☐ **Tags/collections** *(nécessite une petite migration — applicable seulement avec un token)* · **IA**
+  (génération description/alt/SEO, nécessite une clé LLM) · **vues sauvegardées** de la liste.
 - ⚠️ **Migration `0014_waitlist.sql`** (issue du chantier marque) **à appliquer** avec un `SUPABASE_ACCESS_TOKEN`
   (`supabase db push` ou MCP authentifié) — non applicable depuis cet environnement.

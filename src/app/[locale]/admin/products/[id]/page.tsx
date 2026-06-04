@@ -35,7 +35,7 @@ const LOCALE_LABEL: Record<string, string> = { fr: "FR", en: "EN", es: "ES", de:
 const SELECT_CLASS = "flex h-10 w-full rounded-md border border-[var(--color-border)] bg-white px-3 text-sm";
 const TEXTAREA_CLASS = "w-full resize-y rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm";
 
-type Inventory = { quantity: number; reserved: number; reorder_point: number };
+type Inventory = { quantity: number; reserved: number; reorder_point: number; warehouse_id: string };
 type Variant = {
   id: string;
   sku: string;
@@ -104,7 +104,7 @@ export default async function AdminProductEdit({
   const { data: product } = await sb
     .from("products")
     .select(
-      "id, slug, name_i18n, description_i18n, seo, brand, status, category_id, supplier_id, product_variants(id, sku, price_cents, compare_at_price_cents, cost_cents, barcode, weight_g, currency, active, option_values, position, inventory(quantity, reserved, reorder_point)), product_images(id, storage_path, alt_i18n, position)",
+      "id, slug, name_i18n, description_i18n, seo, brand, status, category_id, supplier_id, product_variants(id, sku, price_cents, compare_at_price_cents, cost_cents, barcode, weight_g, currency, active, option_values, position, inventory(quantity, reserved, reorder_point, warehouse_id)), product_images(id, storage_path, alt_i18n, position)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -119,6 +119,17 @@ export default async function AdminProductEdit({
     .from("suppliers")
     .select("id, name")
     .order("name", { ascending: true });
+  const warehousesRes = await sb
+    .from("warehouses")
+    .select("id, name, is_default")
+    .order("created_at", { ascending: true });
+  const warehouses = (warehousesRes.data ?? []) as unknown as {
+    id: string;
+    name: string;
+    is_default: boolean;
+  }[];
+  const defaultWh = warehouses.find((w) => w.is_default) ?? warehouses[0];
+  const whName = (wid: string) => warehouses.find((w) => w.id === wid)?.name ?? "Entrepôt";
 
   const variants = [...(product.product_variants ?? [])].sort((a, b) => a.position - b.position);
   const images = [...(product.product_images ?? [])].sort((a, b) => a.position - b.position);
@@ -266,7 +277,8 @@ export default async function AdminProductEdit({
             </p>
           )}
           {variants.map((v) => {
-            const inv = v.inventory?.[0];
+            const invList = v.inventory ?? [];
+            const defInv = invList.find((x) => x.warehouse_id === defaultWh?.id) ?? invList[0];
             const opt = optionFields(v.option_values);
             return (
               <div key={v.id} className="rounded-md border border-[var(--color-border)] p-4">
@@ -296,14 +308,48 @@ export default async function AdminProductEdit({
                   </form>
                 </div>
 
-                <ActionForm action={setInventory} successMessage="Stock mis à jour." className="mt-3 flex flex-wrap items-end gap-3 border-t border-[var(--color-border)] pt-3">
-                  <input type="hidden" name="productId" value={product.id} />
-                  <input type="hidden" name="variantId" value={v.id} />
-                  <Field label="Stock" name="quantity" type="number" min="0" defaultValue={String(inv?.quantity ?? 0)} className="w-24" />
-                  <Field label="Seuil d'alerte" name="reorder_point" type="number" min="0" defaultValue={String(inv?.reorder_point ?? 5)} className="w-24" />
-                  <SubmitButton size="sm" variant="outline">Mettre à jour le stock</SubmitButton>
-                  {inv && <span className="pb-2 text-xs text-[var(--color-muted)]">Réservé : {inv.reserved}</span>}
-                </ActionForm>
+                <div className="mt-3 border-t border-[var(--color-border)] pt-3">
+                  {invList.length > 0 && (
+                    <p className="mb-2 text-xs text-[var(--color-muted)]">
+                      Stock :{" "}
+                      {invList
+                        .map(
+                          (x) =>
+                            `${whName(x.warehouse_id)} ${x.quantity}` +
+                            (x.reserved ? ` (réservé ${x.reserved})` : ""),
+                        )
+                        .join(" · ")}
+                    </p>
+                  )}
+                  <ActionForm
+                    action={setInventory}
+                    successMessage="Stock mis à jour."
+                    className="flex flex-wrap items-end gap-3"
+                  >
+                    <input type="hidden" name="productId" value={product.id} />
+                    <input type="hidden" name="variantId" value={v.id} />
+                    {warehouses.length > 1 && (
+                      <div className="space-y-1">
+                        <Label className="text-xs">Entrepôt</Label>
+                        <select
+                          name="warehouseId"
+                          defaultValue={defaultWh?.id ?? ""}
+                          className="h-10 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                        >
+                          {warehouses.map((w) => (
+                            <option key={w.id} value={w.id}>
+                              {w.name}
+                              {w.is_default ? " (défaut)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <Field label="Stock" name="quantity" type="number" min="0" defaultValue={String(defInv?.quantity ?? 0)} className="w-24" />
+                    <Field label="Seuil d'alerte" name="reorder_point" type="number" min="0" defaultValue={String(defInv?.reorder_point ?? 5)} className="w-24" />
+                    <SubmitButton size="sm" variant="outline">Mettre à jour le stock</SubmitButton>
+                  </ActionForm>
+                </div>
               </div>
             );
           })}
