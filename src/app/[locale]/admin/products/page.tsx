@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Plus } from "lucide-react";
 import { createProduct } from "./actions";
 import { ProductsTable, type AdminProductRow } from "@/components/admin/products-table";
+import { SavedViews } from "@/components/admin/saved-views";
 
 type VariantLite = {
   price_cents: number;
@@ -210,6 +211,8 @@ export default async function AdminProductsPage({
           </p>
         </Card>
       </details>
+
+      <SavedViews currentQ={q} currentStatus={status} />
 
       <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
         <Input name="q" defaultValue={q} placeholder="Nom, slug ou marque…" className="max-w-xs" />
