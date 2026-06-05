@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 500" font-family="Georgia, 'Times New Roman', serif">
+  <defs>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0e2a3a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="500" fill="#FBFAF7"/>
+  <text x="640" y="56" text-anchor="middle" font-size="30" font-weight="700" letter-spacing="6" fill="#0e2a3a">HAMAREA · LYCRA</text>
+  <text x="640" y="80" text-anchor="middle" font-size="13" letter-spacing="5" fill="#8a8a8a" font-family="system-ui, sans-serif">JUST RUN &amp; SWIM</text>
+
+  <!-- one top, repeated in 4 colours -->
+  <!-- d = athletic top / rashguard silhouette -->
+  <g transform="translate(40,110) scale(0.72)" filter="url(#sh)">
+    <path d="M150 50 L210 30 Q256 70 302 30 L362 50 L400 120 L340 150 L330 130 L330 330 Q256 352 182 330 L182 130 L172 150 L112 120 Z" fill="#E07A5F"/>
+    <path d="M210 30 Q256 70 302 30 L296 56 Q256 88 216 56 Z" fill="#ffffff" opacity="0.25"/>
+    <text x="256" y="205" text-anchor="middle" font-size="30" font-weight="700" letter-spacing="3" fill="#ffffff">HAMAREA</text>
+    <path d="M196 232 q30 18 60 0 q30 -18 60 0" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <text x="220" y="470" text-anchor="middle" font-size="16" fill="#0e2a3a" font-family="system-ui, sans-serif">Corail</text>
+
+  <g transform="translate(360,110) scale(0.72)" filter="url(#sh)">
+    <path d="M150 50 L210 30 Q256 70 302 30 L362 50 L400 120 L340 150 L330 130 L330 330 Q256 352 182 330 L182 130 L172 150 L112 120 Z" fill="#1D3557"/>
+    <path d="M210 30 Q256 70 302 30 L296 56 Q256 88 216 56 Z" fill="#ffffff" opacity="0.22"/>
+    <text x="256" y="205" text-anchor="middle" font-size="30" font-weight="700" letter-spacing="3" fill="#ffffff">HAMAREA</text>
+    <path d="M196 232 q30 18 60 0 q30 -18 60 0" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <text x="540" y="470" text-anchor="middle" font-size="16" fill="#0e2a3a" font-family="system-ui, sans-serif">Bleu nuit</text>
+
+  <g transform="translate(680,110) scale(0.72)" filter="url(#sh)">
+    <path d="M150 50 L210 30 Q256 70 302 30 L362 50 L400 120 L340 150 L330 130 L330 330 Q256 352 182 330 L182 130 L172 150 L112 120 Z" fill="#81A684"/>
+    <path d="M210 30 Q256 70 302 30 L296 56 Q256 88 216 56 Z" fill="#ffffff" opacity="0.25"/>
+    <text x="256" y="205" text-anchor="middle" font-size="30" font-weight="700" letter-spacing="3" fill="#ffffff">HAMAREA</text>
+    <path d="M196 232 q30 18 60 0 q30 -18 60 0" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <text x="860" y="470" text-anchor="middle" font-size="16" fill="#0e2a3a" font-family="system-ui, sans-serif">Vert sauge</text>
+
+  <g transform="translate(1000,110) scale(0.72)" filter="url(#sh)">
+    <path d="M150 50 L210 30 Q256 70 302 30 L362 50 L400 120 L340 150 L330 130 L330 330 Q256 352 182 330 L182 130 L172 150 L112 120 Z" fill="#2B2B2B"/>
+    <path d="M210 30 Q256 70 302 30 L296 56 Q256 88 216 56 Z" fill="#ffffff" opacity="0.18"/>
+    <text x="256" y="205" text-anchor="middle" font-size="30" font-weight="700" letter-spacing="3" fill="#ffffff">HAMAREA</text>
+    <path d="M196 232 q30 18 60 0 q30 -18 60 0" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <text x="1180" y="470" text-anchor="middle" font-size="16" fill="#0e2a3a" font-family="system-ui, sans-serif">Noir</text>
+</svg>
