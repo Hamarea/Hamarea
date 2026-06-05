@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
 import type { FormState } from "@/lib/form-state";
 import { logAudit } from "@/lib/audit";
+import { autoTranslate } from "@/lib/translate";
 
 const ProductSchema = z.object({
   name_fr: z.string().trim().min(1).max(200),
@@ -63,8 +64,11 @@ export async function createProduct(
       return { error: "Pour publier (active), renseigne un prix (crée la 1ʳᵉ variante)." };
     }
 
-    const name_i18n: Record<string, string> = { fr: data.name_fr };
-    if (data.name_en) name_i18n.en = data.name_en;
+    // Auto-translate the name into the other locales — the admin only ever
+    // types one name. Falls back to the source text when DEEPL_API_KEY is unset.
+    const translated = await autoTranslate(data.name_fr, "fr", ["en", "es", "de"]);
+    const name_i18n: Record<string, string> = { fr: data.name_fr, ...translated };
+    if (data.name_en) name_i18n.en = data.name_en; // explicit override wins
 
     const supabase = (await createClient()) as unknown as LooseClient;
     const { data: created, error } = await supabase
