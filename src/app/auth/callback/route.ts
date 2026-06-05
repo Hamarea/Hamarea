@@ -12,9 +12,9 @@ import { cookies } from "next/headers";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") ?? "/account";
+  const nextParam = url.searchParams.get("next");
   // Only allow same-site relative redirects.
-  const safeNext = next.startsWith("/") ? next : "/account";
+  let dest = nextParam && nextParam.startsWith("/") ? nextParam : "/account";
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -45,9 +45,35 @@ export async function GET(request: Request) {
         new URL(`/login?error=auth_callback`, url.origin),
       );
     }
+    // Default landing (no explicit `next`): send staff/admins to the dashboard.
+    if (!nextParam) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await (
+          supabase as unknown as {
+            from: (t: string) => {
+              select: (q: string) => {
+                eq: (k: string, v: string) => {
+                  maybeSingle: () => Promise<{ data: { role?: string } | null }>;
+                };
+              };
+            };
+          }
+        )
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (profile?.role === "admin" || profile?.role === "staff") {
+          dest = "/admin";
+        }
+      }
+    }
   }
 
-  return NextResponse.redirect(new URL(safeNext, url.origin));
+  return NextResponse.redirect(new URL(dest, url.origin));
 }
 
 export const dynamic = "force-dynamic";
