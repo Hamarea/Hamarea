@@ -24,6 +24,7 @@ type ProductRow = {
   name_i18n: Record<string, string>;
   status: "draft" | "active" | "archived";
   brand: string | null;
+  preorder: boolean;
   created_at: string;
   product_variants: VariantLite[] | null;
   product_images: { storage_path: string; position: number }[] | null;
@@ -63,6 +64,7 @@ function toRow(p: ProductRow): AdminProductRow {
     currency: priceVariant?.currency ?? "EUR",
     stock: variants.length > 0 ? stock : null,
     image: image?.storage_path ?? null,
+    preorder: p.preorder ?? false,
     created_at: p.created_at,
   };
 }
@@ -88,7 +90,7 @@ export default async function AdminProductsPage({
     let qb = (supabase as unknown as { from: (t: string) => ListBuilder })
       .from("products")
       .select(
-        "id, slug, name_i18n, status, brand, created_at, product_variants(price_cents, currency, active, position, inventory(quantity)), product_images(storage_path, position)",
+        "id, slug, name_i18n, status, brand, preorder, created_at, product_variants(price_cents, currency, active, position, inventory(quantity)), product_images(storage_path, position)",
         { count: "exact" },
       );
     if (status) qb = qb.eq("status", status);
@@ -166,6 +168,12 @@ export default async function AdminProductsPage({
                 <option value="active">En ligne (visible)</option>
               </select>
             </div>
+            <label className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-4">
+              <input type="checkbox" name="preorder" value="true" className="h-4 w-4" />
+              <span>
+                <strong>Précommande</strong> — affiche un bandeau « Précommander » sur le produit
+              </span>
+            </label>
             <div className="sm:col-span-2 lg:col-span-4">
               <SubmitButton>Créer le produit</SubmitButton>
             </div>

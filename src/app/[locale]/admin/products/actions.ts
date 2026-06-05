@@ -70,6 +70,9 @@ export async function createProduct(
     const name_i18n: Record<string, string> = { fr: data.name_fr, ...translated };
     if (data.name_en) name_i18n.en = data.name_en; // explicit override wins
 
+    const preorder =
+      formData.get("preorder") === "on" || formData.get("preorder") === "true";
+
     const supabase = (await createClient()) as unknown as LooseClient;
     const { data: created, error } = await supabase
       .from("products")
@@ -79,6 +82,7 @@ export async function createProduct(
         brand: data.brand,
         supplier_id: data.supplier_id || null,
         status: data.status,
+        preorder,
       })
       .select("id")
       .single();
