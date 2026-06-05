@@ -81,6 +81,18 @@ export default async function ProductPage({
         <span className="text-[var(--color-foreground)]">{p.name}</span>
       </nav>
 
+      {p.preorder && (
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span className="inline-flex items-center rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+            Précommande
+          </span>
+          <span>
+            Ce produit est en <strong>précommande</strong> — réservez-le dès
+            maintenant, expédié dès sa sortie.
+          </span>
+        </div>
+      )}
+
       <div className="grid gap-10 md:grid-cols-2">
         <ImageGallery images={galleryImages} fallbackAlt={p.name} />
 

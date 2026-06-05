@@ -45,6 +45,7 @@ export type ProductDetail = ProductCard & {
   images: ProductImage[];
   category: { slug: string; name: string } | null;
   seo?: ProductSeo | null;
+  preorder?: boolean;
 };
 
 export type ProductSort = "newest" | "oldest" | "price-asc" | "price-desc";
@@ -219,6 +220,7 @@ type ProductRowDetail = {
   description_i18n: Record<string, string>;
   seo: ProductSeo | null;
   brand: string | null;
+  preorder: boolean | null;
   product_variants: Array<{
     id: string;
     sku: string;
@@ -396,6 +398,7 @@ export async function getProductBySlug(
     return {
       ...sample,
       seo: null,
+      preorder: false,
       variants: [
         {
           id: sample.id,
@@ -427,7 +430,7 @@ export async function getProductBySlug(
     const res = await supabase
       .from("products")
       .select(
-        "id, slug, name_i18n, description_i18n, seo, brand, product_variants(id, sku, option_values, price_cents, compare_at_price_cents, currency, active, position), product_images(storage_path, alt_i18n, position), category:category_id(slug, name_i18n)",
+        "id, slug, name_i18n, description_i18n, seo, brand, preorder, product_variants(id, sku, option_values, price_cents, compare_at_price_cents, currency, active, position), product_images(storage_path, alt_i18n, position), category:category_id(slug, name_i18n)",
       )
       .eq("status", "active")
       .eq("slug", slug)
@@ -469,6 +472,7 @@ export async function getProductBySlug(
       image_url: images[0]?.url,
       in_stock: variants.some((v) => v.active),
       seo: row.seo ?? null,
+      preorder: row.preorder ?? false,
       variants,
       images,
       category: row.category
