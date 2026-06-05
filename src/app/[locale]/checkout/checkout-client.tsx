@@ -66,6 +66,7 @@ export function CheckoutClient() {
           // Only references — the server recomputes the authoritative price.
           lines: lines.map((l) => ({
             productId: l.productId,
+            variantId: l.variantId,
             color: l.options?.color ?? "",
             pack: Number(l.options?.pack ?? 1),
             quantity: l.quantity,
