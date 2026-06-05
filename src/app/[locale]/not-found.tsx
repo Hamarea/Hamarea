@@ -1,5 +1,10 @@
-import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
+// Plain `next/link`, NOT the next-intl `Link`: this component is also rendered
+// for paths with an invalid locale segment (e.g. browser requests to
+// `/favicon.ico` or `/apple-touch-icon.png`) that bypass the middleware and
+// trip `notFound()` in the locale layout *before* the i18n provider is set up.
+// The i18n `<Link>` throws there and turns a clean 404 into a 500; `next/link`
+// needs no i18n context and still satisfies `no-html-link-for-pages`.
+import Link from "next/link";
 
 export default function NotFound() {
   return (
@@ -10,9 +15,12 @@ export default function NotFound() {
         La page que vous cherchez n&apos;existe pas ou a été déplacée.
       </p>
       <div className="mt-6">
-        <Button asChild>
-          <Link href="/">Retour à l&apos;accueil</Link>
-        </Button>
+        <Link
+          href="/"
+          className="inline-flex h-10 items-center justify-center rounded-md bg-[var(--color-primary-600)] px-5 text-sm font-medium text-white transition hover:opacity-90"
+        >
+          Retour à l&apos;accueil
+        </Link>
       </div>
     </section>
   );
