@@ -17,6 +17,8 @@ const CouponSchema = z.object({
   type: z.enum(["percent", "fixed"]),
   value: z.coerce.number().int().min(1).max(1_000_000),
   min_subtotal_cents: z.coerce.number().int().min(0).max(10_000_000).default(0),
+  ends_at: z.string().trim().optional().nullable(),
+  usage_limit: z.coerce.number().int().min(1).max(1_000_000).optional().nullable(),
 });
 
 type LooseClient = {
@@ -39,18 +41,23 @@ export async function createCoupon(
       type: formData.get("type"),
       value: formData.get("value"),
       min_subtotal_cents: formData.get("min_subtotal_cents") || 0,
+      ends_at: (formData.get("ends_at") as string) || null,
+      usage_limit: (formData.get("usage_limit") as string) || null,
     });
 
     if (data.type === "percent" && data.value > 100) {
       return { error: "Un pourcentage ne peut pas dépasser 100." };
     }
 
+    const endsAtIso = data.ends_at ? new Date(data.ends_at).toISOString() : null;
     const supabase = (await createClient()) as unknown as LooseClient;
     const { error } = await supabase.from("coupons").insert({
       code: data.code,
       type: data.type,
       value: data.value,
       min_subtotal_cents: data.min_subtotal_cents,
+      ends_at: endsAtIso,
+      usage_limit: data.usage_limit ?? null,
       active: true,
     });
     if (error) {
