@@ -41,6 +41,8 @@ export type OrderItemRow = {
   name_snapshot: string;
   quantity: number;
   unit_price_cents: number;
+  /** Real product_variants UUID for DB products (null for the sacoche landing). */
+  variant_id?: string | null;
 };
 
 export type PricedCart = {
@@ -170,9 +172,9 @@ export async function createPendingOrder(
     const { error: itemsErr } = await sb.from("order_items").insert(
       params.orderItems.map((it) => ({
         order_id: order.id,
-        // Catalog ids are slugs, not product_variants UUIDs yet — store the slug
-        // in `sku` and leave variant_id null (single-product MVP).
-        variant_id: null,
+        // DB products carry their real variant_id (so stock decrements); the
+        // sacoche landing has no DB variant and keeps just the SKU.
+        variant_id: it.variant_id ?? null,
         sku: it.sku,
         name_snapshot: it.name_snapshot,
         quantity: it.quantity,

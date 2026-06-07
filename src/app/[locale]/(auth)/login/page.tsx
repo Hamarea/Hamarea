@@ -25,7 +25,32 @@ export default function LoginPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      router.push("/account");
+      // Route staff/admins straight to the dashboard; customers to their account.
+      let dest = "/account";
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await (
+          supabase as unknown as {
+            from: (t: string) => {
+              select: (q: string) => {
+                eq: (k: string, v: string) => {
+                  maybeSingle: () => Promise<{ data: { role?: string } | null }>;
+                };
+              };
+            };
+          }
+        )
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (profile?.role === "admin" || profile?.role === "staff") {
+          dest = "/admin";
+        }
+      }
+      router.push(dest);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");

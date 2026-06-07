@@ -17,6 +17,7 @@ export type AdminProductRow = {
   currency: string;
   stock: number | null;
   image: string | null;
+  preorder: boolean;
   created_at: string;
 };
 
@@ -135,10 +136,15 @@ export function ProductsTable({ rows }: { rows: AdminProductRow[] }) {
                       <span className="min-w-0">
                         <Link
                           href={`/admin/products/${p.id}` as never}
-                          className="block truncate font-medium text-[var(--color-primary-600)] hover:underline"
+                          className="font-medium text-[var(--color-primary-600)] hover:underline"
                         >
                           {p.name}
                         </Link>
+                        {p.preorder && (
+                          <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                            Précommande
+                          </span>
+                        )}
                         <span className="block truncate text-xs text-[var(--color-muted)]">
                           {p.slug}
                           {p.brand ? ` · ${p.brand}` : ""}

@@ -24,6 +24,7 @@ type ProductRow = {
   name_i18n: Record<string, string>;
   status: "draft" | "active" | "archived";
   brand: string | null;
+  preorder: boolean;
   created_at: string;
   product_variants: VariantLite[] | null;
   product_images: { storage_path: string; position: number }[] | null;
@@ -63,6 +64,7 @@ function toRow(p: ProductRow): AdminProductRow {
     currency: priceVariant?.currency ?? "EUR",
     stock: variants.length > 0 ? stock : null,
     image: image?.storage_path ?? null,
+    preorder: p.preorder ?? false,
     created_at: p.created_at,
   };
 }
@@ -84,12 +86,11 @@ export default async function AdminProductsPage({
 
   let rows: AdminProductRow[] = [];
   let total = 0;
-  let suppliers: { id: string; name: string }[] = [];
   try {
     let qb = (supabase as unknown as { from: (t: string) => ListBuilder })
       .from("products")
       .select(
-        "id, slug, name_i18n, status, brand, created_at, product_variants(price_cents, currency, active, position, inventory(quantity)), product_images(storage_path, position)",
+        "id, slug, name_i18n, status, brand, preorder, created_at, product_variants(price_cents, currency, active, position, inventory(quantity)), product_images(storage_path, position)",
         { count: "exact" },
       );
     if (status) qb = qb.eq("status", status);
@@ -103,18 +104,6 @@ export default async function AdminProductsPage({
     const { data, count } = await qb.order("created_at", { ascending: false }).range(from, to);
     rows = (data ?? []).map(toRow);
     total = count ?? 0;
-
-    const { data: sup } = await (supabase as unknown as {
-      from: (t: string) => {
-        select: (q: string) => {
-          order: (k: string, opts: { ascending: boolean }) => Promise<{ data: { id: string; name: string }[] | null }>;
-        };
-      };
-    })
-      .from("suppliers")
-      .select("id, name")
-      .order("name", { ascending: true });
-    suppliers = sup ?? [];
   } catch {
     rows = [];
   }
@@ -142,72 +131,57 @@ export default async function AdminProductsPage({
         <Card className="mt-3 p-6">
           <ActionForm
             action={createProduct}
-            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-4"
             successMessage="Produit créé."
             resetOnSuccess
           >
-            <div className="space-y-1.5">
-              <Label htmlFor="name_fr">Nom (FR) *</Label>
-              <Input id="name_fr" name="name_fr" required maxLength={200} />
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="name_fr">Nom du produit *</Label>
+              <Input
+                id="name_fr"
+                name="name_fr"
+                required
+                maxLength={200}
+                placeholder="ex : Sacoche étanche"
+              />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="name_en">Nom (EN)</Label>
-              <Input id="name_en" name="name_en" maxLength={200} />
+              <Label htmlFor="price">Prix (€)</Label>
+              <Input
+                id="price"
+                name="price"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="ex : 24.90"
+              />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="slug">Slug (auto si vide)</Label>
-              <Input id="slug" name="slug" maxLength={200} placeholder="auto depuis le nom" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="price">Prix EUR (crée la 1ʳᵉ variante)</Label>
-              <Input id="price" name="price" type="number" step="0.01" min="0" placeholder="ex : 24.90" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="sku">SKU (auto si vide)</Label>
-              <Input id="sku" name="sku" maxLength={120} placeholder="auto" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="brand">Marque</Label>
-              <Input id="brand" name="brand" maxLength={120} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="supplier_id">Fournisseur</Label>
-              <select
-                id="supplier_id"
-                name="supplier_id"
-                defaultValue=""
-                className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-white px-3 text-sm"
-              >
-                <option value="">— Aucun —</option>
-                {suppliers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="status">Statut</Label>
+              <Label htmlFor="status">Visibilité</Label>
               <select
                 id="status"
                 name="status"
                 defaultValue="draft"
                 className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-white px-3 text-sm"
               >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABEL[s]}
-                  </option>
-                ))}
+                <option value="draft">Brouillon (caché)</option>
+                <option value="active">En ligne (visible)</option>
               </select>
             </div>
-            <div className="flex items-end">
+            <label className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-4">
+              <input type="checkbox" name="preorder" value="true" className="h-4 w-4" />
+              <span>
+                <strong>Précommande</strong> — affiche un bandeau « Précommander » sur le produit
+              </span>
+            </label>
+            <div className="sm:col-span-2 lg:col-span-4">
               <SubmitButton>Créer le produit</SubmitButton>
             </div>
           </ActionForm>
           <p className="mt-3 text-xs text-[var(--color-muted)]">
-            Renseigne un prix pour rendre le produit vendable immédiatement. Variantes, images,
-            description multilingue et SEO : sur la fiche produit.
+            🌍 La traduction (EN / ES / DE) est <strong>automatique</strong>. Le lien et la
+            référence du produit sont générés tout seuls. Photos, variantes, description et SEO :
+            ensuite, sur la fiche du produit.
           </p>
         </Card>
       </details>

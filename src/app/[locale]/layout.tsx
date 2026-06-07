@@ -19,6 +19,14 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+// Only the known locales (fr/en/es/de) are valid values for the `[locale]`
+// segment. Without this, paths like `/favicon.ico` or `/apple-touch-icon.png`
+// (which bypass the i18n middleware) are routed to `[locale]="favicon.ico"` and
+// render the page, where `Intl.NumberFormat("favicon.ico")` throws and turns a
+// 404 into a 500. `dynamicParams = false` makes Next 404 unknown locales before
+// any page/layout renders.
+export const dynamicParams = false;
+
 export default async function LocaleLayout({
   children,
   params,

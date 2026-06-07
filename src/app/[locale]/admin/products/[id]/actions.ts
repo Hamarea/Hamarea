@@ -401,8 +401,15 @@ export async function addImage(
     const alt_i18n: Record<string, string> = {};
     if (d.alt_fr) alt_i18n.fr = d.alt_fr;
     if (d.alt_en) alt_i18n.en = d.alt_en;
+    const variantId = z
+      .string()
+      .uuid()
+      .nullable()
+      .catch(null)
+      .parse((formData.get("variantId") as string) || null);
     const { error } = await sb.from("product_images").insert({
       product_id: d.productId,
+      ...(variantId ? { variant_id: variantId } : {}),
       storage_path: d.url,
       alt_i18n,
       position: await nextImagePosition(sb, d.productId),
@@ -424,6 +431,12 @@ export async function uploadImage(
     const actor = await requirePermission("products.write");
     const productId = z.string().uuid().parse(formData.get("productId"));
     const altFr = ((formData.get("alt_fr") as string) || "").trim();
+    const variantId = z
+      .string()
+      .uuid()
+      .nullable()
+      .catch(null)
+      .parse((formData.get("variantId") as string) || null);
 
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) return err("Aucun fichier sélectionné.");
@@ -446,6 +459,7 @@ export async function uploadImage(
     const sb = await db();
     const { error } = await sb.from("product_images").insert({
       product_id: productId,
+      ...(variantId ? { variant_id: variantId } : {}),
       storage_path: publicUrl,
       alt_i18n: altFr ? { fr: altFr } : {},
       position: await nextImagePosition(sb, productId),

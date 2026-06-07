@@ -9,6 +9,7 @@ import {
   priceCart,
   shippingCentsFor,
 } from "@/lib/checkout";
+import { priceDbVariants } from "@/lib/checkout-db";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimitHit } from "@/lib/rate-limit";
@@ -26,7 +27,10 @@ import { rateLimitHit } from "@/lib/rate-limit";
  */
 const LineSchema = z.object({
   productId: z.string().min(1).max(100),
-  color: z.string().min(1).max(40),
+  // Any string: the sacoche landing uses synthetic ids (e.g. sacoche-rose-pack-2);
+  // only non-sacoche lines are looked up as real DB variant UUIDs.
+  variantId: z.string().max(100).optional(),
+  color: z.string().max(40).optional().default(""),
   pack: z.coerce.number().int().min(1).max(3).default(1),
   quantity: z.number().int().min(1).max(99),
 });
@@ -74,12 +78,29 @@ export async function POST(req: Request) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
   const currency = SACOCHE.currency.toLowerCase();
 
-  // Build line items from the trusted catalogue. Reject anything unknown.
-  const priced = priceCart(body.lines, origin);
+  // Two trusted pricing paths — the price is ALWAYS recomputed server-side:
+  //  - the sacoche landing (productId === SACOCHE.id) → priceCart (packs, etc.)
+  //  - any other catalogue product → priceDbVariants (price read from the DB).
+  const sacocheLines = body.lines.filter((l) => l.productId === SACOCHE.id);
+  const dbLines = body.lines
+    .filter((l) => l.productId !== SACOCHE.id && l.variantId)
+    .map((l) => ({ variantId: l.variantId as string, quantity: l.quantity }));
+
+  const priced = priceCart(sacocheLines, origin);
   if (!priced.ok) {
     return NextResponse.json({ error: priced.error }, { status: 400 });
   }
-  const { lineItems, orderItems, subtotalCents } = priced.cart;
+  const dbPriced = await priceDbVariants(dbLines);
+  if (!dbPriced.ok) {
+    return NextResponse.json({ error: dbPriced.error }, { status: 400 });
+  }
+
+  const lineItems = [...priced.cart.lineItems, ...dbPriced.cart.lineItems];
+  const orderItems = [...priced.cart.orderItems, ...dbPriced.cart.orderItems];
+  const subtotalCents = priced.cart.subtotalCents + dbPriced.cart.subtotalCents;
+  if (lineItems.length === 0) {
+    return NextResponse.json({ error: "Panier vide ou article indisponible." }, { status: 400 });
+  }
   const shippingCents = shippingCentsFor(subtotalCents, body.shippingMethod);
   const totalCents = subtotalCents + shippingCents;
 

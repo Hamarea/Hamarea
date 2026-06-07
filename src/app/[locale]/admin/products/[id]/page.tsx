@@ -52,6 +52,7 @@ type Variant = {
 };
 type Image = {
   id: string;
+  variant_id: string | null;
   storage_path: string;
   alt_i18n: Record<string, string> | null;
   position: number;
@@ -104,7 +105,7 @@ export default async function AdminProductEdit({
   const { data: product } = await sb
     .from("products")
     .select(
-      "id, slug, name_i18n, description_i18n, seo, brand, status, category_id, supplier_id, product_variants(id, sku, price_cents, compare_at_price_cents, cost_cents, barcode, weight_g, currency, active, option_values, position, inventory(quantity, reserved, reorder_point, warehouse_id)), product_images(id, storage_path, alt_i18n, position)",
+      "id, slug, name_i18n, description_i18n, seo, brand, status, category_id, supplier_id, product_variants(id, sku, price_cents, compare_at_price_cents, cost_cents, barcode, weight_g, currency, active, option_values, position, inventory(quantity, reserved, reorder_point, warehouse_id)), product_images(id, variant_id, storage_path, alt_i18n, position)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -133,6 +134,17 @@ export default async function AdminProductEdit({
 
   const variants = [...(product.product_variants ?? [])].sort((a, b) => a.position - b.position);
   const images = [...(product.product_images ?? [])].sort((a, b) => a.position - b.position);
+
+  // Human label for a variant (colour first), used by the photo↔colour picker.
+  const variantLabel = (v: Variant): string => {
+    const ov = (v.option_values ?? {}) as Record<string, unknown>;
+    const color = (ov.color ?? ov.Couleur ?? ov.couleur) as string | undefined;
+    const all = Object.values(ov)
+      .filter((x): x is string => typeof x === "string" && x.length > 0)
+      .join(" / ");
+    return color || all || v.sku;
+  };
+  const variantLabelById = new Map(variants.map((v) => [v.id, variantLabel(v)]));
   const seo = product.seo ?? {};
 
   // Per-locale content panels (name + description + SEO) — submitted together.
@@ -443,6 +455,11 @@ export default async function AdminProductEdit({
                   </SubmitButton>
                 </form>
               </div>
+              {img.variant_id && variantLabelById.get(img.variant_id) && (
+                <p className="mt-0.5 text-center text-[10px] font-medium text-[var(--color-primary-600)]">
+                  🎨 {variantLabelById.get(img.variant_id)}
+                </p>
+              )}
               {i === 0 && (
                 <p className="mt-0.5 text-center text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                   Principale
@@ -464,6 +481,23 @@ export default async function AdminProductEdit({
               className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-primary-600)] file:px-3 file:py-1.5 file:text-white"
             />
             <Field label="Texte alt (FR)" name="alt_fr" className="w-56" maxLength={200} />
+            {variants.length > 0 && (
+              <div className="space-y-1">
+                <Label className="text-xs">Couleur</Label>
+                <select
+                  name="variantId"
+                  defaultValue=""
+                  className="h-10 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                >
+                  <option value="">Toutes (photo générale)</option>
+                  {variants.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {variantLabel(v)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <SubmitButton size="sm">Téléverser</SubmitButton>
           </ActionForm>
           <p className="mt-1 text-xs text-[var(--color-muted)]">
@@ -478,6 +512,23 @@ export default async function AdminProductEdit({
             <Field label="URL" name="url" type="url" required className="w-72" placeholder="https://…" />
             <Field label="Alt (FR)" name="alt_fr" className="w-40" maxLength={200} />
             <Field label="Alt (EN)" name="alt_en" className="w-40" maxLength={200} />
+            {variants.length > 0 && (
+              <div className="space-y-1">
+                <Label className="text-xs">Couleur</Label>
+                <select
+                  name="variantId"
+                  defaultValue=""
+                  className="h-10 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+                >
+                  <option value="">Toutes (photo générale)</option>
+                  {variants.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {variantLabel(v)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <SubmitButton size="sm">Ajouter</SubmitButton>
           </ActionForm>
         </div>

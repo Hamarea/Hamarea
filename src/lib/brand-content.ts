@@ -83,9 +83,9 @@ const fr: BrandCopy = {
   nav: { home: "Accueil", sacoche: "La Sacoche", univers: "L'Univers", about: "À propos" },
   tagline: "Just Run & Swim",
   hero: {
-    eyebrow: "Just Run & Swim",
-    titleLine1: "L'océan ne fait",
-    titleLine2: "jamais de pause.",
+    eyebrow: "Équipement de mer",
+    titleLine1: "Just Run &",
+    titleLine2: "Swim.",
     subtitle:
       "Hamarea équipe celles et ceux qui courent et nagent au bord de l'eau. Du matériel testé par la mer — sel, sable, chocs — pour profiter à fond, sans rien craindre.",
     ctaPrimary: "Découvrir la sacoche",
@@ -192,9 +192,9 @@ const en: BrandCopy = {
   nav: { home: "Home", sacoche: "The Pouch", univers: "The Range", about: "About" },
   tagline: "Just Run & Swim",
   hero: {
-    eyebrow: "Just Run & Swim",
-    titleLine1: "The ocean never",
-    titleLine2: "takes a break.",
+    eyebrow: "Sea gear, ocean-tested",
+    titleLine1: "Just Run &",
+    titleLine2: "Swim.",
     subtitle:
       "Hamarea equips the people who run and swim by the water. Gear tested by the sea — salt, sand, knocks — so you can go all in, fearlessly.",
     ctaPrimary: "Discover the pouch",
@@ -300,9 +300,9 @@ const es: BrandCopy = {
   nav: { home: "Inicio", sacoche: "La Funda", univers: "La Gama", about: "Nosotros" },
   tagline: "Just Run & Swim",
   hero: {
-    eyebrow: "Just Run & Swim",
-    titleLine1: "El océano nunca",
-    titleLine2: "hace una pausa.",
+    eyebrow: "Equipo de mar",
+    titleLine1: "Just Run &",
+    titleLine2: "Swim.",
     subtitle:
       "Hamarea equipa a quienes corren y nadan junto al agua. Material probado por el mar — sal, arena, golpes — para disfrutar al máximo, sin miedo.",
     ctaPrimary: "Descubrir la funda",
@@ -408,9 +408,9 @@ const de: BrandCopy = {
   nav: { home: "Start", sacoche: "Die Hülle", univers: "Die Range", about: "Über uns" },
   tagline: "Just Run & Swim",
   hero: {
-    eyebrow: "Just Run & Swim",
-    titleLine1: "Das Meer macht",
-    titleLine2: "niemals Pause.",
+    eyebrow: "Meeres-Ausrüstung",
+    titleLine1: "Just Run &",
+    titleLine2: "Swim.",
     subtitle:
       "Hamarea rüstet alle aus, die am Wasser laufen und schwimmen. Vom Meer getestete Ausrüstung — Salz, Sand, Stöße — damit du voll reingehst, ohne Sorge.",
     ctaPrimary: "Hülle entdecken",

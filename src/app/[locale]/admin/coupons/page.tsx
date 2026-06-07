@@ -16,6 +16,8 @@ type CouponRow = {
   value: number;
   min_subtotal_cents: number;
   used_count: number;
+  ends_at: string | null;
+  usage_limit: number | null;
   active: boolean;
 };
 
@@ -33,7 +35,7 @@ export default async function AdminCouponsPage() {
       };
     })
       .from("coupons")
-      .select("id, code, type, value, min_subtotal_cents, used_count, active")
+      .select("id, code, type, value, min_subtotal_cents, used_count, ends_at, usage_limit, active")
       .order("created_at", { ascending: false });
     coupons = data ?? [];
   } catch {
@@ -53,6 +55,7 @@ export default async function AdminCouponsPage() {
                 <th className="px-4 py-3 font-medium">Réduction</th>
                 <th className="px-4 py-3 font-medium">Min. panier</th>
                 <th className="px-4 py-3 font-medium">Utilisé</th>
+                <th className="px-4 py-3 font-medium">Validité</th>
                 <th className="px-4 py-3 font-medium">État</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -60,7 +63,7 @@ export default async function AdminCouponsPage() {
             <tbody>
               {coupons.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-[var(--color-muted)]">
+                  <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-muted)]">
                     Aucun coupon.
                   </td>
                 </tr>
@@ -74,7 +77,14 @@ export default async function AdminCouponsPage() {
                         : `−${formatMoney(c.value)}`}
                     </td>
                     <td className="px-4 py-3">{formatMoney(c.min_subtotal_cents)}</td>
-                    <td className="px-4 py-3">{c.used_count}</td>
+                    <td className="px-4 py-3">
+                      {c.usage_limit ? `${c.used_count}/${c.usage_limit}` : c.used_count}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-[var(--color-muted)]">
+                      {c.ends_at
+                        ? `jusqu'au ${new Date(c.ends_at).toLocaleDateString("fr-FR")}`
+                        : "illimité"}
+                    </td>
                     <td className="px-4 py-3">
                       <Badge variant={c.active ? "success" : "outline"}>
                         {c.active ? "Actif" : "Inactif"}
@@ -124,6 +134,17 @@ export default async function AdminCouponsPage() {
             <div className="space-y-1.5">
               <Label htmlFor="min_subtotal_cents">Minimum panier (centimes)</Label>
               <Input id="min_subtotal_cents" name="min_subtotal_cents" type="number" min={0} defaultValue={0} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="ends_at">Date limite</Label>
+                <Input id="ends_at" name="ends_at" type="date" />
+                <p className="text-xs text-[var(--color-muted)]">Vide = illimité.</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="usage_limit">Limite d&apos;usage</Label>
+                <Input id="usage_limit" name="usage_limit" type="number" min={1} placeholder="∞" />
+              </div>
             </div>
             <SubmitButton>Créer</SubmitButton>
           </ActionForm>
