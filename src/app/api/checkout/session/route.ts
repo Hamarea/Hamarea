@@ -10,6 +10,7 @@ import {
   shippingCentsFor,
 } from "@/lib/checkout";
 import { priceDbVariants } from "@/lib/checkout-db";
+import { resolveCoupon, couponErrorMessage } from "@/lib/coupon-db";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimitHit } from "@/lib/rate-limit";
@@ -39,6 +40,9 @@ const BodySchema = z.object({
   email: z.string().email(),
   shippingMethod: z.enum(["standard", "express"]).default("standard"),
   lines: z.array(LineSchema).min(1).max(50),
+  // Code promo applicatif (table `coupons`). Optionnel et rétro-compatible :
+  // absent → on conserve les codes promo natifs Stripe (allow_promotion_codes).
+  couponCode: z.string().trim().max(40).optional(),
 });
 
 const SHIPPING_LABEL = {
@@ -101,17 +105,36 @@ export async function POST(req: Request) {
   if (lineItems.length === 0) {
     return NextResponse.json({ error: "Panier vide ou article indisponible." }, { status: 400 });
   }
+  const hasDb = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+  );
+
+  // --- Coupon applicatif (autoritaire serveur) -----------------------------
+  // La remise est TOUJOURS recalculée en base ; le client n'envoie qu'un code.
+  // Un code fourni mais invalide ⇒ 400 (le front affiche l'erreur). Sans DB, on
+  // ignore (les coupons app vivent en base ; les codes Stripe natifs restent).
+  let discountCents = 0;
+  let couponId: string | null = null;
+  if (body.couponCode && hasDb) {
+    const res = await resolveCoupon(body.couponCode, subtotalCents);
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: couponErrorMessage(res.reason), couponError: true },
+        { status: 400 },
+      );
+    }
+    discountCents = res.discountCents;
+    couponId = res.couponId;
+  }
+
   const shippingCents = shippingCentsFor(subtotalCents, body.shippingMethod);
-  const totalCents = subtotalCents + shippingCents;
+  const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents;
 
   // --- Order persistence (best-effort) -------------------------------------
   // Only when Supabase is configured. Failures are logged but never block the
   // payment — the sale must not be lost.
   let orderId: string | null = null;
-  const hasDb = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-  );
   if (hasDb) {
     const supabase = await createClient();
     const {
@@ -125,6 +148,8 @@ export async function POST(req: Request) {
       shippingCents,
       totalCents,
       orderItems,
+      discountCents,
+      couponId,
     });
   }
 
@@ -136,20 +161,43 @@ export async function POST(req: Request) {
   }
 
   // Idempotency: same payload submitted twice (double-click) reuses the session.
+  // Le coupon entre dans la clé : changer le code ⇒ nouvelle session (pas de
+  // réutilisation d'une session sans remise).
   const idempotencyKey = createHash("sha256")
     .update(
-      JSON.stringify({ email: body.email, m: body.shippingMethod, l: body.lines }),
+      JSON.stringify({
+        email: body.email,
+        m: body.shippingMethod,
+        l: body.lines,
+        c: body.couponCode ?? "",
+        d: discountCents,
+      }),
     )
     .digest("hex");
 
   try {
+    // Coupon app appliqué → coupon Stripe éphémère + on retire les promo codes
+    // natifs (Stripe interdit `discounts` ET `allow_promotion_codes` ensemble).
+    // Si la création échoue, l'erreur remonte en 502 : on ne facture jamais le
+    // plein tarif alors qu'une remise valide était promise.
+    let discounts: { coupon: string }[] | undefined;
+    if (couponId && discountCents > 0) {
+      const ephemeral = await stripe.coupons.create({
+        amount_off: discountCents,
+        currency,
+        duration: "once",
+        name: body.couponCode ? `Code ${body.couponCode.toUpperCase()}` : "Remise",
+      });
+      discounts = [{ coupon: ephemeral.id }];
+    }
+
     const session = await stripe.checkout.sessions.create(
       {
         mode: "payment",
         locale: "auto",
         customer_email: body.email,
         line_items: lineItems,
-        allow_promotion_codes: true,
+        ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         billing_address_collection: "auto",
         phone_number_collection: { enabled: true },
         shipping_address_collection: { allowed_countries: [...SHIP_TO] },
