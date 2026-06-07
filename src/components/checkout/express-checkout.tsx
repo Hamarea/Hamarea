@@ -96,6 +96,7 @@ function ExpressInner({
   const stripe = useStripe();
   const elements = useElements();
   const lines = useCart((s) => s.lines);
+  const t = useTranslations("checkout");
   const [error, setError] = useState<string | null>(null);
 
   const shippingRates = useMemo(
@@ -104,12 +105,12 @@ function ExpressInner({
         id: shippingMethod,
         displayName:
           shippingMethod === "express"
-            ? "Livraison express (1-2j)"
-            : "Livraison standard (3-5j)",
+            ? t("shippingExpress")
+            : t("shippingStandard"),
         amount: shippingCents,
       },
     ],
-    [shippingMethod, shippingCents],
+    [shippingMethod, shippingCents, t],
   );
 
   async function onConfirm(event: StripeExpressCheckoutElementConfirmEvent) {
@@ -117,7 +118,7 @@ function ExpressInner({
     setError(null);
     const { error: submitError } = await elements.submit();
     if (submitError) {
-      setError(submitError.message ?? "Erreur");
+      setError(submitError.message ?? t("paymentError"));
       return;
     }
     try {
@@ -138,8 +139,8 @@ function ExpressInner({
       if (!res.ok) {
         const { error: message } = (await res
           .json()
-          .catch(() => ({ error: "Erreur paiement" }))) as { error?: string };
-        throw new Error(message ?? "Erreur paiement");
+          .catch(() => ({ error: t("paymentError") }))) as { error?: string };
+        throw new Error(message ?? t("paymentError"));
       }
       const { clientSecret } = (await res.json()) as { clientSecret: string };
       const { error: confirmError } = await stripe.confirmPayment({
@@ -149,9 +150,9 @@ function ExpressInner({
           return_url: `${window.location.origin}/checkout/success`,
         },
       });
-      if (confirmError) setError(confirmError.message ?? "Erreur paiement");
+      if (confirmError) setError(confirmError.message ?? t("paymentError"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur paiement");
+      setError(err instanceof Error ? err.message : t("paymentError"));
     }
   }
 

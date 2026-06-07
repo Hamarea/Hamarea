@@ -73,6 +73,12 @@
     "paymentError": "Zahlungsfehler",
     "expressTitle": "Express-Bezahlung",
     "orCard": "oder mit Karte zahlen",
+    "couponLabel": "Gutscheincode",
+    "couponPlaceholder": "Dein Code",
+    "couponApply": "Anwenden",
+    "couponRemove": "Entfernen",
+    "couponApplied": "Code {code} angewendet",
+    "discount": "Rabatt",
     "success": {
       "thanks": "Danke für deine Bestellung! 🎉",
       "confirmed": "Deine Zahlung ist bestätigt. Eine Bestätigungs-E-Mail wurde dir gesendet.",
