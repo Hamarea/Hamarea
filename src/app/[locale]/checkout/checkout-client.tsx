@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/utils";
 import { SHIPPING } from "@/lib/product";
 import { ExpressCheckout } from "@/components/checkout/express-checkout";
+import { Link } from "@/i18n/navigation";
+import { Lock } from "lucide-react";
 
 const SHIPPING_CENTS = {
   standard: SHIPPING.standardCents,
@@ -30,12 +32,18 @@ export function CheckoutClient() {
   const [shipping, setShipping] = useState<ShippingMethod>("standard");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discountCents: number } | null>(null);
+  const [couponMsg, setCouponMsg] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const shippingCents = useMemo(
     () => (subtotal >= SHIPPING.freeAboveCents ? 0 : SHIPPING_CENTS[shipping]),
     [subtotal, shipping],
   );
-  const total = subtotal + shippingCents;
+  // Discount is recomputed authoritatively server-side; this is the display copy.
+  const discountCents = coupon ? Math.min(coupon.discountCents, subtotal) : 0;
+  const total = Math.max(0, subtotal - discountCents) + shippingCents;
   const toFree = Math.max(0, SHIPPING.freeAboveCents - subtotal);
 
   const shippingLabel = (m: ShippingMethod) =>
@@ -52,6 +60,50 @@ export function CheckoutClient() {
     );
   }
 
+  // Only references — the server recomputes the authoritative price (and the
+  // discount, from the coupon code). Shared by the pay + coupon-apply calls.
+  const lineRefs = () =>
+    lines.map((l) => ({
+      productId: l.productId,
+      variantId: l.variantId,
+      color: l.options?.color ?? "",
+      pack: Number(l.options?.pack ?? 1),
+      quantity: l.quantity,
+    }));
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponLoading(true);
+    setCouponMsg(null);
+    try {
+      const res = await fetch("/api/checkout/coupon", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ couponCode: code, lines: lineRefs() }),
+      });
+      const data = (await res.json().catch(() => ({ ok: false }))) as
+        | { ok: true; discountCents: number; code: string }
+        | { ok: false; error?: string };
+      if (data.ok) {
+        setCoupon({ code: data.code, discountCents: data.discountCents });
+        setCouponInput("");
+      } else {
+        setCoupon(null);
+        setCouponMsg(data.error ?? t("paymentError"));
+      }
+    } catch {
+      setCouponMsg(t("paymentError"));
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCoupon(null);
+    setCouponMsg(null);
+  };
+
   const pay = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -63,14 +115,9 @@ export function CheckoutClient() {
         body: JSON.stringify({
           email,
           shippingMethod: shipping,
+          ...(coupon ? { couponCode: coupon.code } : {}),
           // Only references — the server recomputes the authoritative price.
-          lines: lines.map((l) => ({
-            productId: l.productId,
-            variantId: l.variantId,
-            color: l.options?.color ?? "",
-            pack: Number(l.options?.pack ?? 1),
-            quantity: l.quantity,
-          })),
+          lines: lineRefs(),
         }),
       });
       if (!res.ok) {
@@ -165,7 +212,15 @@ export function CheckoutClient() {
 
       <aside>
         <Card className="sticky top-24 p-6">
-          <h3 className="mb-3 font-medium">{t("summary")}</h3>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="font-medium">{t("summary")}</h3>
+            <Link
+              href="/cart"
+              className="text-xs text-[var(--color-primary-600)] hover:underline"
+            >
+              {t("editCart")}
+            </Link>
+          </div>
           <ul className="space-y-2 text-sm">
             {lines.map((l) => (
               <li key={l.variantId} className="flex justify-between gap-2">
@@ -181,8 +236,64 @@ export function CheckoutClient() {
               </li>
             ))}
           </ul>
+
+          {/* Code promo — remise validée et appliquée côté serveur */}
+          <div className="mt-4 border-t border-[var(--color-border)] pt-3">
+            {coupon ? (
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span className="font-medium text-[var(--color-secondary-700)]">
+                  {t("couponApplied", { code: coupon.code })}
+                </span>
+                <button
+                  type="button"
+                  onClick={removeCoupon}
+                  className="text-xs text-[var(--color-muted)] underline hover:text-[var(--color-danger)]"
+                >
+                  {t("couponRemove")}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2">
+                <div className="flex-1">
+                  <label htmlFor="coupon" className="sr-only">
+                    {t("couponLabel")}
+                  </label>
+                  <Input
+                    id="coupon"
+                    value={couponInput}
+                    onChange={(ev) => setCouponInput(ev.target.value)}
+                    placeholder={t("couponPlaceholder")}
+                    onKeyDown={(ev) => {
+                      if (ev.key === "Enter") {
+                        ev.preventDefault();
+                        applyCoupon();
+                      }
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={applyCoupon}
+                  disabled={couponLoading || !couponInput.trim()}
+                >
+                  {t("couponApply")}
+                </Button>
+              </div>
+            )}
+            {couponMsg && (
+              <p className="mt-1.5 text-xs text-[var(--color-danger)]">{couponMsg}</p>
+            )}
+          </div>
+
           <div className="mt-4 space-y-1 border-t border-[var(--color-border)] pt-3 text-sm">
             <Row label={tc("subtotal")} value={formatMoney(subtotal, "EUR", locale)} />
+            {discountCents > 0 && (
+              <Row
+                label={t("discount")}
+                value={`−${formatMoney(discountCents, "EUR", locale)}`}
+              />
+            )}
             <Row
               label={tc("shipping")}
               value={
@@ -198,7 +309,8 @@ export function CheckoutClient() {
               ? t("redirecting")
               : t("pay", { amount: formatMoney(total, "EUR", locale) })}
           </Button>
-          <p className="mt-3 text-center text-[11px] text-[var(--color-muted)]">
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-[var(--color-muted)]">
+            <Lock className="h-3 w-3 shrink-0" />
             {t("securePayment")}
           </p>
         </Card>
