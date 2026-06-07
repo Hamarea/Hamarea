@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/utils";
 import { SHIPPING } from "@/lib/product";
 import { ExpressCheckout } from "@/components/checkout/express-checkout";
+import { Link } from "@/i18n/navigation";
+import { Lock } from "lucide-react";
 
 const SHIPPING_CENTS = {
   standard: SHIPPING.standardCents,
@@ -210,7 +212,15 @@ export function CheckoutClient() {
 
       <aside>
         <Card className="sticky top-24 p-6">
-          <h3 className="mb-3 font-medium">{t("summary")}</h3>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="font-medium">{t("summary")}</h3>
+            <Link
+              href="/cart"
+              className="text-xs text-[var(--color-primary-600)] hover:underline"
+            >
+              {t("editCart")}
+            </Link>
+          </div>
           <ul className="space-y-2 text-sm">
             {lines.map((l) => (
               <li key={l.variantId} className="flex justify-between gap-2">
@@ -299,7 +309,8 @@ export function CheckoutClient() {
               ? t("redirecting")
               : t("pay", { amount: formatMoney(total, "EUR", locale) })}
           </Button>
-          <p className="mt-3 text-center text-[11px] text-[var(--color-muted)]">
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-[var(--color-muted)]">
+            <Lock className="h-3 w-3 shrink-0" />
             {t("securePayment")}
           </p>
         </Card>

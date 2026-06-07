@@ -64,6 +64,7 @@
     "shippingExpress": "Envío exprés (1-2 días)",
     "free": "Gratis",
     "summary": "Resumen",
+    "editCart": "Editar carrito",
     "shippingFree": "Gratis",
     "redirecting": "Redirigiendo…",
     "pay": "Pagar {amount}",
