@@ -30,6 +30,10 @@ const db = async () => (await createClient()) as unknown as DB;
 const revalidate = (productId: string) => {
   revalidatePath(`/admin/products/${productId}`);
   revalidatePath("/admin/products");
+  // Public storefront — so edits/publishing reflect in the catalog at once.
+  revalidatePath("/[locale]/products", "page");
+  revalidatePath("/[locale]/products/[slug]", "page");
+  revalidatePath("/[locale]", "page");
 };
 const ok = (): FormState => ({ ok: true });
 const err = (m: string): FormState => ({ error: m });
