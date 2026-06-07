@@ -64,6 +64,7 @@
     "shippingExpress": "Expressversand (1-2 Tage)",
     "free": "Gratis",
     "summary": "Übersicht",
+    "editCart": "Warenkorb bearbeiten",
     "shippingFree": "Gratis",
     "redirecting": "Weiterleitung…",
     "pay": "{amount} bezahlen",

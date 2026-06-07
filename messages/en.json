@@ -97,6 +97,7 @@
     "shippingExpress": "Express delivery (1-2 days)",
     "free": "Free",
     "summary": "Summary",
+    "editCart": "Edit cart",
     "shippingFree": "Free",
     "redirecting": "Redirecting…",
     "pay": "Pay {amount}",

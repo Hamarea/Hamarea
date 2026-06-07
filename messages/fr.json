@@ -97,6 +97,7 @@
     "shippingExpress": "Livraison express (1-2j)",
     "free": "Offert",
     "summary": "Récapitulatif",
+    "editCart": "Modifier le panier",
     "shippingFree": "Offerte",
     "redirecting": "Redirection…",
     "pay": "Payer {amount}",
