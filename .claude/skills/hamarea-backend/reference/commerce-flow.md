@@ -75,6 +75,7 @@ produisent. Jamais de confiance dans la redirection navigateur seule.
    font échouer le webhook, le paiement est déjà encaissé) :
    - `insert payments { provider:'stripe', status:'succeeded', amount_cents, raw }`
    - `rpc("decrement_stock_for_order", { p_order_id })`
+   - si `coupon_id` → `rpc("increment_coupon_usage", { p_coupon_id })` (quota)
    - `sendEmail(...)` (Resend, no-op si non configuré)
    - `trackPurchaseServer(...)` (Meta/TikTok CAPI ; `eventId = orderId` pour
      dédupliquer avec le pixel navigateur)
@@ -103,12 +104,28 @@ Atomicité côté Postgres : pas de course critique lecture-puis-écriture.
 - Elles sont **remplies par le webhook** à partir des détails collectés par
   Stripe (Checkout) ou le wallet (PaymentIntent), via `toAddressJson()`.
 
-## Coupons
+## Coupons (appliqués côté serveur)
 
 - Table `coupons` : `type` percent/fixed, `value`, `min_subtotal_cents`,
   fenêtre `starts_at`/`ends_at`, `usage_limit`/`used_count`, `active`.
-- Côté Checkout hébergé, `allow_promotion_codes: true` laisse Stripe gérer la
-  saisie ; l'admin gère les coupons via `src/app/[locale]/admin/coupons/`.
+- **Moteur PUR** `lib/coupons.ts` (`validateCoupon` + `computeDiscountCents` +
+  `applyCoupon`) — remise AUTORITAIRE serveur, bornée à `[0, subtotal]`, testée
+  (`coupons.test.ts`). Le client n'envoie qu'un `couponCode`.
+- **Résolution** `lib/coupon-db.ts › resolveCoupon(code, subtotal)` : charge le
+  coupon (client admin, `code` est `citext` → eq insensible à la casse), applique
+  le moteur → `{ couponId, discountCents }` ou un motif de refus.
+- **Routes checkout** : `couponCode` optionnel. Si valide →
+  - Checkout hébergé : **coupon Stripe éphémère** (`stripe.coupons.create` +
+    `discounts:[…]`) et on **retire** `allow_promotion_codes` (Stripe interdit les
+    deux). Sans coupon app → on **garde** `allow_promotion_codes` (codes natifs).
+  - Express/PaymentIntent : le `amount` est directement réduit.
+  - Code fourni mais invalide → **400** `{ couponError: true }` (jamais facturer
+    le plein tarif quand une remise valide était promise → échec bruyant).
+- **Persistance** : `createPendingOrder` enregistre `discount_cents` + `coupon_id`.
+- **Quota** : le webhook incrémente `used_count` via la RPC atomique
+  `increment_coupon_usage` (migr. 0020), **une fois par commande** (garde
+  `status <> 'paid'`), best-effort.
+- L'admin gère les coupons via `src/app/[locale]/admin/coupons/`.
 
 ## États & transitions de commande
 

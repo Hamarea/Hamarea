@@ -205,8 +205,13 @@ l'UI vit dans `src/app/[locale]/admin/customers/`.
 ```bash
 npm run typecheck   # tsc --noEmit
 npm run lint        # eslint
+npm test            # vitest (logique pure : pricing, coupons, frais de port)
 npm run build       # build prod (optionnel mais recommandé avant push)
 ```
+
+> Les tests vivent en `src/**/*.test.ts` (config `vitest.config.ts`, env node).
+> Couvre en priorité la **logique pure autoritaire** (prix, coupons) — pas les
+> routes (non testables sans Stripe/DB live).
 Si la DB a changé : MCP `get_advisors('security')` + `('performance')`, puis
 `generate_typescript_types`.
 

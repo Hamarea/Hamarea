@@ -8,6 +8,7 @@ import {
   priceCart,
   shippingCentsFor,
 } from "@/lib/checkout";
+import { resolveCoupon, couponErrorMessage } from "@/lib/coupon-db";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimitHit } from "@/lib/rate-limit";
@@ -33,6 +34,7 @@ const BodySchema = z.object({
   email: z.string().email().optional(),
   shippingMethod: z.enum(["standard", "express"]).default("standard"),
   lines: z.array(LineSchema).min(1).max(50),
+  couponCode: z.string().trim().max(40).optional(),
 });
 
 export async function POST(req: Request) {
@@ -71,15 +73,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: priced.error }, { status: 400 });
   }
   const { orderItems, subtotalCents } = priced.cart;
-  const shippingCents = shippingCentsFor(subtotalCents, body.shippingMethod);
-  const totalCents = subtotalCents + shippingCents;
 
-  // Persist a pending order so the webhook can reconcile it (best-effort).
-  let orderId: string | null = null;
   const hasDb = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.SUPABASE_SERVICE_ROLE_KEY,
   );
+
+  // Coupon applicatif (autoritaire serveur). Le montant est directement réduit
+  // (on contrôle `amount` du PaymentIntent). Code invalide ⇒ 400.
+  let discountCents = 0;
+  let couponId: string | null = null;
+  if (body.couponCode && hasDb) {
+    const res = await resolveCoupon(body.couponCode, subtotalCents);
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: couponErrorMessage(res.reason), couponError: true },
+        { status: 400 },
+      );
+    }
+    discountCents = res.discountCents;
+    couponId = res.couponId;
+  }
+
+  const shippingCents = shippingCentsFor(subtotalCents, body.shippingMethod);
+  const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents;
+
+  // Persist a pending order so the webhook can reconcile it (best-effort).
+  let orderId: string | null = null;
   if (hasDb) {
     const supabase = await createClient();
     const {
@@ -93,6 +113,8 @@ export async function POST(req: Request) {
       shippingCents,
       totalCents,
       orderItems,
+      discountCents,
+      couponId,
     });
   }
 

@@ -140,6 +140,10 @@ export async function createPendingOrder(
     shippingCents: number;
     totalCents: number;
     orderItems: OrderItemRow[];
+    /** Remise appliquée (centimes, autoritaire serveur). 0 si pas de coupon. */
+    discountCents?: number;
+    /** UUID du coupon `coupons` appliqué — null sinon (incrémenté au webhook). */
+    couponId?: string | null;
   },
 ): Promise<string | null> {
   // The generated Database type does not yet cover the commerce tables, so the
@@ -156,7 +160,8 @@ export async function createPendingOrder(
         subtotal_cents: params.subtotalCents,
         shipping_cents: params.shippingCents,
         tax_cents: 0,
-        discount_cents: 0,
+        discount_cents: params.discountCents ?? 0,
+        coupon_id: params.couponId ?? null,
         total_cents: params.totalCents,
         shipping_address: {}, // filled by the webhook from Stripe-collected details
         billing_address: {},

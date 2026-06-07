@@ -108,6 +108,7 @@ toutes en **RLS activée**. Les types TS sont dans `src/lib/supabase/types.ts`
 | `prevent_role_self_escalation()` | trigger BEFORE UPDATE `profiles` | `security definer` | bloque l'auto-promotion `role`/`id`/`permissions` (0010/0013) |
 | `is_staff()` | fonction | `security definer`, exécutable anon/auth/service | lit le rôle **sans réentrer la RLS** (fix récursion 0015) |
 | `rate_limit_hit(text, int, int)` | RPC | service_role | compteur fenêtre fixe → bool « autorisé » |
+| `increment_coupon_usage(uuid)` | RPC | service_role | incrémente `coupons.used_count` (atomique, appelé au webhook ; migr. 0020) |
 
 ## Index notables
 

@@ -128,7 +128,7 @@ Détails complets (idempotence, Express Checkout/wallets, adresses) :
 ## Carte des fichiers backend
 
 ```
-supabase/migrations/0001..0018_*.sql   Schéma SQL : extensions, enums, tables, RLS, RPC, seeds
+supabase/migrations/0001..0020_*.sql   Schéma SQL : extensions, enums, tables, RLS, RPC, seeds
 src/lib/supabase/
   ├── client.ts      Client navigateur (anon)
   ├── server.ts      Client serveur (anon + cookies) + STUB mode aperçu
@@ -140,6 +140,8 @@ src/lib/
   ├── queries.ts     Lecture catalogue (repli données d'exemple si pas de DB)
   ├── checkout.ts    Pricing AUTORITAIRE sacoche + createPendingOrder (pur)
   ├── checkout-db.ts Pricing AUTORITAIRE produits catalogue (lit price_cents en DB)
+  ├── coupons.ts     Moteur de coupons PUR (validate + computeDiscount) — testé
+  ├── coupon-db.ts   resolveCoupon : charge le coupon (admin) + applique le moteur
   ├── stripe.ts      Singleton SDK Stripe (null si non configuré)
   ├── audit.ts       logAudit() best-effort → audit_logs
   ├── rate-limit.ts  rateLimitHit() → RPC rate_limit_hit (fail-open)

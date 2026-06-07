@@ -36,7 +36,13 @@ type AdminDb = {
           v: string,
         ) => {
           select: (cols?: string) => Promise<{
-            data: { id: string; number?: string | number | null }[] | null;
+            data:
+              | {
+                  id: string;
+                  number?: string | number | null;
+                  coupon_id?: string | null;
+                }[]
+              | null;
             error: { message?: string } | null;
           }>;
         };
@@ -123,7 +129,7 @@ async function markOrderPaid(
     })
     .eq("id", orderId)
     .neq("status", "paid")
-    .select("id, number");
+    .select("id, number, coupon_id");
 
   if (updErr) {
     console.error("[stripe webhook] order update failed", orderId, updErr);
@@ -134,6 +140,20 @@ async function markOrderPaid(
 
   const orderNumber =
     (updated[0] as { number?: string | number | null }).number ?? null;
+  const couponId =
+    (updated[0] as { coupon_id?: string | null }).coupon_id ?? null;
+
+  // Idempotent par commande (garde `status <> 'paid'` ci-dessus) : on incrémente
+  // le quota du coupon exactement une fois. Atomique via RPC ; best-effort (un
+  // échec ne casse jamais le webhook — le paiement est déjà encaissé).
+  if (couponId) {
+    const { error: cErr } = await sb.rpc("increment_coupon_usage", {
+      p_coupon_id: couponId,
+    });
+    if (cErr) {
+      console.error("[stripe webhook] coupon usage increment failed", orderId, cErr);
+    }
+  }
 
   const { error: payErr } = await sb.from("payments").insert({
     order_id: orderId,
