@@ -15,9 +15,10 @@ export default async function AccountLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect({ href: "/login", locale: "fr" });
 
-  // Surface a shortcut to the admin dashboard for staff/admins (there is no
-  // other link to /admin in the UI). RLS (`profiles_self_read`) lets a user
-  // read its own role.
+  // Back-office users (admin/staff) have no customer account area: the header's
+  // profile icon must land them on the dashboard, never on /account. We already
+  // hold the session here, so the role read adds no extra page cost. RLS
+  // (`profiles_self_read`) lets a user read its own role.
   const { data: profile } = await (
     supabase as unknown as {
       from: (t: string) => {
@@ -33,7 +34,9 @@ export default async function AccountLayout({
     .select("role")
     .eq("id", user!.id)
     .maybeSingle();
-  const isStaff = profile?.role === "admin" || profile?.role === "staff";
+  if (profile?.role === "admin" || profile?.role === "staff") {
+    redirect({ href: "/admin", locale: "fr" });
+  }
 
   const t = await getTranslations();
 
@@ -43,14 +46,6 @@ export default async function AccountLayout({
         <p className="px-3 py-2 text-xs uppercase tracking-wider text-[var(--color-muted)]">
           {t("common.account")}
         </p>
-        {isStaff && (
-          <Link
-            href="/admin"
-            className="mb-2 block rounded-md bg-[var(--color-primary-600)] px-3 py-2 font-medium text-white transition hover:opacity-90"
-          >
-            {t("admin.dashboard")}
-          </Link>
-        )}
         <Link
           href="/account"
           className="block rounded-md px-3 py-2 hover:bg-[var(--color-primary-50)]"
