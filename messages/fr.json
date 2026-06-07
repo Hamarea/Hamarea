@@ -106,6 +106,12 @@
     "paymentError": "Erreur paiement",
     "expressTitle": "Paiement express",
     "orCard": "ou payer par carte",
+    "couponLabel": "Code promo",
+    "couponPlaceholder": "Votre code",
+    "couponApply": "Appliquer",
+    "couponRemove": "Retirer",
+    "couponApplied": "Code {code} appliqué",
+    "discount": "Remise",
     "success": {
       "thanks": "Merci pour votre commande ! 🎉",
       "confirmed": "Votre paiement a été confirmé. Un e-mail récapitulatif vous a été envoyé.",

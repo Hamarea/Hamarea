@@ -106,6 +106,12 @@
     "paymentError": "Payment error",
     "expressTitle": "Express checkout",
     "orCard": "or pay by card",
+    "couponLabel": "Promo code",
+    "couponPlaceholder": "Your code",
+    "couponApply": "Apply",
+    "couponRemove": "Remove",
+    "couponApplied": "Code {code} applied",
+    "discount": "Discount",
     "success": {
       "thanks": "Thank you for your order! 🎉",
       "confirmed": "Your payment is confirmed. A summary email has been sent to you.",
