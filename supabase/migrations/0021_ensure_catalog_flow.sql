@@ -1,12 +1,15 @@
--- 0019_ensure_catalog_flow.sql
+-- 0021_ensure_catalog_flow.sql
 -- Idempotent safety net for the "create product → catalog" flow. Re-asserts the
 -- pieces a fresh / partially-migrated database needs so the admin can CREATE
 -- products (and categories, variants, images) and the storefront can READ them:
 --   • products.preorder column (0018) — inserted on every product creation
 --   • is_staff() + profiles RLS fix (0015) — admin role checks (no 500)
---   • catalog RLS: public read (active) + admin/staff write
+--   • catalog RLS: public read (active) + admin/staff write (0003 / 0019)
 --   • public Storage bucket for product photos (upload on create / on edit)
 -- Safe to run multiple times; nothing is duplicated or dropped destructively.
+-- The catalog read/write policies are already established by 0003 + 0019; they
+-- are re-asserted here only so a partially-migrated DB self-heals. The one piece
+-- NOT created by any earlier migration is the `product-images` Storage bucket.
 
 -- 1) Pre-order flag (also in 0018) — inserted by createProduct on every create.
 alter table public.products
