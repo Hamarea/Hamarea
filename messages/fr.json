@@ -71,7 +71,19 @@
     "shipping": "Livraison & retours",
     "reviews": "Avis clients",
     "relatedProducts": "Vous aimerez aussi",
-    "selectVariant": "Choisir une variante"
+    "selectVariant": "Choisir une variante",
+    "promo": "Promotion",
+    "preorderBadge": "Précommande",
+    "preorderNotice": "Ce produit est en <strong>précommande</strong> — réservez-le dès maintenant, expédié dès sa sortie.",
+    "shippingInfo": {
+      "delivery": "Livraison sous 3-5 jours ouvrés (UE)",
+      "returns": "Retours gratuits sous 14 jours",
+      "packaging": "Emballage soigné, sans plastique"
+    },
+    "options": {
+      "color": "Couleur",
+      "size": "Taille"
+    }
   },
   "cart": {
     "title": "Votre panier",

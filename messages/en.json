@@ -71,7 +71,19 @@
     "shipping": "Shipping & returns",
     "reviews": "Customer reviews",
     "relatedProducts": "You may also like",
-    "selectVariant": "Select a variant"
+    "selectVariant": "Select a variant",
+    "promo": "Sale",
+    "preorderBadge": "Pre-order",
+    "preorderNotice": "This product is on <strong>pre-order</strong> — reserve yours now, shipped as soon as it's out.",
+    "shippingInfo": {
+      "delivery": "Delivery within 3-5 business days (EU)",
+      "returns": "Free returns within 14 days",
+      "packaging": "Careful, plastic-free packaging"
+    },
+    "options": {
+      "color": "Colour",
+      "size": "Size"
+    }
   },
   "cart": {
     "title": "Your cart",
