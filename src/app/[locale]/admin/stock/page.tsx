@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionForm } from "@/components/ui/action-form";
+import { FilterChips } from "@/components/admin/filter-chips";
 import { createClient } from "@/lib/supabase/server";
 import { setInventory } from "@/app/[locale]/admin/products/[id]/actions";
 
@@ -21,9 +22,15 @@ type InvRow = {
   };
 };
 
-export default async function AdminStockPage() {
+export default async function AdminStockPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ f?: string }>;
+}) {
   const t = await getTranslations();
   const supabase = await createClient();
+  const sp = await searchParams;
+  const f = sp.f === "low" || sp.f === "out" ? sp.f : "";
 
   let rows: InvRow[] = [];
   try {
@@ -39,46 +46,81 @@ export default async function AdminStockPage() {
     rows = [];
   }
 
+  // Compute availability buckets: out (≤0) · low (0<avail≤seuil) · ok.
+  const enriched = rows.map((r) => ({ ...r, available: r.quantity - r.reserved }));
+  const isOut = (a: number) => a <= 0;
+  const isLow = (a: number, seuil: number) => a > 0 && a <= seuil;
+  const counts = {
+    all: enriched.length,
+    low: enriched.filter((r) => isLow(r.available, r.reorder_point)).length,
+    out: enriched.filter((r) => isOut(r.available)).length,
+  };
+  const filtered =
+    f === "out"
+      ? enriched.filter((r) => isOut(r.available))
+      : f === "low"
+        ? enriched.filter((r) => isLow(r.available, r.reorder_point))
+        : enriched;
+
   return (
     <div>
-      <h1 className="font-display text-3xl mb-1">{t("admin.stock")}</h1>
+      <h1 className="mb-1 font-display text-3xl">{t("admin.stock")}</h1>
       <p className="mb-6 text-sm text-[var(--color-muted)]">
         Modifie la quantité et le seuil d&apos;alerte directement ici, puis
-        « Enregistrer ». « Réservé » = quantité en cours de commande. « Stock
-        bas » s&apos;affiche quand le disponible passe sous le seuil.
+        « Enregistrer ». « Réservé » = quantité en cours de commande.
+        « Disponible » = quantité − réservé.
       </p>
+
+      <FilterChips
+        items={[
+          { label: "Tous", href: { pathname: "/admin/stock" }, active: !f, count: counts.all },
+          {
+            label: "Stock bas",
+            href: { pathname: "/admin/stock", query: { f: "low" } },
+            active: f === "low",
+            count: counts.low,
+          },
+          {
+            label: "Rupture",
+            href: { pathname: "/admin/stock", query: { f: "out" } },
+            active: f === "out",
+            count: counts.out,
+          },
+        ]}
+      />
+
       <Card>
         <table className="w-full text-sm">
           <thead className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
             <tr className="text-left">
               <th className="px-4 py-3 font-medium">Produit</th>
               <th className="px-4 py-3 font-medium">Stock (modifiable)</th>
-              <th className="px-4 py-3 font-medium text-right">Réservé</th>
-              <th className="px-4 py-3 font-medium">Alerte</th>
+              <th className="px-4 py-3 text-right font-medium">Réservé</th>
+              <th className="px-4 py-3 text-right font-medium">Disponible</th>
+              <th className="px-4 py-3 font-medium">État</th>
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-12 text-center text-[var(--color-muted)]">
-                  Aucun stock défini.
+                <td colSpan={5} className="px-4 py-12 text-center text-[var(--color-muted)]">
+                  {enriched.length === 0
+                    ? "Aucun stock défini. Ajoutez une variante avec un prix sur une fiche produit."
+                    : "Aucune variante dans ce filtre. 🎉"}
                 </td>
               </tr>
             ) : (
-              rows.map((r) => {
-                const available = r.quantity - r.reserved;
-                const low = available <= r.reorder_point;
+              filtered.map((r) => {
+                const available = r.available;
+                const out = isOut(available);
+                const low = isLow(available, r.reorder_point);
                 const pv = r.product_variants;
                 const productName =
-                  pv?.products?.name_i18n?.fr ??
-                  pv?.products?.name_i18n?.en ??
-                  "Produit";
+                  pv?.products?.name_i18n?.fr ?? pv?.products?.name_i18n?.en ?? "Produit";
                 const ov = (pv?.option_values ?? {}) as Record<string, unknown>;
-                const color = (ov.color ?? ov.Couleur ?? ov.couleur) as
-                  | string
-                  | undefined;
+                const color = (ov.color ?? ov.Couleur ?? ov.couleur) as string | undefined;
                 return (
-                  <tr key={r.variant_id} className="border-b border-[var(--color-border)]">
+                  <tr key={r.variant_id} className="border-b border-[var(--color-border)] last:border-0">
                     <td className="px-4 py-3">
                       <div className="font-medium">
                         {productName}
@@ -127,9 +169,16 @@ export default async function AdminStockPage() {
                       </ActionForm>
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">{r.reserved}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      <span className={out ? "font-semibold text-[var(--color-danger)]" : low ? "font-medium text-amber-700" : ""}>
+                        {available}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">
-                      {low ? (
-                        <Badge variant="danger">Stock bas</Badge>
+                      {out ? (
+                        <Badge variant="danger">Rupture</Badge>
+                      ) : low ? (
+                        <Badge variant="warning">Stock bas</Badge>
                       ) : (
                         <Badge variant="success">OK</Badge>
                       )}
