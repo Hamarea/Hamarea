@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Check, ShoppingBag, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
@@ -16,9 +16,12 @@ import { PaymentMarks, Reassurance } from "@/components/product/reassurance";
 export function BuyBox({
   variant = "hero",
   compact = false,
+  stockByColor,
 }: {
   variant?: "hero" | "section";
   compact?: boolean;
+  /** Real stock per colour id (rose/noir/blanc). Undefined → treat as in stock. */
+  stockByColor?: Record<string, number>;
 }) {
   const add = useCart((s) => s.add);
   const openDrawer = useCartUI((s) => s.openDrawer);
@@ -31,6 +34,9 @@ export function BuyBox({
   const [added, setAdded] = useState(false);
 
   const colorName = copy.colors.names[color.id];
+  const tCommon = useTranslations("common");
+  const stockLeft = stockByColor?.[color.id];
+  const outOfStock = typeof stockLeft === "number" && stockLeft <= 0;
 
   const buildLine = (): CartLine => ({
     variantId: color.variantId,
@@ -46,6 +52,7 @@ export function BuyBox({
   });
 
   const onAdd = () => {
+    if (outOfStock) return;
     add(buildLine());
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -53,6 +60,7 @@ export function BuyBox({
   };
 
   const onBuyNow = () => {
+    if (outOfStock) return;
     add(buildLine());
     router.push("/checkout");
   };
@@ -137,14 +145,20 @@ export function BuyBox({
         <div className="mt-1.5 flex gap-1.5">
           {SACOCHE.colors.map((c) => {
             const active = c.id === color.id;
+            const cOut =
+              typeof stockByColor?.[c.id] === "number" &&
+              (stockByColor[c.id] as number) <= 0;
             return (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => setColorId(c.id)}
+                title={cOut ? tCommon("outOfStock") : undefined}
                 aria-label={copy.buyBox.colorAria.replace("{name}", copy.colors.names[c.id])}
                 aria-pressed={active}
                 className={`grid ${swatchSize} place-items-center rounded-full ring-2 transition-all ${
+                  cOut ? "opacity-40" : ""
+                } ${
                   active
                     ? "ring-[var(--color-primary-600)] ring-offset-2 ring-offset-transparent scale-110"
                     : dark
@@ -190,8 +204,10 @@ export function BuyBox({
             +
           </button>
         </div>
-        <Button size={btnSize} className="flex-1" onClick={onAdd}>
-          {added ? (
+        <Button size={btnSize} className="flex-1" onClick={onAdd} disabled={outOfStock}>
+          {outOfStock ? (
+            tCommon("outOfStock")
+          ) : added ? (
             <>
               <Check className="h-4 w-4" /> {copy.buyBox.added}
             </>
@@ -211,6 +227,7 @@ export function BuyBox({
           variant="secondary"
           className="mt-2 w-full"
           onClick={onBuyNow}
+          disabled={outOfStock}
         >
           <Zap className="h-4 w-4" /> {copy.buyBox.buyNow}
         </Button>

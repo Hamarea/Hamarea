@@ -1,22 +1,17 @@
-import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
+import { HeroMedia } from "@/components/brand/hero-media";
 import { getBrandCopy } from "@/lib/brand-content";
+import { getHomeHero } from "@/lib/queries";
 
 /** Brand hero: identity + value prop + one primary CTA, viewable in <1 screen. */
-export function BrandHero({ locale }: { locale: string }) {
+export async function BrandHero({ locale }: { locale: string }) {
   const c = getBrandCopy(locale).hero;
+  const media = await getHomeHero();
   return (
     <section className="relative -mt-16 min-h-[100svh] w-full overflow-hidden bg-[var(--color-primary-900)] text-white">
-      <Image
-        src="/hero.jpg"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover"
-      />
+      <HeroMedia media={media} />
       <div
         aria-hidden
         className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary-900)]/85 via-[var(--color-primary-900)]/55 to-[var(--color-secondary-900)]/40"

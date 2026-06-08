@@ -35,6 +35,7 @@ const revalidate = (productId: string) => {
   // Vitrine publique : reflet live des changements (prix, stock, contenu, statut).
   revalidatePath("/[locale]/products", "page");
   revalidatePath("/[locale]/products/[slug]", "page");
+  revalidatePath("/[locale]/sacoche", "page");
   revalidatePath("/[locale]", "page");
 };
 const ok = (): FormState => ({ ok: true });

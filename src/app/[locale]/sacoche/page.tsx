@@ -20,6 +20,12 @@ import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { CountUp } from "@/components/ui/count-up";
 import { SACOCHE } from "@/lib/product";
 import { getProductCopy } from "@/lib/product-content";
+import { getSacocheStockByColor } from "@/lib/queries";
+
+// Landing « stock-aware » : revalidation périodique pour que le badge « rupture »
+// reflète les ventes/réassorts récents (les modifs stock admin revalident aussi
+// ce chemin).
+export const revalidate = 120;
 
 export async function generateMetadata({
   params,
@@ -63,6 +69,7 @@ export default async function SacochePage({
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const copy = getProductCopy(locale);
+  const stockByColor = await getSacocheStockByColor();
 
   return (
     <>
@@ -109,7 +116,7 @@ export default async function SacochePage({
               </p>
             </Reveal>
             <Reveal delay={0.24} className="mt-5">
-              <BuyBox variant="hero" compact />
+              <BuyBox variant="hero" compact stockByColor={stockByColor} />
             </Reveal>
           </div>
           <div className="hidden md:col-span-7 md:block lg:col-span-8" aria-hidden />
@@ -154,7 +161,7 @@ export default async function SacochePage({
         </Reveal>
       </section>
 
-      <StickyBuyBar />
+      <StickyBuyBar stockByColor={stockByColor} />
     </>
   );
 }
