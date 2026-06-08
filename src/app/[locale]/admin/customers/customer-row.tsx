@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { Loader2 } from "lucide-react";
 import { setUserRole, setUserPermissions } from "./actions";
 import { ALL_PERMISSIONS, PERMISSION_LABELS } from "@/lib/permissions";
@@ -74,7 +75,14 @@ export function CustomerRow({
 
   return (
     <tr className="border-b border-[var(--color-border)] align-top">
-      <td className="px-4 py-3 font-medium">{customer.full_name ?? "—"}</td>
+      <td className="px-4 py-3 font-medium">
+        <Link
+          href={`/admin/customers/${customer.id}` as never}
+          className="text-[var(--color-primary-600)] hover:underline"
+        >
+          {customer.full_name ?? customer.email ?? "—"}
+        </Link>
+      </td>
       <td className="px-4 py-3">{customer.email}</td>
       <td className="px-4 py-3">
         {canManage && !isSelf ? (
