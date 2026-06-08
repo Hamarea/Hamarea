@@ -19,6 +19,32 @@ export type CategoryCard = {
   image_url?: string | null;
 };
 
+/** A catalog category as shown on the brand home "L'Univers" grid. */
+export type UniverseCategory = {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  image_url?: string | null;
+};
+
+/**
+ * Admin-managed background media for the brand hero (key `home_hero` in
+ * `shop_settings`). `single` uses images[0]; `slideshow` cross-fades images[];
+ * `video` plays videoUrl (with an optional poster). Falls back to /hero.jpg.
+ */
+export type HomeHeroMedia = {
+  type: "single" | "slideshow" | "video";
+  images: string[];
+  videoUrl?: string;
+  poster?: string;
+};
+
+export const DEFAULT_HOME_HERO: HomeHeroMedia = {
+  type: "single",
+  images: ["/hero.jpg"],
+};
+
 export type VariantOption = {
   id: string;
   sku: string;
@@ -629,5 +655,112 @@ export async function listCategories(locale: string): Promise<CategoryCard[]> {
     }));
   } catch {
     return SAMPLE_CATEGORIES;
+  }
+}
+
+/**
+ * Active catalog categories WITH their image + description, real DB only (no
+ * sample fallback → []). Powers the brand home "L'Univers" grid so that each
+ * card is a real, admin-managed category linking to its filtered catalog.
+ */
+export async function listActiveCategories(
+  locale: string,
+): Promise<UniverseCategory[]> {
+  if (!isConfigured()) return [];
+  try {
+    const supabase = (await createClient()) as unknown as SBClient;
+    const res = (await supabase
+      .from("categories")
+      .select("id, slug, name_i18n, description_i18n, image_url")
+      .eq("active", true)
+      .order("position")) as unknown as {
+      data: Array<{
+        id: string;
+        slug: string;
+        name_i18n: Record<string, string>;
+        description_i18n: Record<string, string> | null;
+        image_url: string | null;
+      }> | null;
+    };
+    return (res.data ?? []).map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      name: c.name_i18n?.[locale] ?? c.name_i18n?.fr ?? c.slug,
+      description:
+        c.description_i18n?.[locale] ?? c.description_i18n?.fr ?? undefined,
+      image_url: c.image_url,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Products explicitly flagged « vedette » (featured = true), real DB only
+ * (no sample fallback → []). Powers the home best-seller spotlight, which the
+ * admin curates by ticking « Vedette » on one OR several products. Resilient if
+ * the `featured` column doesn't exist yet (returns []).
+ */
+export async function listFeaturedProductsOnly(
+  locale: string,
+  limit = 6,
+): Promise<ProductCard[]> {
+  if (!isConfigured()) return [];
+  const select =
+    "id, slug, name_i18n, description_i18n, created_at, product_variants(price_cents, compare_at_price_cents, currency, active, position), product_images(storage_path, alt_i18n, position)";
+  try {
+    const supabase = (await createClient()) as unknown as SBClient;
+    const res = (await supabase
+      .from("products")
+      .select(select)
+      .eq("status", "active")
+      .eq("featured", true)
+      .order("created_at", { ascending: false })
+      .limit(limit)) as unknown as { data: ProductRowList[] | null; error: unknown };
+    if (res.error) return [];
+    return (res.data ?? []).map((p) => rowToCard(p, locale));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Admin-managed hero background media (key `home_hero`). Returns a validated
+ * shape, defaulting to the static /hero.jpg when unset / unconfigured / invalid
+ * — so the home hero NEVER renders empty.
+ */
+export async function getHomeHero(): Promise<HomeHeroMedia> {
+  if (!isConfigured()) return DEFAULT_HOME_HERO;
+  try {
+    const supabase = (await createClient()) as unknown as {
+      from: (t: string) => {
+        select: (q: string) => {
+          eq: (k: string, v: string) => {
+            maybeSingle: () => Promise<{
+              data: { value: Partial<HomeHeroMedia> | null } | null;
+            }>;
+          };
+        };
+      };
+    };
+    const { data } = await supabase
+      .from("shop_settings")
+      .select("value")
+      .eq("key", "home_hero")
+      .maybeSingle();
+    const v = data?.value;
+    if (!v || typeof v !== "object") return DEFAULT_HOME_HERO;
+    const type =
+      v.type === "slideshow" || v.type === "video" ? v.type : "single";
+    const images = Array.isArray(v.images)
+      ? v.images.filter((x): x is string => typeof x === "string" && x.length > 0)
+      : [];
+    const videoUrl = typeof v.videoUrl === "string" ? v.videoUrl : undefined;
+    const poster = typeof v.poster === "string" ? v.poster : undefined;
+    if (type === "video" && videoUrl) return { type, videoUrl, poster, images };
+    if (images.length > 0) return { type, images };
+    return DEFAULT_HOME_HERO;
+  } catch {
+    return DEFAULT_HOME_HERO;
   }
 }

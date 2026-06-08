@@ -47,7 +47,8 @@
     "marqueeCta": "Entdecken",
     "featured": "Empfehlungen",
     "newArrivals": "Neuheiten",
-    "viewAll": "Alle ansehen"
+    "viewAll": "Alle ansehen",
+    "bestSellers": "Unsere Bestseller"
   },
   "product": { "description": "Beschreibung", "details": "Eigenschaften", "shipping": "Versand & Rückgabe", "reviews": "Kundenbewertungen", "relatedProducts": "Das könnte Ihnen gefallen", "selectVariant": "Variante wählen", "promo": "Angebot", "preorderBadge": "Vorbestellung", "preorderNotice": "Dieses Produkt ist <strong>vorbestellbar</strong> — sichere es dir jetzt, Versand ab Erscheinen.", "shippingInfo": { "delivery": "Lieferung in 3-5 Werktagen (EU)", "returns": "Kostenlose Rückgabe innerhalb von 14 Tagen", "packaging": "Sorgfältige, plastikfreie Verpackung" }, "options": { "color": "Farbe", "size": "Größe" } },
   "cart": { "title": "Ihr Warenkorb", "empty": "Ihr Warenkorb ist leer.", "subtotal": "Zwischensumme", "shipping": "Versand", "tax": "MwSt.", "total": "Gesamt", "checkout": "Zur Kasse", "continueShopping": "Weiter einkaufen", "remove": "Entfernen" },
