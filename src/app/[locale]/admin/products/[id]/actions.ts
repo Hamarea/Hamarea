@@ -90,6 +90,8 @@ export async function updateProduct(
       title: i18nFromForm(formData, "seo_title"),
       description: i18nFromForm(formData, "seo_description"),
     };
+    const featured =
+      formData.get("featured") === "on" || formData.get("featured") === "true";
 
     const sb = await db();
 
@@ -120,6 +122,7 @@ export async function updateProduct(
         status: base.status,
         category_id: base.category_id || null,
         supplier_id: base.supplier_id || null,
+        featured,
         updated_at: new Date().toISOString(),
       })
       .eq("id", base.id);

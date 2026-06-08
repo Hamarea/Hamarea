@@ -307,17 +307,29 @@ export async function listCatalogProducts(
   limit = 4,
 ): Promise<ProductCard[]> {
   if (!isConfigured()) return [];
+  const select =
+    "id, slug, name_i18n, description_i18n, created_at, product_variants(price_cents, compare_at_price_cents, currency, active, position), product_images(storage_path, alt_i18n, position)";
   try {
     const supabase = (await createClient()) as unknown as SBClient;
-    const res = (await supabase
+    // Vedettes d'abord (migration 0022) ; repli sur les plus récents si la
+    // colonne n'existe pas encore (la grille accueil ne casse jamais).
+    const featuredRes = (await supabase
       .from("products")
-      .select(
-        "id, slug, name_i18n, description_i18n, created_at, product_variants(price_cents, compare_at_price_cents, currency, active, position), product_images(storage_path, alt_i18n, position)",
-      )
+      .select(select)
       .eq("status", "active")
+      .order("featured", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(limit)) as unknown as { data: ProductRowList[] | null };
-    return (res.data ?? []).map((p) => rowToCard(p, locale));
+      .limit(limit)) as unknown as { data: ProductRowList[] | null; error: unknown };
+    if (featuredRes.error) {
+      const res = (await supabase
+        .from("products")
+        .select(select)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(limit)) as unknown as { data: ProductRowList[] | null };
+      return (res.data ?? []).map((p) => rowToCard(p, locale));
+    }
+    return (featuredRes.data ?? []).map((p) => rowToCard(p, locale));
   } catch {
     return [];
   }

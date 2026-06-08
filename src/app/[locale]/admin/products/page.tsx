@@ -247,6 +247,12 @@ export default async function AdminProductsPage({
                 <strong>Précommande</strong> — affiche un bandeau « Précommander » sur le produit
               </span>
             </label>
+            <label className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-4">
+              <input type="checkbox" name="featured" value="true" className="h-4 w-4" />
+              <span>
+                <strong>Vedette</strong> — met le produit en avant sur la page d&apos;accueil
+              </span>
+            </label>
             <div className="sm:col-span-2 lg:col-span-4">
               <SubmitButton>Créer le produit</SubmitButton>
             </div>

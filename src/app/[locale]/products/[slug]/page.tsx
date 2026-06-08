@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
 import { getProductBySlug } from "@/lib/queries";
+import { SACOCHE } from "@/lib/product";
 import { ImageGallery } from "@/components/shop/image-gallery";
 import { VariantPicker } from "@/components/shop/variant-picker";
 import { WishlistButton } from "@/components/shop/wishlist-button";
@@ -43,6 +44,9 @@ export default async function ProductPage({
 }) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
+  // Une seule expérience sacoche canonique : la landing riche /sacoche. L'entrée
+  // catalogue redirige (pas d'URL/contenu en double, pas de dilution SEO).
+  if (slug === SACOCHE.slug) redirect({ href: "/sacoche", locale });
   const t = await getTranslations();
   const p = await getProductBySlug(slug, locale);
   if (!p) notFound();
