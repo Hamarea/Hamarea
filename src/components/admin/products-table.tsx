@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { formatMoney } from "@/lib/utils";
 import { bulkSetStatus } from "@/app/[locale]/admin/products/actions";
 import { setProductStatus } from "@/app/[locale]/admin/products/actions";
-import { DeleteProductForm } from "@/components/admin/delete-product-form";
+import { RowActions } from "@/components/admin/row-actions";
 
 export type AdminProductRow = {
   id: string;
@@ -194,7 +194,7 @@ export function ProductsTable({ rows }: { rows: AdminProductRow[] }) {
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex justify-end">
-                      <DeleteProductForm id={p.id} />
+                      <RowActions id={p.id} />
                     </div>
                   </td>
                 </tr>

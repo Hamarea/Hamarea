@@ -11,6 +11,7 @@ import { createProduct } from "./actions";
 import { ProductsTable, type AdminProductRow } from "@/components/admin/products-table";
 import { SavedViews } from "@/components/admin/saved-views";
 import { FilterChips } from "@/components/admin/filter-chips";
+import { ImageDropZone } from "@/components/admin/image-drop-zone";
 
 type VariantLite = {
   price_cents: number;
@@ -229,14 +230,8 @@ export default async function AdminProductsPage({
               />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="file">Photo (depuis l&apos;ordinateur)</Label>
-              <input
-                id="file"
-                type="file"
-                name="file"
-                accept="image/*"
-                className="w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-primary-600)] file:px-3 file:py-1.5 file:text-white"
-              />
+              <Label>Photo (depuis l&apos;ordinateur)</Label>
+              <ImageDropZone name="file" />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="image_url">… ou photo par URL</Label>
