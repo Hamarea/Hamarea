@@ -10,6 +10,13 @@ import type { FormState } from "@/lib/form-state";
 import { logAudit } from "@/lib/audit";
 import { autoTranslate } from "@/lib/translate";
 
+/** Revalidate the admin list + the public storefront so edits show live. */
+function revalidateProducts() {
+  revalidatePath("/admin/products");
+  revalidatePath("/[locale]/products", "page");
+  revalidatePath("/[locale]/products/[slug]", "page");
+}
+
 const ProductSchema = z.object({
   name_fr: z.string().trim().min(1).max(200),
   name_en: z.string().trim().max(200).optional().nullable(),
@@ -117,7 +124,7 @@ export async function createProduct(
       entityId: newId,
       data: { slug, status: data.status, withVariant: data.price != null },
     });
-    revalidatePath("/admin/products");
+    revalidateProducts();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
     if (msg === "forbidden" || msg === "unauthorized") return { error: "Action non autorisée." };
@@ -148,7 +155,7 @@ export async function setProductStatus(formData: FormData): Promise<void> {
       entityId: data.id,
       data: { status: data.status },
     });
-    revalidatePath("/admin/products");
+    revalidateProducts();
   } catch {
     /* swallow — best-effort row action */
   }
@@ -175,7 +182,7 @@ export async function bulkSetStatus(formData: FormData): Promise<void> {
       entity: "product",
       data: { status, count: ids.length },
     });
-    revalidatePath("/admin/products");
+    revalidateProducts();
   } catch {
     /* swallow */
   }

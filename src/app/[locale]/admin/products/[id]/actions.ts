@@ -31,6 +31,10 @@ const db = async () => (await createClient()) as unknown as DB;
 const revalidate = (productId: string) => {
   revalidatePath(`/admin/products/${productId}`);
   revalidatePath("/admin/products");
+  revalidatePath("/admin/stock");
+  // Vitrine publique : reflet live des changements (prix, stock, contenu, statut).
+  revalidatePath("/[locale]/products", "page");
+  revalidatePath("/[locale]/products/[slug]", "page");
 };
 const ok = (): FormState => ({ ok: true });
 const err = (m: string): FormState => ({ error: m });

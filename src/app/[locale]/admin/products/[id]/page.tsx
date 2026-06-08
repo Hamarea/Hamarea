@@ -281,7 +281,13 @@ export default async function AdminProductEdit({
 
       {/* Variantes */}
       <Card className="p-6">
-        <h2 className="mb-4 font-medium">Variantes &amp; prix</h2>
+        <h2 className="mb-1 font-medium">Variantes &amp; prix</h2>
+        <p className="mb-4 text-xs text-[var(--color-muted)]">
+          💡 <strong>SKU</strong> = ta référence interne (unique) ·{" "}
+          <strong>Prix barré</strong> = ancien prix, affiché rayé ·{" "}
+          <strong>Coût</strong> = ton prix d&apos;achat (sert à calculer la marge) ·{" "}
+          <strong>Code-barres</strong> = EAN/UPC (optionnel).
+        </p>
         <div className="space-y-4">
           {variants.length === 0 && (
             <p className="text-sm text-[var(--color-muted)]">
@@ -320,6 +326,13 @@ export default async function AdminProductEdit({
                     </SubmitButton>
                   </form>
                 </div>
+
+                {v.cost_cents != null && v.cost_cents > 0 && v.price_cents > 0 && (
+                  <p className="mt-2 text-xs font-medium text-[var(--color-secondary-700)]">
+                    Marge : {euros(v.price_cents - v.cost_cents)} € ·{" "}
+                    {Math.round(((v.price_cents - v.cost_cents) / v.price_cents) * 100)} %
+                  </p>
+                )}
 
                 <div className="mt-3 border-t border-[var(--color-border)] pt-3">
                   {invList.length > 0 && (
