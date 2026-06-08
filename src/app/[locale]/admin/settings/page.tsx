@@ -73,31 +73,33 @@ export default async function AdminSettingsPage() {
           <h2 className="font-medium mb-4">Livraison</h2>
           <form action={saveShipping} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="freeAbove">Port offert à partir de (centimes)</Label>
+              <Label htmlFor="freeAbove">Port offert à partir de (€)</Label>
               <Input
                 id="freeAbove"
                 name="freeAbove"
                 type="number"
+                step="0.01"
                 min={0}
-                defaultValue={shipping.freeAbove}
+                defaultValue={(shipping.freeAbove / 100).toFixed(2)}
                 required
               />
               <p className="text-xs text-[var(--color-muted)]">
-                {(shipping.freeAbove / 100).toFixed(2)} € actuellement.
+                Montant du panier au-delà duquel la livraison est offerte.
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="flatRate">Forfait livraison standard (centimes)</Label>
+              <Label htmlFor="flatRate">Forfait livraison standard (€)</Label>
               <Input
                 id="flatRate"
                 name="flatRate"
                 type="number"
+                step="0.01"
                 min={0}
-                defaultValue={shipping.flatRate}
+                defaultValue={(shipping.flatRate / 100).toFixed(2)}
                 required
               />
               <p className="text-xs text-[var(--color-muted)]">
-                {(shipping.flatRate / 100).toFixed(2)} € actuellement.
+                Frais de port appliqués en dessous du seuil ci-dessus.
               </p>
             </div>
             <SubmitButton>Enregistrer</SubmitButton>
@@ -107,16 +109,13 @@ export default async function AdminSettingsPage() {
         <Card className="p-6">
           <h2 className="font-medium mb-2">Équipe &amp; rôles</h2>
           <p className="text-sm text-[var(--color-muted)]">
-            La gestion des rôles (admin / staff / customer) se fait désormais dans{" "}
+            La gestion des rôles et des accès (admin / staff / client) se fait
+            dans{" "}
             <Link href="/admin/customers" className="text-[var(--color-primary-600)] underline">
               Clients
             </Link>{" "}
-            (réservé aux administrateurs). Le tout premier admin doit être promu une
-            seule fois en SQL :
+            (réservé aux administrateurs).
           </p>
-          <code className="mt-2 block rounded bg-[var(--color-bg)] px-2 py-1 text-xs">
-            update profiles set role = &apos;admin&apos; where email = &apos;moi@hamarea.com&apos;;
-          </code>
         </Card>
 
         <Card className="p-6">

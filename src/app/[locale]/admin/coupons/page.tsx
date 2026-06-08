@@ -7,7 +7,8 @@ import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/utils";
-import { createCoupon, toggleCoupon } from "./actions";
+import { Trash2 } from "lucide-react";
+import { createCoupon, toggleCoupon, deleteCoupon } from "./actions";
 
 type CouponRow = {
   id: string;
@@ -90,14 +91,27 @@ export default async function AdminCouponsPage() {
                         {c.active ? "Actif" : "Inactif"}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <form action={toggleCoupon}>
-                        <input type="hidden" name="id" value={c.id} />
-                        <input type="hidden" name="active" value={String(c.active)} />
-                        <SubmitButton type="submit" variant="ghost" size="sm">
-                          {c.active ? "Désactiver" : "Activer"}
-                        </SubmitButton>
-                      </form>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <form action={toggleCoupon}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <input type="hidden" name="active" value={String(c.active)} />
+                          <SubmitButton type="submit" variant="ghost" size="sm">
+                            {c.active ? "Désactiver" : "Activer"}
+                          </SubmitButton>
+                        </form>
+                        <form action={deleteCoupon}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <SubmitButton
+                            type="submit"
+                            variant="ghost"
+                            size="sm"
+                            aria-label="Supprimer le coupon"
+                          >
+                            <Trash2 className="h-4 w-4 text-[var(--color-danger)]" />
+                          </SubmitButton>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))

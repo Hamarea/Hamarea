@@ -23,6 +23,7 @@ import {
   reorderImage,
   uploadImage,
   duplicateProduct,
+  deleteProduct,
 } from "./actions";
 
 const STATUSES = ["draft", "active", "archived"] as const;
@@ -280,7 +281,13 @@ export default async function AdminProductEdit({
 
       {/* Variantes */}
       <Card className="p-6">
-        <h2 className="mb-4 font-medium">Variantes &amp; prix</h2>
+        <h2 className="mb-1 font-medium">Variantes &amp; prix</h2>
+        <p className="mb-4 text-xs text-[var(--color-muted)]">
+          💡 <strong>SKU</strong> = ta référence interne (unique) ·{" "}
+          <strong>Prix barré</strong> = ancien prix, affiché rayé ·{" "}
+          <strong>Coût</strong> = ton prix d&apos;achat (sert à calculer la marge) ·{" "}
+          <strong>Code-barres</strong> = EAN/UPC (optionnel).
+        </p>
         <div className="space-y-4">
           {variants.length === 0 && (
             <p className="text-sm text-[var(--color-muted)]">
@@ -319,6 +326,13 @@ export default async function AdminProductEdit({
                     </SubmitButton>
                   </form>
                 </div>
+
+                {v.cost_cents != null && v.cost_cents > 0 && v.price_cents > 0 && (
+                  <p className="mt-2 text-xs font-medium text-[var(--color-secondary-700)]">
+                    Marge : {euros(v.price_cents - v.cost_cents)} € ·{" "}
+                    {Math.round(((v.price_cents - v.cost_cents) / v.price_cents) * 100)} %
+                  </p>
+                )}
 
                 <div className="mt-3 border-t border-[var(--color-border)] pt-3">
                   {invList.length > 0 && (
@@ -532,6 +546,29 @@ export default async function AdminProductEdit({
             <SubmitButton size="sm">Ajouter</SubmitButton>
           </ActionForm>
         </div>
+      </Card>
+
+      {/* Zone de danger — suppression définitive */}
+      <Card className="border-[var(--color-danger)]/40 p-6">
+        <h2 className="mb-1 font-medium text-[var(--color-danger)]">
+          Zone de danger
+        </h2>
+        <p className="mb-3 text-sm text-[var(--color-muted)]">
+          Supprime définitivement ce produit, ses variantes, son stock et ses
+          photos. Les commandes déjà passées sont conservées (historique).
+          Action irréversible.
+        </p>
+        <details>
+          <summary className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[var(--color-danger)]/50 px-4 py-2 text-sm font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10">
+            <Trash2 className="h-4 w-4" /> Supprimer le produit
+          </summary>
+          <form action={deleteProduct} className="mt-3">
+            <input type="hidden" name="id" value={product.id} />
+            <SubmitButton variant="destructive" size="sm">
+              <Trash2 className="h-4 w-4" /> Oui, supprimer définitivement
+            </SubmitButton>
+          </form>
+        </details>
       </Card>
     </div>
   );

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -76,6 +77,7 @@ export async function createProduct(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  let createdId: string | null = null;
   try {
     const actor = await requirePermission("products.write");
     const priceRaw = ((formData.get("price") as string) || "").trim();
@@ -152,8 +154,9 @@ export async function createProduct(
       // unapplied migration — instead of a misleading "Champs invalides".
       return { error: `Création impossible : ${error.message ?? "erreur base de données"}.` };
     }
-    const newId = (created as { id: string } | null)?.id;
+    const newId = (created as { id: string } | null)?.id ?? null;
     if (!newId) return { error: "Création impossible (identifiant manquant)." };
+    createdId = newId;
 
     // Optional first variant (makes the product sellable / publishable).
     if (data.price != null) {
@@ -225,10 +228,13 @@ export async function createProduct(
       },
     });
     revalidateCatalog();
-    return { ok: true };
   } catch (e) {
     return { error: toMessage(e) };
   }
+  // Land the admin straight on the full product sheet (photos, description,
+  // variantes, stock, SEO…). The create form is intentionally short.
+  if (createdId) redirect(`/admin/products/${createdId}`);
+  return { ok: true };
 }
 
 export async function setProductStatus(formData: FormData): Promise<void> {
