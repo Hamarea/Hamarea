@@ -49,7 +49,7 @@
     "newArrivals": "Novedades",
     "viewAll": "Ver todo"
   },
-  "product": { "description": "Descripción", "details": "Características", "shipping": "Envío y devoluciones", "reviews": "Opiniones", "relatedProducts": "También te puede gustar", "selectVariant": "Elegir variante" },
+  "product": { "description": "Descripción", "details": "Características", "shipping": "Envío y devoluciones", "reviews": "Opiniones", "relatedProducts": "También te puede gustar", "selectVariant": "Elegir variante", "promo": "Oferta", "preorderBadge": "Reserva", "preorderNotice": "Este producto está en <strong>reserva</strong> — resérvalo ahora, se envía en cuanto salga.", "shippingInfo": { "delivery": "Entrega en 3-5 días laborables (UE)", "returns": "Devoluciones gratis en 14 días", "packaging": "Embalaje cuidado, sin plástico" }, "options": { "color": "Color", "size": "Talla" } },
   "cart": { "title": "Tu carrito", "empty": "Tu carrito está vacío.", "subtotal": "Subtotal", "shipping": "Envío", "tax": "IVA", "total": "Total", "checkout": "Finalizar compra", "continueShopping": "Seguir comprando", "remove": "Quitar" },
   "checkout": {
     "previewMode": "Modo vista previa — define <code>STRIPE_SECRET_KEY</code> en <code>.env.local</code> para activar el pago.",

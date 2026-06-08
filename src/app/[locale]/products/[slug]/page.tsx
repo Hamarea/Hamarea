@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
 import { getProductBySlug } from "@/lib/queries";
+import { SACOCHE } from "@/lib/product";
 import { ImageGallery } from "@/components/shop/image-gallery";
 import { VariantPicker } from "@/components/shop/variant-picker";
 import { WishlistButton } from "@/components/shop/wishlist-button";
@@ -43,6 +44,9 @@ export default async function ProductPage({
 }) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
+  // Une seule expérience sacoche canonique : la landing riche /sacoche. L'entrée
+  // catalogue redirige (pas d'URL/contenu en double, pas de dilution SEO).
+  if (slug === SACOCHE.slug) redirect({ href: "/sacoche", locale });
   const t = await getTranslations();
   const p = await getProductBySlug(slug, locale);
   if (!p) notFound();
@@ -84,11 +88,12 @@ export default async function ProductPage({
       {p.preorder && (
         <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <span className="inline-flex items-center rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-            Précommande
+            {t("product.preorderBadge")}
           </span>
           <span>
-            Ce produit est en <strong>précommande</strong> — réservez-le dès
-            maintenant, expédié dès sa sortie.
+            {t.rich("product.preorderNotice", {
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
           </span>
         </div>
       )}
@@ -121,9 +126,9 @@ export default async function ProductPage({
           <section className="mt-8 border-t border-[var(--color-border)] pt-6 text-sm">
             <h2 className="mb-3 font-display text-xl">{t("product.shipping")}</h2>
             <ul className="space-y-1.5 text-[var(--color-muted)]">
-              <li>✓ Livraison sous 3-5 jours ouvrés (UE)</li>
-              <li>✓ Retours gratuits sous 14 jours</li>
-              <li>✓ Emballage soigné, sans plastique</li>
+              <li>✓ {t("product.shippingInfo.delivery")}</li>
+              <li>✓ {t("product.shippingInfo.returns")}</li>
+              <li>✓ {t("product.shippingInfo.packaging")}</li>
             </ul>
           </section>
         </div>

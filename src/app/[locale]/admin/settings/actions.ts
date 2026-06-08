@@ -11,9 +11,10 @@ const SiteSchema = z.object({
   supportEmail: z.string().trim().email().max(200),
 });
 
+// Saisie en euros côté UI ; stockée en centimes (entier, source unique).
 const ShippingSchema = z.object({
-  freeAbove: z.coerce.number().int().min(0).max(1_000_000),
-  flatRate: z.coerce.number().int().min(0).max(100_000),
+  freeAbove: z.coerce.number().min(0).max(100_000),
+  flatRate: z.coerce.number().min(0).max(10_000),
 });
 
 type UpsertClient = {
@@ -52,10 +53,15 @@ export async function saveSite(formData: FormData) {
 
 export async function saveShipping(formData: FormData) {
   const actor = await requirePermission("settings.write");
-  const data = ShippingSchema.parse({
+  const input = ShippingSchema.parse({
     freeAbove: formData.get("freeAbove"),
     flatRate: formData.get("flatRate"),
   });
+  // Euros → centimes (stockage entier).
+  const data = {
+    freeAbove: Math.round(input.freeAbove * 100),
+    flatRate: Math.round(input.flatRate * 100),
+  };
   await saveKey("shipping", data);
   await logAudit({
     actorId: actor.id,

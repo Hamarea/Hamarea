@@ -47,6 +47,11 @@ export function ModerationRow({ review, locale }: { review: ReviewView; locale: 
   const [error, setError] = useState<string | null>(null);
 
   const dispatch = (status: "approved" | "rejected" | "pending") => {
+    // Confirmation avant une action conséquente (approuver / rejeter).
+    if (status === "approved" || status === "rejected") {
+      const label = status === "approved" ? t("actions.approve") : t("actions.reject");
+      if (typeof window !== "undefined" && !window.confirm(`${label} ?`)) return;
+    }
     setError(null);
     startTransition(async () => {
       try {

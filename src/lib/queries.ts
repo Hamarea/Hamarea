@@ -296,6 +296,80 @@ export async function listFeaturedProducts(
   }
 }
 
+/**
+ * Real catalog products ONLY (no sample fallback). For surfaces that MUST
+ * reflect the actual database — e.g. the home "featured" strip — so an
+ * admin-published product appears, and nothing fake shows when the catalog is
+ * empty or Supabase isn't configured. Returns [] in those cases.
+ */
+export async function listCatalogProducts(
+  locale: string,
+  limit = 4,
+): Promise<ProductCard[]> {
+  if (!isConfigured()) return [];
+  const select =
+    "id, slug, name_i18n, description_i18n, created_at, product_variants(price_cents, compare_at_price_cents, currency, active, position), product_images(storage_path, alt_i18n, position)";
+  try {
+    const supabase = (await createClient()) as unknown as SBClient;
+    // Vedettes d'abord (migration 0022) ; repli sur les plus récents si la
+    // colonne n'existe pas encore (la grille accueil ne casse jamais).
+    const featuredRes = (await supabase
+      .from("products")
+      .select(select)
+      .eq("status", "active")
+      .order("featured", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(limit)) as unknown as { data: ProductRowList[] | null; error: unknown };
+    if (featuredRes.error) {
+      const res = (await supabase
+        .from("products")
+        .select(select)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(limit)) as unknown as { data: ProductRowList[] | null };
+      return (res.data ?? []).map((p) => rowToCard(p, locale));
+    }
+    return (featuredRes.data ?? []).map((p) => rowToCard(p, locale));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Active products as a lightweight list (slug, name, first image), WITHOUT the
+ * SAMPLE fallback — returns [] when Supabase is unconfigured/empty/errored.
+ * Used to connect the brand "universe" grid to the real catalog: a published
+ * product flips its family card to "available" and links it to its page.
+ */
+export async function listActiveProductsLite(
+  locale: string,
+): Promise<{ slug: string; name: string; image_url?: string }[]> {
+  if (!isConfigured()) return [];
+  try {
+    const supabase = (await createClient()) as unknown as SBClient;
+    const res = (await supabase
+      .from("products")
+      .select("slug, name_i18n, product_images(storage_path, position)")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(60)) as unknown as {
+      data: Array<{
+        slug: string;
+        name_i18n: Record<string, string>;
+        product_images: Array<{ storage_path: string; position: number }> | null;
+      }> | null;
+    };
+    return (res.data ?? []).map((p) => ({
+      slug: p.slug,
+      name: p.name_i18n?.[locale] ?? p.name_i18n?.fr ?? p.slug,
+      image_url: [...(p.product_images ?? [])].sort((a, b) => a.position - b.position)[0]
+        ?.storage_path,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function listProducts(
   params: ListProductsParams,
 ): Promise<ListProductsResult> {

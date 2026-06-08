@@ -9,6 +9,12 @@ import { useCart, type CartLine } from "@/stores/cart";
 import { formatMoney, cn } from "@/lib/utils";
 import type { VariantOption } from "@/lib/queries";
 
+// `option_values` may carry display metadata (e.g. `hex` for the colour swatch)
+// that is NOT a sellable option — it must never be rendered as a choice. Known
+// keys also get a nicer localised legend (others fall back to capitalisation).
+const META_OPTION_KEYS = new Set(["hex"]);
+const KNOWN_OPTION_KEYS = new Set(["color", "size"]);
+
 type Props = {
   productId: string;
   slug: string;
@@ -47,10 +53,17 @@ export function VariantPicker({
   const add = useCart((s) => s.add);
   const [added, setAdded] = useState(false);
 
+  const optionLabel = (key: string) =>
+    KNOWN_OPTION_KEYS.has(key)
+      ? t(`product.options.${key}` as never)
+      : key.charAt(0).toUpperCase() + key.slice(1);
+
   const optionKeys = useMemo(() => {
     const keys = new Set<string>();
     for (const v of variants) {
-      for (const k of Object.keys(v.options)) keys.add(k);
+      for (const k of Object.keys(v.options)) {
+        if (!META_OPTION_KEYS.has(k)) keys.add(k);
+      }
     }
     return Array.from(keys);
   }, [variants]);
@@ -125,7 +138,7 @@ export function VariantPicker({
     <div>
       {hasPromo && (
         <Badge variant="accent" className="mb-3">
-          Promotion
+          {t("product.promo")}
         </Badge>
       )}
 
@@ -151,7 +164,7 @@ export function VariantPicker({
           {optionKeys.map((key) => (
             <fieldset key={key}>
               <legend className="text-sm font-medium uppercase tracking-wider text-[var(--color-muted)]">
-                {key}
+                {optionLabel(key)}
               </legend>
               <div className="mt-2 flex flex-wrap gap-2">
                 {optionsByKey[key].map((value) => {

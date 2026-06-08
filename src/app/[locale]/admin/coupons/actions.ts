@@ -27,6 +27,9 @@ type LooseClient = {
     update: (row: Record<string, unknown>) => {
       eq: (k: string, v: string) => Promise<{ error: { message?: string } | null }>;
     };
+    delete: () => {
+      eq: (k: string, v: string) => Promise<{ error: { message?: string } | null }>;
+    };
   };
 };
 
@@ -78,6 +81,21 @@ export async function createCoupon(
       return { error: "Action non autorisée." };
     return { error: "Champs invalides." };
   }
+}
+
+export async function deleteCoupon(formData: FormData) {
+  const actor = await requirePermission("coupons.write");
+  const id = z.string().uuid().parse(formData.get("id"));
+  const supabase = (await createClient()) as unknown as LooseClient;
+  const { error } = await supabase.from("coupons").delete().eq("id", id);
+  if (error) throw new Error(error.message ?? "delete_failed");
+  await logAudit({
+    actorId: actor.id,
+    action: "coupon.delete",
+    entity: "coupon",
+    entityId: id,
+  });
+  revalidatePath("/admin/coupons");
 }
 
 export async function toggleCoupon(formData: FormData) {
