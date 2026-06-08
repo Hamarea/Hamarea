@@ -296,6 +296,33 @@ export async function listFeaturedProducts(
   }
 }
 
+/**
+ * Real catalog products ONLY (no sample fallback). For surfaces that MUST
+ * reflect the actual database — e.g. the home "featured" strip — so an
+ * admin-published product appears, and nothing fake shows when the catalog is
+ * empty or Supabase isn't configured. Returns [] in those cases.
+ */
+export async function listCatalogProducts(
+  locale: string,
+  limit = 4,
+): Promise<ProductCard[]> {
+  if (!isConfigured()) return [];
+  try {
+    const supabase = (await createClient()) as unknown as SBClient;
+    const res = (await supabase
+      .from("products")
+      .select(
+        "id, slug, name_i18n, description_i18n, created_at, product_variants(price_cents, compare_at_price_cents, currency, active, position), product_images(storage_path, alt_i18n, position)",
+      )
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(limit)) as unknown as { data: ProductRowList[] | null };
+    return (res.data ?? []).map((p) => rowToCard(p, locale));
+  } catch {
+    return [];
+  }
+}
+
 export async function listProducts(
   params: ListProductsParams,
 ): Promise<ListProductsResult> {

@@ -7,6 +7,7 @@ import { BrandHero } from "@/components/brand/brand-hero";
 import { BrandMarquee } from "@/components/brand/brand-marquee";
 import { ProductUniverse } from "@/components/brand/product-universe";
 import { HeroProductSpotlight } from "@/components/brand/hero-product-spotlight";
+import { FeaturedProducts } from "@/components/brand/featured-products";
 import { OceanCommitment } from "@/components/brand/ocean-commitment";
 import { Community } from "@/components/brand/community";
 import { Waitlist } from "@/components/brand/waitlist";
@@ -60,6 +61,7 @@ export default async function HomePage({
       <BrandMarquee locale={locale} />
       <ProductUniverse locale={locale} />
       <HeroProductSpotlight locale={locale} />
+      <FeaturedProducts locale={locale} />
       <OceanCommitment locale={locale} />
       <Community locale={locale} />
       <Waitlist />
