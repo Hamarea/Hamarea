@@ -107,6 +107,37 @@ const TAB_ICONS: Record<Tab, typeof Inbox> = {
   approved: CheckCircle2,
 };
 
+/** Per-tab counts for the inbox-style badges (lightweight head counts). */
+async function fetchCounts(): Promise<Record<Tab, number>> {
+  const zero: Record<Tab, number> = { pending: 0, flagged: 0, rejected: 0, approved: 0 };
+  try {
+    const supabase = await createClient();
+    const sb = supabase as unknown as {
+      from: (n: string) => {
+        select: (q: string, o: { count: "exact"; head: true }) => {
+          eq: (k: string, v: string) => Promise<{ count: number | null }>;
+          gt: (k: string, v: number) => Promise<{ count: number | null }>;
+        };
+      };
+    };
+    const c = () => sb.from("reviews").select("id", { count: "exact", head: true });
+    const [pending, flagged, rejected, approved] = await Promise.all([
+      c().eq("status", "pending"),
+      c().gt("flagged_count", 0),
+      c().eq("status", "rejected"),
+      c().eq("status", "approved"),
+    ]);
+    return {
+      pending: pending.count ?? 0,
+      flagged: flagged.count ?? 0,
+      rejected: rejected.count ?? 0,
+      approved: approved.count ?? 0,
+    };
+  } catch {
+    return zero;
+  }
+}
+
 export default async function AdminModerationPage({
   params,
   searchParams,
@@ -122,7 +153,7 @@ export default async function AdminModerationPage({
     ? (sp.tab as Tab)
     : "pending";
 
-  const reviews = await fetchReviews(tab, locale);
+  const [reviews, counts] = await Promise.all([fetchReviews(tab, locale), fetchCounts()]);
 
   return (
     <div>
@@ -151,6 +182,18 @@ export default async function AdminModerationPage({
             >
               <Icon className="h-4 w-4" />
               {t(`tabs.${it}`)}
+              {counts[it] > 0 && (
+                <span
+                  className={
+                    "rounded-full px-1.5 text-[11px] tabular-nums " +
+                    (active
+                      ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)]"
+                      : "bg-[var(--color-bg)] text-[var(--color-muted)]")
+                  }
+                >
+                  {counts[it]}
+                </span>
+              )}
             </Link>
           );
         })}

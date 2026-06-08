@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Check, X, RotateCcw, MessageSquare, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,13 @@ export function ModerationRow({ review, locale }: { review: ReviewView; locale: 
     startTransition(async () => {
       try {
         await moderateReview({ id: review.id, status, note: note || null });
+        toast.success(
+          status === "approved"
+            ? "Avis approuvé."
+            : status === "rejected"
+              ? "Avis rejeté."
+              : "Avis rouvert.",
+        );
       } catch (e) {
         const msg = e instanceof Error ? e.message : "generic";
         setError(msg === "forbidden" ? t("errors.forbidden") : t("errors.generic"));

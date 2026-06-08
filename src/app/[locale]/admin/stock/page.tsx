@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionForm } from "@/components/ui/action-form";
 import { FilterChips } from "@/components/admin/filter-chips";
+import { QuantityStepper } from "@/components/admin/quantity-stepper";
 import { createClient } from "@/lib/supabase/server";
 import { setInventory } from "@/app/[locale]/admin/products/[id]/actions";
 
@@ -143,13 +144,7 @@ export default async function AdminStockPage({
                           <label className="block text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                             Quantité
                           </label>
-                          <Input
-                            name="quantity"
-                            type="number"
-                            min={0}
-                            defaultValue={String(r.quantity)}
-                            className="w-24"
-                          />
+                          <QuantityStepper name="quantity" defaultValue={r.quantity} />
                         </div>
                         <div>
                           <label className="block text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
