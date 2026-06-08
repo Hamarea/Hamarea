@@ -35,9 +35,8 @@ export function BrandHero({ locale }: { locale: string }) {
             </span>
           </Reveal>
           <Reveal delay={0.08}>
-            <h1 className="mt-4 font-display text-[clamp(2.75rem,8vw,6rem)] font-black leading-[0.92] tracking-[-0.02em] drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]">
-              {c.titleLine1}
-              <br />
+            <h1 className="mt-4 font-display text-[clamp(1.75rem,8vw,4.5rem)] font-black leading-[1.05] tracking-[-0.02em] whitespace-nowrap drop-shadow-[0_4px_30px_rgba(0,0,0,0.45)]">
+              {c.titleLine1}{" "}
               <span className="text-[var(--color-primary-300)]">{c.titleLine2}</span>
             </h1>
           </Reveal>
