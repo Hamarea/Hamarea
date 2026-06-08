@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Inter, Fraunces } from "next/font/google";
+import { Toaster } from "sonner";
 import { routing } from "@/i18n/routing";
 import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
@@ -67,6 +68,7 @@ export default async function LocaleLayout({
             <Analytics />
           </MotionProvider>
         </NextIntlClientProvider>
+        <Toaster richColors position="top-center" closeButton />
       </body>
     </html>
   );
