@@ -323,6 +323,41 @@ export async function listCatalogProducts(
   }
 }
 
+/**
+ * Active products as a lightweight list (slug, name, first image), WITHOUT the
+ * SAMPLE fallback — returns [] when Supabase is unconfigured/empty/errored.
+ * Used to connect the brand "universe" grid to the real catalog: a published
+ * product flips its family card to "available" and links it to its page.
+ */
+export async function listActiveProductsLite(
+  locale: string,
+): Promise<{ slug: string; name: string; image_url?: string }[]> {
+  if (!isConfigured()) return [];
+  try {
+    const supabase = (await createClient()) as unknown as SBClient;
+    const res = (await supabase
+      .from("products")
+      .select("slug, name_i18n, product_images(storage_path, position)")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(60)) as unknown as {
+      data: Array<{
+        slug: string;
+        name_i18n: Record<string, string>;
+        product_images: Array<{ storage_path: string; position: number }> | null;
+      }> | null;
+    };
+    return (res.data ?? []).map((p) => ({
+      slug: p.slug,
+      name: p.name_i18n?.[locale] ?? p.name_i18n?.fr ?? p.slug,
+      image_url: [...(p.product_images ?? [])].sort((a, b) => a.position - b.position)[0]
+        ?.storage_path,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function listProducts(
   params: ListProductsParams,
 ): Promise<ListProductsResult> {
