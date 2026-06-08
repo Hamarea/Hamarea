@@ -16,6 +16,12 @@ import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { Reveal } from "@/components/ui/reveal";
 import { getBrandCopy } from "@/lib/brand-content";
 
+// La home dépend désormais de données admin/DB (fond hero, catégories de
+// « L'Univers », best-sellers « Vedette »). On la régénère périodiquement (ISR)
+// pour qu'elle reflète la base sans redéploiement — les actions admin
+// revalident déjà ce chemin pour une mise à jour immédiate.
+export const revalidate = 300;
+
 export async function generateMetadata({
   params,
 }: {
