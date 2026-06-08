@@ -132,6 +132,8 @@ export async function createProduct(
 
     const preorder =
       formData.get("preorder") === "on" || formData.get("preorder") === "true";
+    const featured =
+      formData.get("featured") === "on" || formData.get("featured") === "true";
 
     const supabase = (await createClient()) as unknown as LooseClient;
     const { data: created, error } = await supabase
@@ -145,6 +147,7 @@ export async function createProduct(
         supplier_id: data.supplier_id || null,
         status: data.status,
         preorder,
+        featured,
       })
       .select("id")
       .single();

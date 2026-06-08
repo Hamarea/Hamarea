@@ -68,6 +68,7 @@ type Product = {
   seo: Seo | null;
   brand: string | null;
   status: string;
+  featured: boolean | null;
   category_id: string | null;
   supplier_id: string | null;
   product_variants: Variant[];
@@ -107,7 +108,7 @@ export default async function AdminProductEdit({
   const { data: product } = await sb
     .from("products")
     .select(
-      "id, slug, name_i18n, description_i18n, seo, brand, status, category_id, supplier_id, product_variants(id, sku, price_cents, compare_at_price_cents, cost_cents, barcode, weight_g, currency, active, option_values, position, inventory(quantity, reserved, reorder_point, warehouse_id)), product_images(id, variant_id, storage_path, alt_i18n, position)",
+      "id, slug, name_i18n, description_i18n, seo, brand, status, featured, category_id, supplier_id, product_variants(id, sku, price_cents, compare_at_price_cents, cost_cents, barcode, weight_g, currency, active, option_values, position, inventory(quantity, reserved, reorder_point, warehouse_id)), product_images(id, variant_id, storage_path, alt_i18n, position)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -298,6 +299,17 @@ export default async function AdminProductEdit({
                 ))}
               </select>
             </div>
+            <label className="flex items-center gap-2 self-end pb-2 text-sm">
+              <input
+                type="checkbox"
+                name="featured"
+                defaultChecked={product.featured ?? false}
+                className="h-4 w-4"
+              />
+              <span>
+                <strong>Vedette</strong> (accueil)
+              </span>
+            </label>
           </div>
 
           <SubmitButton>Enregistrer</SubmitButton>
