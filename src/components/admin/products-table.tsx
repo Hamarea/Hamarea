@@ -6,6 +6,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { formatMoney } from "@/lib/utils";
 import { bulkSetStatus } from "@/app/[locale]/admin/products/actions";
 import { setProductStatus } from "@/app/[locale]/admin/products/actions";
+import { DeleteProductForm } from "@/components/admin/delete-product-form";
 
 export type AdminProductRow = {
   id: string;
@@ -95,12 +96,13 @@ export function ProductsTable({ rows }: { rows: AdminProductRow[] }) {
               <th className="px-3 py-3 font-medium">Stock</th>
               <th className="px-3 py-3 font-medium">Statut</th>
               <th className="px-3 py-3 font-medium">Créé le</th>
+              <th className="px-3 py-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-[var(--color-muted)]">
+                <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-muted)]">
                   Aucun produit.
                 </td>
               </tr>
@@ -189,6 +191,11 @@ export function ProductsTable({ rows }: { rows: AdminProductRow[] }) {
                   </td>
                   <td className="px-3 py-2.5 text-[var(--color-muted)]">
                     {new Date(p.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex justify-end">
+                      <DeleteProductForm id={p.id} />
+                    </div>
                   </td>
                 </tr>
               ))
