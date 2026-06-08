@@ -23,6 +23,23 @@ type InvRow = {
   };
 };
 
+type Movement = {
+  variant_id: string;
+  delta: number;
+  reason: string;
+  note: string | null;
+  created_at: string;
+};
+
+const REASON_LABEL: Record<string, string> = {
+  sale: "Vente",
+  adjustment: "Réglage",
+  return: "Retour",
+  restock: "Réappro",
+  reservation: "Réservation",
+  release: "Libération",
+};
+
 export default async function AdminStockPage({
   searchParams,
 }: {
@@ -45,6 +62,34 @@ export default async function AdminStockPage({
     rows = data ?? [];
   } catch {
     rows = [];
+  }
+
+  // Recent stock movements (audit trail) — grouped by variant, capped per row.
+  let movements: Movement[] = [];
+  try {
+    const { data } = await (supabase as unknown as {
+      from: (t: string) => {
+        select: (q: string) => {
+          order: (
+            k: string,
+            o: { ascending: boolean },
+          ) => { limit: (n: number) => Promise<{ data: Movement[] | null }> };
+        };
+      };
+    })
+      .from("stock_movements")
+      .select("variant_id, delta, reason, note, created_at")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    movements = data ?? [];
+  } catch {
+    movements = [];
+  }
+  const movesByVariant = new Map<string, Movement[]>();
+  for (const m of movements) {
+    const arr = movesByVariant.get(m.variant_id) ?? [];
+    if (arr.length < 8) arr.push(m);
+    movesByVariant.set(m.variant_id, arr);
   }
 
   // Compute availability buckets: out (≤0) · low (0<avail≤seuil) · ok.
@@ -130,6 +175,34 @@ export default async function AdminStockPage({
                       <div className="font-mono text-[11px] text-[var(--color-muted)]">
                         {pv?.sku ?? r.variant_id}
                       </div>
+                      {(() => {
+                        const moves = movesByVariant.get(r.variant_id) ?? [];
+                        if (moves.length === 0) return null;
+                        return (
+                          <details className="mt-1">
+                            <summary className="cursor-pointer text-[11px] text-[var(--color-primary-600)]">
+                              Historique ({moves.length})
+                            </summary>
+                            <ul className="mt-1 space-y-0.5 text-[11px] text-[var(--color-muted)]">
+                              {moves.map((m, i) => (
+                                <li key={i}>
+                                  {new Date(m.created_at).toLocaleDateString()} ·{" "}
+                                  <span
+                                    className={
+                                      m.delta >= 0 ? "text-green-600" : "text-[var(--color-danger)]"
+                                    }
+                                  >
+                                    {m.delta >= 0 ? "+" : ""}
+                                    {m.delta}
+                                  </span>{" "}
+                                  · {REASON_LABEL[m.reason] ?? m.reason}
+                                  {m.note ? ` — ${m.note}` : ""}
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       <ActionForm
