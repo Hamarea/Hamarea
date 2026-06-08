@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import { createProduct } from "./actions";
 import { ProductsTable, type AdminProductRow } from "@/components/admin/products-table";
 import { SavedViews } from "@/components/admin/saved-views";
+import { FilterChips } from "@/components/admin/filter-chips";
 
 type VariantLite = {
   price_cents: number;
@@ -276,6 +277,27 @@ export default async function AdminProductsPage({
       </details>
 
       <SavedViews currentQ={q} currentStatus={status} />
+
+      <FilterChips
+        items={[
+          { label: "Tous", href: { pathname: "/admin/products", query: q ? { q } : {} }, active: !status },
+          {
+            label: STATUS_LABEL.active,
+            href: { pathname: "/admin/products", query: { ...(q ? { q } : {}), status: "active" } },
+            active: status === "active",
+          },
+          {
+            label: STATUS_LABEL.draft,
+            href: { pathname: "/admin/products", query: { ...(q ? { q } : {}), status: "draft" } },
+            active: status === "draft",
+          },
+          {
+            label: STATUS_LABEL.archived,
+            href: { pathname: "/admin/products", query: { ...(q ? { q } : {}), status: "archived" } },
+            active: status === "archived",
+          },
+        ]}
+      />
 
       <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
         <Input name="q" defaultValue={q} placeholder="Nom, slug ou marque…" className="max-w-xs" />
