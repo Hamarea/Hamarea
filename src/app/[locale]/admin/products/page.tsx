@@ -84,6 +84,34 @@ export default async function AdminProductsPage({
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
+  // Active categories — populate the "Catégorie" select in the create form so a
+  // product can be filed in the catalog from the moment it's created.
+  let categoryOptions: { id: string; name: string }[] = [];
+  try {
+    const { data: cats } = await (supabase as unknown as {
+      from: (t: string) => {
+        select: (q: string) => {
+          eq: (k: string, v: boolean) => {
+            order: (
+              k: string,
+              o: { ascending: boolean },
+            ) => Promise<{ data: { id: string; name_i18n: Record<string, string> | null }[] | null }>;
+          };
+        };
+      };
+    })
+      .from("categories")
+      .select("id, name_i18n")
+      .eq("active", true)
+      .order("position", { ascending: true });
+    categoryOptions = (cats ?? []).map((c) => ({
+      id: c.id,
+      name: c.name_i18n?.fr ?? c.name_i18n?.en ?? c.id,
+    }));
+  } catch {
+    categoryOptions = [];
+  }
+
   let rows: AdminProductRow[] = [];
   let total = 0;
   try {
@@ -146,6 +174,26 @@ export default async function AdminProductsPage({
               />
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="brand">Marque</Label>
+              <Input id="brand" name="brand" maxLength={120} placeholder="ex : Hamarea" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="category_id">Catégorie</Label>
+              <select
+                id="category_id"
+                name="category_id"
+                defaultValue=""
+                className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-white px-3 text-sm"
+              >
+                <option value="">— Aucune —</option>
+                {categoryOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="price">Prix (€)</Label>
               <Input
                 id="price"
@@ -168,6 +216,31 @@ export default async function AdminProductsPage({
                 <option value="active">En ligne (visible)</option>
               </select>
             </div>
+            <div className="space-y-1.5 sm:col-span-2 lg:col-span-4">
+              <Label htmlFor="description_fr">Description courte</Label>
+              <textarea
+                id="description_fr"
+                name="description_fr"
+                rows={3}
+                maxLength={5000}
+                placeholder="Quelques phrases sur le produit (traduites automatiquement)."
+                className="w-full resize-y rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="file">Photo (depuis l&apos;ordinateur)</Label>
+              <input
+                id="file"
+                type="file"
+                name="file"
+                accept="image/*"
+                className="w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-primary-600)] file:px-3 file:py-1.5 file:text-white"
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="image_url">… ou photo par URL</Label>
+              <Input id="image_url" name="image_url" type="url" placeholder="https://…" maxLength={1000} />
+            </div>
             <label className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-4">
               <input type="checkbox" name="preorder" value="true" className="h-4 w-4" />
               <span>
@@ -180,8 +253,18 @@ export default async function AdminProductsPage({
           </ActionForm>
           <p className="mt-3 text-xs text-[var(--color-muted)]">
             🌍 La traduction (EN / ES / DE) est <strong>automatique</strong>. Le lien et la
-            référence du produit sont générés tout seuls. Photos, variantes, description et SEO :
-            ensuite, sur la fiche du produit.
+            référence sont générés tout seuls. Choisissez <strong>« En ligne »</strong> (avec un
+            prix) pour publier tout de suite dans le catalogue — sinon le produit reste en
+            brouillon. Variantes, photos supplémentaires et SEO : ensuite, sur la fiche.
+            {categoryOptions.length === 0 && (
+              <>
+                {" "}
+                <Link href={"/admin/categories" as never} className="text-[var(--color-primary-600)] underline">
+                  Créez d&apos;abord une catégorie
+                </Link>{" "}
+                pour pouvoir la choisir ici.
+              </>
+            )}
           </p>
         </Card>
       </details>

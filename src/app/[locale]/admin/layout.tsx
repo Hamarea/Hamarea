@@ -7,6 +7,7 @@ import { CommandPalette } from "@/components/admin/command-palette";
 import {
   LayoutDashboard,
   Package,
+  FolderTree,
   ShoppingBag,
   Users,
   Boxes,
@@ -91,6 +92,7 @@ export default async function AdminLayout({
   const items = [
     { href: "/admin", label: t("admin.dashboard"), icon: <LayoutDashboard className={ic} /> },
     { href: "/admin/products", label: t("admin.products"), icon: <Package className={ic} /> },
+    { href: "/admin/categories", label: "Catégories", icon: <FolderTree className={ic} /> },
     { href: "/admin/suppliers", label: "Fournisseurs", icon: <Truck className={ic} /> },
     { href: "/admin/orders", label: t("admin.orders"), icon: <ShoppingBag className={ic} /> },
     { href: "/admin/payments", label: "Paiements", icon: <CreditCard className={ic} /> },
@@ -106,6 +108,7 @@ export default async function AdminLayout({
   const paletteItems = [
     ...items.map((it) => ({ label: it.label, href: it.href })),
     { label: "Action : nouveau produit", href: "/admin/products" },
+    { label: "Action : nouvelle catégorie", href: "/admin/categories" },
     { label: "Voir la boutique", href: "/" },
   ];
 
