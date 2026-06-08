@@ -18,6 +18,7 @@ import {
   Truck,
   ScrollText,
   CreditCard,
+  Home,
 } from "lucide-react";
 
 const isSupabaseConfigured = () =>
@@ -91,6 +92,7 @@ export default async function AdminLayout({
   const ic = "h-4 w-4 opacity-80";
   const items = [
     { href: "/admin", label: t("admin.dashboard"), icon: <LayoutDashboard className={ic} /> },
+    { href: "/admin/appearance", label: "Page d'accueil", icon: <Home className={ic} /> },
     { href: "/admin/products", label: t("admin.products"), icon: <Package className={ic} /> },
     { href: "/admin/categories", label: "Catégories", icon: <FolderTree className={ic} /> },
     { href: "/admin/suppliers", label: "Fournisseurs", icon: <Truck className={ic} /> },

@@ -63,7 +63,8 @@
     "marqueeCta": "Discover",
     "featured": "Featured products",
     "newArrivals": "New arrivals",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "bestSellers": "Our best-sellers"
   },
   "product": {
     "description": "Description",
