@@ -370,6 +370,45 @@ export async function listActiveProductsLite(
   }
 }
 
+/**
+ * Real stock per sacoche colour (SKUs SACOCHE-ROSE/NOIR/BLANC) summed across
+ * warehouses, keyed by colour id (rose/noir/blanc). Returns {} when Supabase is
+ * unconfigured/empty/errored — so the static landing treats "no data" as
+ * in-stock and never shows a false "out of stock".
+ */
+export async function getSacocheStockByColor(): Promise<Record<string, number>> {
+  if (!isConfigured()) return {};
+  try {
+    const supabase = (await createClient()) as unknown as {
+      from: (t: string) => {
+        select: (q: string) => {
+          in: (
+            k: string,
+            v: string[],
+          ) => Promise<{
+            data: Array<{
+              sku: string;
+              inventory: Array<{ quantity: number }> | null;
+            }> | null;
+          }>;
+        };
+      };
+    };
+    const { data } = await supabase
+      .from("product_variants")
+      .select("sku, inventory(quantity)")
+      .in("sku", ["SACOCHE-ROSE", "SACOCHE-NOIR", "SACOCHE-BLANC"]);
+    const out: Record<string, number> = {};
+    for (const v of data ?? []) {
+      const color = v.sku.replace(/^SACOCHE-/i, "").toLowerCase();
+      out[color] = (v.inventory ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0);
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 export async function listProducts(
   params: ListProductsParams,
 ): Promise<ListProductsResult> {

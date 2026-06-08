@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ShoppingBag, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/stores/cart";
@@ -11,7 +11,11 @@ import { formatMoney } from "@/lib/utils";
 import { SACOCHE } from "@/lib/product";
 import { getProductCopy } from "@/lib/product-content";
 
-export function StickyBuyBar() {
+export function StickyBuyBar({
+  stockByColor,
+}: {
+  stockByColor?: Record<string, number>;
+}) {
   const add = useCart((s) => s.add);
   const openDrawer = useCartUI((s) => s.openDrawer);
   const locale = useLocale();
@@ -21,6 +25,9 @@ export function StickyBuyBar() {
   const [pastHero, setPastHero] = useState(false);
   const [footerInView, setFooterInView] = useState(false);
   const [added, setAdded] = useState(false);
+  const tCommon = useTranslations("common");
+  const stockLeft = stockByColor?.[color.id];
+  const outOfStock = typeof stockLeft === "number" && stockLeft <= 0;
 
   useEffect(() => {
     const onScroll = () => setPastHero(window.scrollY > 600);
@@ -45,6 +52,7 @@ export function StickyBuyBar() {
   const visible = pastHero && !footerInView;
 
   const onAdd = () => {
+    if (outOfStock) return;
     add({
       variantId: color.variantId,
       productId: SACOCHE.id,
@@ -99,8 +107,10 @@ export function StickyBuyBar() {
             );
           })}
         </div>
-        <Button onClick={onAdd} className="ml-auto" size="md">
-          {added ? (
+        <Button onClick={onAdd} className="ml-auto" size="md" disabled={outOfStock}>
+          {outOfStock ? (
+            tCommon("outOfStock")
+          ) : added ? (
             <>
               <Check className="h-4 w-4" /> {copy.sticky.added}
             </>
