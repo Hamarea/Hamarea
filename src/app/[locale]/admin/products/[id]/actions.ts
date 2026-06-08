@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
@@ -276,6 +277,56 @@ export async function deleteVariant(formData: FormData): Promise<void> {
   } catch {
     /* swallow — UI re-renders unchanged */
   }
+}
+
+// --- Delete whole product --------------------------------------------------
+/**
+ * Permanently delete a product. Its variants, image rows and inventory cascade
+ * via FKs; `order_items.variant_id` is ON DELETE SET NULL so the order history
+ * is preserved (each line keeps its sku + name snapshot). Uploaded Storage files
+ * are purged best-effort. Redirects to the product list on success.
+ */
+export async function deleteProduct(formData: FormData): Promise<void> {
+  let done = false;
+  try {
+    const actor = await requirePermission("products.write");
+    const id = z.string().uuid().parse(formData.get("id"));
+    const sb = await db();
+
+    const { data: imgs } = await sb
+      .from("product_images")
+      .select("storage_path")
+      .eq("product_id", id);
+
+    const { error } = await sb.from("products").delete().eq("id", id);
+    if (error) return; // RLS/constraint failure — stay on the page
+
+    // Purge the files we host (ignore external URLs / already-gone objects).
+    const marker = `/object/public/${BUCKET}/`;
+    const paths = ((imgs as { storage_path: string }[] | null) ?? [])
+      .map((r) => r.storage_path)
+      .filter((p) => p.includes(marker))
+      .map((p) => decodeURIComponent(p.slice(p.indexOf(marker) + marker.length)));
+    if (paths.length > 0 && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        await createAdminClient().storage.from(BUCKET).remove(paths);
+      } catch {
+        /* file already gone / external URL — ignore */
+      }
+    }
+
+    await logAudit({
+      actorId: actor.id,
+      action: "product.delete",
+      entity: "product",
+      entityId: id,
+    });
+    revalidatePath("/admin/products");
+    done = true;
+  } catch {
+    return; // permission/validation error — no-op
+  }
+  if (done) redirect("/admin/products");
 }
 
 // --- Inventory (manual stock) ----------------------------------------------

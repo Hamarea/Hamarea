@@ -23,6 +23,7 @@ import {
   reorderImage,
   uploadImage,
   duplicateProduct,
+  deleteProduct,
 } from "./actions";
 
 const STATUSES = ["draft", "active", "archived"] as const;
@@ -532,6 +533,29 @@ export default async function AdminProductEdit({
             <SubmitButton size="sm">Ajouter</SubmitButton>
           </ActionForm>
         </div>
+      </Card>
+
+      {/* Zone de danger — suppression définitive */}
+      <Card className="border-[var(--color-danger)]/40 p-6">
+        <h2 className="mb-1 font-medium text-[var(--color-danger)]">
+          Zone de danger
+        </h2>
+        <p className="mb-3 text-sm text-[var(--color-muted)]">
+          Supprime définitivement ce produit, ses variantes, son stock et ses
+          photos. Les commandes déjà passées sont conservées (historique).
+          Action irréversible.
+        </p>
+        <details>
+          <summary className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[var(--color-danger)]/50 px-4 py-2 text-sm font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10">
+            <Trash2 className="h-4 w-4" /> Supprimer le produit
+          </summary>
+          <form action={deleteProduct} className="mt-3">
+            <input type="hidden" name="id" value={product.id} />
+            <SubmitButton variant="destructive" size="sm">
+              <Trash2 className="h-4 w-4" /> Oui, supprimer définitivement
+            </SubmitButton>
+          </form>
+        </details>
       </Card>
     </div>
   );

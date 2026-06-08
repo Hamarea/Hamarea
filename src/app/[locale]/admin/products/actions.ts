@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
@@ -42,6 +43,7 @@ export async function createProduct(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  let createdId: string | null = null;
   try {
     const actor = await requirePermission("products.write");
     const priceRaw = ((formData.get("price") as string) || "").trim();
@@ -90,7 +92,8 @@ export async function createProduct(
       if (error.code === "23505") return { error: "Un produit avec ce slug existe déjà." };
       return { error: "Création impossible." };
     }
-    const newId = (created as { id: string } | null)?.id;
+    const newId = (created as { id: string } | null)?.id ?? null;
+    createdId = newId;
 
     // Optional first variant (makes the product sellable immediately).
     if (newId && data.price != null) {
@@ -115,12 +118,15 @@ export async function createProduct(
       data: { slug, status: data.status, withVariant: data.price != null },
     });
     revalidatePath("/admin/products");
-    return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
     if (msg === "forbidden" || msg === "unauthorized") return { error: "Action non autorisée." };
     return { error: "Champs invalides." };
   }
+  // Land the admin straight on the full product sheet (photos, description,
+  // variantes, stock, SEO…). The create form is intentionally short.
+  if (createdId) redirect(`/admin/products/${createdId}`);
+  return { ok: true };
 }
 
 export async function setProductStatus(formData: FormData): Promise<void> {
