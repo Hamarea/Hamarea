@@ -25,6 +25,7 @@ import {
   duplicateProduct,
   deleteProduct,
 } from "./actions";
+import { setProductStatus } from "@/app/[locale]/admin/products/actions";
 
 const STATUSES = ["draft", "active", "archived"] as const;
 const STATUS_LABEL: Record<string, string> = {
@@ -216,12 +217,36 @@ export default async function AdminProductEdit({
             {product.slug} · {STATUS_LABEL[product.status] ?? product.status}
           </p>
         </div>
-        <form action={duplicateProduct}>
-          <input type="hidden" name="id" value={product.id} />
-          <SubmitButton variant="outline" size="sm">
-            <Copy className="h-4 w-4" /> Dupliquer
-          </SubmitButton>
-        </form>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Quick status — change visibility in one click, no full-form save. */}
+          <form action={setProductStatus} className="flex items-center gap-1.5">
+            <input type="hidden" name="id" value={product.id} />
+            <label htmlFor="quick-status" className="text-sm text-[var(--color-muted)]">
+              Statut
+            </label>
+            <select
+              id="quick-status"
+              name="status"
+              defaultValue={product.status}
+              className="h-9 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
+            >
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_LABEL[s]}
+                </option>
+              ))}
+            </select>
+            <SubmitButton size="sm" variant="secondary">
+              Appliquer
+            </SubmitButton>
+          </form>
+          <form action={duplicateProduct}>
+            <input type="hidden" name="id" value={product.id} />
+            <SubmitButton variant="outline" size="sm">
+              <Copy className="h-4 w-4" /> Dupliquer
+            </SubmitButton>
+          </form>
+        </div>
       </div>
 
       {/* Contenu (multilingue + SEO) */}
