@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { getStripe } from "@/lib/stripe";
 import { sendEmail, shippingNotificationHtml } from "@/lib/email";
+import { refundOrderStatus, type OrderStatus } from "@/lib/order-transitions";
 
 const ORDER_STATUSES = [
   "pending",
@@ -171,11 +173,16 @@ type RefundClient = {
         v: string,
       ) => {
         maybeSingle: () => Promise<{
-          data: { stripe_payment_intent_id: string | null; total_cents: number } | null;
+          data: {
+            stripe_payment_intent_id: string | null;
+            total_cents: number;
+            refunded_cents: number | null;
+            status: string;
+          } | null;
         }>;
       };
     };
-    insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string } | null }>;
+    insert: (row: Record<string, unknown>) => Promise<{ error: { message?: string; code?: string } | null }>;
     update: (row: Record<string, unknown>) => {
       eq: (k: string, v: string) => Promise<{ error: { message?: string } | null }>;
     };
@@ -194,23 +201,39 @@ export async function createRefund(formData: FormData) {
   const supabase = (await createClient()) as unknown as RefundClient;
   const { data: order } = await supabase
     .from("orders")
-    .select("stripe_payment_intent_id, total_cents")
+    .select("stripe_payment_intent_id, total_cents, refunded_cents, status")
     .eq("id", data.orderId)
     .maybeSingle();
   if (!order) throw new Error("order_not_found");
-  if (amountCents > order.total_cents) {
-    throw new Error("Le montant dépasse le total de la commande.");
+
+  // Garde cumulative : le déjà-remboursé + ce remboursement ne peut jamais
+  // dépasser le total de la commande (empêche le sur-remboursement interne).
+  const alreadyRefunded = order.refunded_cents ?? 0;
+  if (amountCents > order.total_cents - alreadyRefunded) {
+    throw new Error(
+      "Le montant dépasse le solde remboursable (total − déjà remboursé).",
+    );
   }
+  const newRefundedCents = alreadyRefunded + amountCents;
+
+  // Idempotence : un double-clic / retry avec le MÊME montant sur le MÊME état
+  // cumulé réutilise le remboursement Stripe au lieu d'en créer un second.
+  const idempotencyKey = createHash("sha256")
+    .update(`${data.orderId}:${amountCents}:${alreadyRefunded}`)
+    .digest("hex");
 
   // Real Stripe refund when a payment intent exists; otherwise just record it
   // (covers manual / off-Stripe refunds).
   let providerRefundId: string | null = null;
   const stripe = getStripe();
   if (stripe && order.stripe_payment_intent_id) {
-    const refund = await stripe.refunds.create({
-      payment_intent: order.stripe_payment_intent_id,
-      amount: amountCents,
-    });
+    const refund = await stripe.refunds.create(
+      {
+        payment_intent: order.stripe_payment_intent_id,
+        amount: amountCents,
+      },
+      { idempotencyKey },
+    );
     providerRefundId = refund.id;
   }
 
@@ -219,24 +242,39 @@ export async function createRefund(formData: FormData) {
     amount_cents: amountCents,
     reason: data.reason || null,
     provider_refund_id: providerRefundId,
+    status: "succeeded",
     created_by: actor.id,
   });
-  if (error) throw new Error(error.message ?? "refund_failed");
+  // 23505 = ce remboursement Stripe est déjà journalisé (webhook ou double-clic).
+  if (error && error.code !== "23505") throw new Error(error.message ?? "refund_failed");
 
-  // Full refund → flip the order to refunded.
-  if (amountCents >= order.total_cents) {
-    await supabase
-      .from("orders")
-      .update({ status: "refunded", updated_at: new Date().toISOString() })
-      .eq("id", data.orderId);
-  }
+  // Bascule d'état via la matrice pure (partiel → partially_refunded ; total →
+  // refunded). Le webhook `charge.refunded` réconciliera aussi refunded_cents
+  // (valeur absolue) : ici on met à jour immédiatement pour l'admin.
+  const nextStatus = refundOrderStatus(
+    order.status as OrderStatus,
+    newRefundedCents,
+    order.total_cents,
+  );
+  await supabase
+    .from("orders")
+    .update({
+      refunded_cents: newRefundedCents,
+      ...(nextStatus ? { status: nextStatus } : {}),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", data.orderId);
 
   await logAudit({
     actorId: actor.id,
     action: "order.refund",
     entity: "order",
     entityId: data.orderId,
-    data: { amount_cents: amountCents, provider_refund_id: providerRefundId },
+    data: {
+      amount_cents: amountCents,
+      refunded_cents_total: newRefundedCents,
+      provider_refund_id: providerRefundId,
+    },
   });
 
   revalidatePath(`/admin/orders/${data.orderId}`);
