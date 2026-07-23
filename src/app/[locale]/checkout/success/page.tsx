@@ -13,6 +13,11 @@ export default async function CheckoutSuccessPage({
   const { session_id } = await searchParams;
   const t = await getTranslations("checkout.success");
 
+  // Support post-achat : WhatsApp (gratuit, sans page /contact). Masqué si non
+  // configuré — pas de lien mort depuis que les pages vitrine sont retirées.
+  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/[^\d]/g, "");
+  const waHref = waNumber ? `https://wa.me/${waNumber}` : null;
+
   const steps = [
     { Icon: Mail, title: t("step1Title"), body: t("step1Body") },
     { Icon: Package, title: t("step2Title"), body: t("step2Body") },
@@ -61,12 +66,19 @@ export default async function CheckoutSuccessPage({
             <Link href="/account/orders">{t("viewOrders")}</Link>
           </Button>
         </div>
-        <p className="mt-4 text-xs text-[var(--color-muted)]">
-          {t("question")}
-          <Link href="/contact" className="underline">
-            {t("contactLink")}
-          </Link>
-        </p>
+        {waHref && (
+          <p className="mt-4 text-xs text-[var(--color-muted)]">
+            {t("question")}{" "}
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              {t("contactLink")}
+            </a>
+          </p>
+        )}
       </Card>
     </section>
   );

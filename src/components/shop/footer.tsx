@@ -31,9 +31,7 @@ export function ShopFooter() {
             {b.footer.brand}
           </p>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/about" className="hover:underline">{b.nav.about}</Link></li>
             <li><Link href="/account" className="hover:underline">{t("common.account")}</Link></li>
-            <li><Link href="/contact" className="hover:underline">{t("footer.contact")}</Link></li>
           </ul>
         </div>
 

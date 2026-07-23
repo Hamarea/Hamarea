@@ -25,7 +25,6 @@ export function ShopHeader() {
 
   const NAV: { href: string; label: string }[] = [
     { href: "/sacoche", label: nav.sacoche },
-    { href: "/about", label: nav.about },
   ];
 
   useEffect(() => {
@@ -146,15 +145,6 @@ export function ShopHeader() {
                 </Link>
               </li>
             ))}
-            <li>
-              <Link
-                href="/contact"
-                onClick={() => setMenuOpen(false)}
-                className="block rounded-md px-3 py-3 hover:bg-white"
-              >
-                {t("nav.contact")}
-              </Link>
-            </li>
           </ul>
         </nav>
       )}
