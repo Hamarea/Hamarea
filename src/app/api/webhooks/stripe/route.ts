@@ -4,17 +4,33 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { sendEmail, orderConfirmationHtml } from "@/lib/email";
 import { trackPurchaseServer } from "@/lib/tracking";
+import { disputeOrderTarget } from "@/lib/order-transitions";
 
 /**
  * Stripe webhook.
  * Verifies the Stripe-Signature header with STRIPE_WEBHOOK_SECRET, dedups on
- * webhook_events.event_id (unique), then reconciles the order: marks it paid,
- * stores the PaymentIntent id, writes the Stripe-collected address, records a
- * payment row and decrements stock.
+ * webhook_events.event_id (unique), then reconciles the order.
  *
- * Enable these events on the Stripe endpoint: `checkout.session.completed`
- * (primary). `payment_intent.succeeded` is also handled as a fallback — both
- * are safe to enable because the paid transition is idempotent per order.
+ * Événements à activer sur l'endpoint Stripe :
+ *   - `checkout.session.completed`   (principal — marque payé, adresse, stock)
+ *   - `payment_intent.succeeded`     (repli wallets — même transition idempotente)
+ *   - `charge.refunded`              (remboursement total/partiel — cumul absolu)
+ *   - `charge.dispute.created`       (litige ouvert)
+ *   - `charge.dispute.updated`       (litige mis à jour)
+ *   - `charge.dispute.closed`        (litige gagné/perdu)
+ *   - `payment_intent.payment_failed`(échec — pending → failed)
+ *
+ * Choix d'événements : on écoute `charge.refunded` (qui porte le CUMUL absolu
+ * `amount_refunded`) et PAS `refund.created/updated` ni `charge.refund.updated`
+ * afin d'éviter tout double traitement d'une même mutation. La dédup transport
+ * (`webhook_events` unique) + les gardes d'état des RPC rendent chaque handler
+ * idempotent et tolérant aux arrivées dans le désordre. La réconciliation
+ * multi-tables (orders + refunds / orders + disputes) est ATOMIQUE côté Postgres
+ * via les RPC `reconcile_refund` / `reconcile_dispute` (migration 0023).
+ *
+ * 🧷 Stock : AUCUNE restitution automatique sur remboursement/litige (décision
+ * produit) — seul l'état financier est mis à jour ; un retour physique reste un
+ * ajustement manuel admin.
  */
 
 type AddressJson = Record<string, unknown>;
@@ -292,6 +308,79 @@ export async function POST(req: Request) {
         billingAddress: shipping,
         email: pi.receipt_email ?? null,
       });
+    }
+  } else if (event.type === "charge.refunded") {
+    // Remboursement (total ou partiel). `charge.amount_refunded` est le CUMUL
+    // absolu remboursé → source de vérité (jamais additif côté app). La commande
+    // est retrouvée par le payment_intent (référence serveur fiable). L'RPC met
+    // à jour orders + refunds atomiquement, de façon idempotente.
+    const charge = event.data.object as Stripe.Charge;
+    const paymentIntentId =
+      typeof charge.payment_intent === "string"
+        ? charge.payment_intent
+        : (charge.payment_intent?.id ?? null);
+    const refundsList = (charge.refunds?.data ?? []).map((r) => ({
+      id: r.id,
+      amount: r.amount,
+      reason: r.reason,
+      status: r.status,
+      created: r.created,
+    }));
+    const { error } = await sb.rpc("reconcile_refund", {
+      p_payment_intent: paymentIntentId,
+      p_refunded_cents: charge.amount_refunded,
+      p_currency: charge.currency ?? null,
+      p_refunds: refundsList,
+    });
+    if (error) {
+      console.error("[stripe webhook] reconcile_refund failed", paymentIntentId, error);
+    }
+  } else if (
+    event.type === "charge.dispute.created" ||
+    event.type === "charge.dispute.updated" ||
+    event.type === "charge.dispute.closed"
+  ) {
+    // Litige : upsert du litige + bascule d'état commande (disputed / dispute_won
+    // / dispute_lost) atomiquement. La cible d'état est calculée par la matrice
+    // pure `disputeOrderTarget` ; l'RPC re-garde la transition (jamais 'paid',
+    // jamais depuis pending/failed/cancelled).
+    const d = event.data.object as Stripe.Dispute;
+    const paymentIntentId =
+      typeof d.payment_intent === "string"
+        ? d.payment_intent
+        : (d.payment_intent?.id ?? null);
+    const chargeId = typeof d.charge === "string" ? d.charge : (d.charge?.id ?? null);
+    const target = disputeOrderTarget(event.type, d.status);
+    const { error } = await sb.rpc("reconcile_dispute", {
+      p_dispute_id: d.id,
+      p_payment_intent: paymentIntentId,
+      p_charge: chargeId,
+      p_amount: d.amount ?? 0,
+      p_currency: d.currency ?? null,
+      p_status: d.status ?? null,
+      p_reason: d.reason ?? null,
+      p_is_refundable: d.is_charge_refundable ?? null,
+      p_opened_at: d.created ? new Date(d.created * 1000).toISOString() : null,
+      p_closed_at:
+        event.type === "charge.dispute.closed"
+          ? new Date(event.created * 1000).toISOString()
+          : null,
+      p_order_target: target,
+      p_raw: d as unknown as Record<string, unknown>,
+    });
+    if (error) {
+      console.error("[stripe webhook] reconcile_dispute failed", d.id, error);
+    }
+  } else if (event.type === "payment_intent.payment_failed") {
+    // Échec de paiement : seule une commande encore `pending` bascule en `failed`
+    // (l'RPC garde la transition ; une commande payée n'est jamais touchée).
+    const pi = event.data.object as Stripe.PaymentIntent;
+    const orderId = pi.metadata?.order_id;
+    if (orderId) {
+      const { error } = await sb.rpc("mark_order_failed", { p_order_id: orderId });
+      if (error) {
+        console.error("[stripe webhook] mark_order_failed failed", orderId, error);
+      }
     }
   }
 
