@@ -61,7 +61,7 @@ export async function ProductUniverse({ locale }: { locale: string }) {
       <ul className={`mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 ${colsClass(categories.length)}`}>
         {categories.map((cat, i) => (
           <Reveal as="li" key={cat.id} delay={i * 0.05} className="h-full">
-            <Link href={`/products?category=${cat.slug}` as never} className={cardCls}>
+            <Link href="/sacoche" className={cardCls}>
               <div className="relative aspect-[4/5] overflow-hidden">
                 {cat.image_url ? (
                   <Image

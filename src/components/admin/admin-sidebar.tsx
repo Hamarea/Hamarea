@@ -6,13 +6,16 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/account/logout-button";
 
+type NavItem = { href: string; label: string; icon: ReactNode };
+type NavSection = { title?: string; items: NavItem[] };
+
 /** Admin sidebar — static column on desktop, collapsible drawer on mobile. */
 export function AdminSidebar({
-  items,
+  sections,
   userEmail,
   supabaseConfigured,
 }: {
-  items: { href: string; label: string; icon: ReactNode }[];
+  sections: NavSection[];
   userEmail: string;
   supabaseConfigured: boolean;
 }) {
@@ -37,17 +40,28 @@ export function AdminSidebar({
             Mode aperçu — Supabase non configuré
           </p>
         )}
-        <nav className="space-y-1">
-          {items.map((it) => (
-            <Link
-              key={it.href}
-              href={it.href as never}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-white/10"
-            >
-              {it.icon}
-              {it.label}
-            </Link>
+        <nav className="space-y-4">
+          {sections.map((section, i) => (
+            <div key={section.title ?? i}>
+              {section.title && (
+                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/50">
+                  {section.title}
+                </p>
+              )}
+              <div className="space-y-1">
+                {section.items.map((it) => (
+                  <Link
+                    key={it.href}
+                    href={it.href as never}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-white/10"
+                  >
+                    {it.icon}
+                    {it.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
         <div className="mt-8 border-t border-white/10 pt-4">

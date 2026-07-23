@@ -8,6 +8,7 @@ import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
 import { CartDrawer } from "@/components/shop/cart-drawer";
 import { WhatsAppButton } from "@/components/shop/whatsapp-button";
+import { StorefrontChrome } from "@/components/shop/storefront-chrome";
 import { MotionProvider } from "@/components/motion-provider";
 import { getProductCopy } from "@/lib/product-content";
 import { ConsentBanner } from "@/components/consent/consent-banner";
@@ -54,16 +55,20 @@ export default async function LocaleLayout({
             >
               {copy.skipToContent}
             </a>
-            <div className="relative z-10 -mb-px bg-[var(--color-primary-900)] py-1.5 text-center text-[11px] font-medium uppercase tracking-wider text-white">
-              {copy.banner}
-            </div>
-            <ShopHeader />
+            <StorefrontChrome>
+              <div className="relative z-10 -mb-px bg-[var(--color-primary-900)] py-1.5 text-center text-[11px] font-medium uppercase tracking-wider text-white">
+                {copy.banner}
+              </div>
+              <ShopHeader />
+            </StorefrontChrome>
             <main id="main" tabIndex={-1} className="min-h-[calc(100vh-4rem)]">
               {children}
             </main>
-            <ShopFooter />
-            <CartDrawer />
-            <WhatsAppButton />
+            <StorefrontChrome>
+              <ShopFooter />
+              <CartDrawer />
+              <WhatsAppButton />
+            </StorefrontChrome>
             <ConsentBanner />
             <Analytics />
           </MotionProvider>
