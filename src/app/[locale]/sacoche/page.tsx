@@ -8,6 +8,7 @@ import { Problem } from "@/components/product/problem";
 import { UspGrid } from "@/components/product/usp-grid";
 import { HowItWorks } from "@/components/product/how-it-works";
 import { ColorsShowcase } from "@/components/product/colors-showcase";
+import { WhatsInside } from "@/components/product/whats-inside";
 import { Comparison } from "@/components/product/comparison";
 import { BundlePicker } from "@/components/product/bundle-picker";
 import { Testimonials } from "@/components/product/testimonials";
@@ -132,6 +133,7 @@ export default async function SacochePage({
       <VideoReel />
       <Testimonials />
       <ColorsShowcase />
+      <WhatsInside />
       <Comparison />
       <HowItWorks />
       <BundlePicker />

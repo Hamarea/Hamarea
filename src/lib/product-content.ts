@@ -67,6 +67,17 @@ export interface ProductCopy {
     choose: string;
     names: { rose: string; noir: string; blanc: string };
   };
+  fits: {
+    eyebrow: string;
+    heading: string;
+    sub: string;
+    sizeLabel: string;
+    sizeSub: string;
+    compatTitle: string;
+    brands: string[];
+    alsoTitle: string;
+    also: string[];
+  };
   comparison: {
     eyebrow: string;
     heading: string;
@@ -202,6 +213,23 @@ const fr: ProductCopy = {
     inStock: "En stock",
     choose: "Choisir",
     names: { rose: "Rose", noir: "Noir", blanc: "Blanc" },
+  },
+  fits: {
+    eyebrow: "Ce qui rentre dedans",
+    heading: "Fait pour votre téléphone. Et l'essentiel avec.",
+    sub: "Un format universel qui accueille (presque) tous les smartphones — coque fine comprise.",
+    sizeLabel: "Jusqu'à 7 pouces",
+    sizeSub: "Largeur max. 9 cm",
+    compatTitle: "Compatible avec",
+    brands: [
+      "iPhone 12 → 16 Pro Max",
+      "Galaxy S20 → S25 Ultra",
+      "Google Pixel 6 → 9",
+      "Huawei P & Mate",
+      "OnePlus · Xiaomi · Oppo…",
+    ],
+    alsoTitle: "Et ce qui va avec",
+    also: ["Carte bancaire", "Quelques billets", "Clé ou carte d'hôtel"],
   },
   comparison: {
     eyebrow: "Comparatif",
@@ -375,6 +403,23 @@ const en: ProductCopy = {
     choose: "Choose",
     names: { rose: "Pink", noir: "Black", blanc: "White" },
   },
+  fits: {
+    eyebrow: "What fits inside",
+    heading: "Made for your phone. And the essentials too.",
+    sub: "A universal fit that takes (almost) any smartphone — slim case included.",
+    sizeLabel: "Up to 7 inches",
+    sizeSub: "Max width 9 cm",
+    compatTitle: "Compatible with",
+    brands: [
+      "iPhone 12 → 16 Pro Max",
+      "Galaxy S20 → S25 Ultra",
+      "Google Pixel 6 → 9",
+      "Huawei P & Mate",
+      "OnePlus · Xiaomi · Oppo…",
+    ],
+    alsoTitle: "And what goes with it",
+    also: ["Bank card", "A few notes", "Key or hotel card"],
+  },
   comparison: {
     eyebrow: "Comparison",
     heading: "Hamarea vs a generic pouch.",
@@ -547,6 +592,23 @@ const es: ProductCopy = {
     choose: "Elegir",
     names: { rose: "Rosa", noir: "Negro", blanc: "Blanco" },
   },
+  fits: {
+    eyebrow: "Lo que cabe dentro",
+    heading: "Hecha para tu móvil. Y lo esencial también.",
+    sub: "Un formato universal que admite (casi) todos los smartphones — con funda fina incluida.",
+    sizeLabel: "Hasta 7 pulgadas",
+    sizeSub: "Ancho máx. 9 cm",
+    compatTitle: "Compatible con",
+    brands: [
+      "iPhone 12 → 16 Pro Max",
+      "Galaxy S20 → S25 Ultra",
+      "Google Pixel 6 → 9",
+      "Huawei P & Mate",
+      "OnePlus · Xiaomi · Oppo…",
+    ],
+    alsoTitle: "Y lo que la acompaña",
+    also: ["Tarjeta bancaria", "Algunos billetes", "Llave o tarjeta de hotel"],
+  },
   comparison: {
     eyebrow: "Comparativa",
     heading: "Hamarea vs funda clásica.",
@@ -718,6 +780,23 @@ const de: ProductCopy = {
     inStock: "Auf Lager",
     choose: "Wählen",
     names: { rose: "Rosa", noir: "Schwarz", blanc: "Weiß" },
+  },
+  fits: {
+    eyebrow: "Was hineinpasst",
+    heading: "Gemacht für dein Handy. Und das Wichtigste dazu.",
+    sub: "Ein universelles Format für (fast) jedes Smartphone — schlanke Hülle inklusive.",
+    sizeLabel: "Bis 7 Zoll",
+    sizeSub: "Max. Breite 9 cm",
+    compatTitle: "Kompatibel mit",
+    brands: [
+      "iPhone 12 → 16 Pro Max",
+      "Galaxy S20 → S25 Ultra",
+      "Google Pixel 6 → 9",
+      "Huawei P & Mate",
+      "OnePlus · Xiaomi · Oppo…",
+    ],
+    alsoTitle: "Und was dazu passt",
+    also: ["Bankkarte", "Ein paar Scheine", "Schlüssel oder Hotelkarte"],
   },
   comparison: {
     eyebrow: "Vergleich",
