@@ -7,31 +7,38 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionForm } from "@/components/ui/action-form";
 import { LangTabs } from "@/components/admin/lang-tabs";
 import { UnsavedGuard } from "@/components/admin/unsaved-guard";
+import { PricingForm } from "@/components/admin/pricing-form";
+import { VariantsEditor, type VariantRow } from "@/components/admin/variants-editor";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { deriveGlobalPair, samePair } from "@/lib/pricing";
 import { routing } from "@/i18n/routing";
-import { ArrowLeft, Trash2, ChevronUp, ChevronDown, Copy } from "lucide-react";
+import { ArrowLeft, Trash2, ChevronUp, ChevronDown, Copy, ExternalLink } from "lucide-react";
 import {
   updateProduct,
-  createVariant,
-  updateVariant,
   deleteVariant,
-  generateVariants,
-  setInventory,
   addImage,
   deleteImage,
   reorderImage,
   uploadImage,
   duplicateProduct,
   deleteProduct,
+  updatePricing,
+  saveVariantsAndStock,
+  addColorVariant,
 } from "./actions";
 import { setProductStatus } from "@/app/[locale]/admin/products/actions";
 
 const STATUSES = ["draft", "active", "archived"] as const;
 const STATUS_LABEL: Record<string, string> = {
   draft: "Brouillon",
-  active: "Active",
-  archived: "Archivée",
+  active: "En vente",
+  archived: "Archivé",
+};
+const STATUS_BADGE: Record<string, string> = {
+  draft: "bg-[var(--color-warning)]/15 text-[var(--color-warning)]",
+  active: "bg-green-600/10 text-green-700",
+  archived: "bg-[var(--color-muted)]/15 text-[var(--color-muted)]",
 };
 const LOCALE_LABEL: Record<string, string> = { fr: "FR", en: "EN", es: "ES", de: "DE" };
 const SELECT_CLASS = "flex h-10 w-full rounded-md border border-[var(--color-border)] bg-white px-3 text-sm";
@@ -71,20 +78,13 @@ type Product = {
   featured: boolean | null;
   category_id: string | null;
   supplier_id: string | null;
+  updated_at: string | null;
   product_variants: Variant[];
   product_images: Image[];
 };
 
-const euros = (c: number | null | undefined) => (c == null ? "" : (c / 100).toFixed(2));
-
-/** Derive {name,value} from option_values (handles the legacy `{label}` shape). */
-function optionFields(ov: Record<string, unknown> | null): { name: string; value: string } {
-  const entries = Object.entries(ov ?? {});
-  if (entries.length === 0) return { name: "", value: "" };
-  const [k, v] = entries[0];
-  if (k === "label") return { name: "", value: String(v ?? "") };
-  return { name: k, value: String(v ?? "") };
-}
+const eurosFmt = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const euros = (c: number) => eurosFmt.format(c / 100);
 
 export default async function AdminProductEdit({
   params,
@@ -108,7 +108,7 @@ export default async function AdminProductEdit({
   const { data: product } = await sb
     .from("products")
     .select(
-      "id, slug, name_i18n, description_i18n, seo, brand, status, featured, category_id, supplier_id, product_variants(id, sku, price_cents, compare_at_price_cents, cost_cents, barcode, weight_g, currency, active, option_values, position, inventory(quantity, reserved, reorder_point, warehouse_id)), product_images(id, variant_id, storage_path, alt_i18n, position)",
+      "id, slug, name_i18n, description_i18n, seo, brand, status, featured, category_id, supplier_id, updated_at, product_variants(id, sku, price_cents, compare_at_price_cents, cost_cents, barcode, weight_g, currency, active, option_values, position, inventory(quantity, reserved, reorder_point, warehouse_id)), product_images(id, variant_id, storage_path, alt_i18n, position)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -133,24 +133,75 @@ export default async function AdminProductEdit({
     is_default: boolean;
   }[];
   const defaultWh = warehouses.find((w) => w.is_default) ?? warehouses[0];
-  const whName = (wid: string) => warehouses.find((w) => w.id === wid)?.name ?? "Entrepôt";
 
   const variants = [...(product.product_variants ?? [])].sort((a, b) => a.position - b.position);
   const images = [...(product.product_images ?? [])].sort((a, b) => a.position - b.position);
 
-  // Human label for a variant (colour first), used by the photo↔colour picker.
+  // --- Modèle « poste de pilotage » : prix global dérivé des variantes -------
+  const globalPair = deriveGlobalPair(variants);
+  const normalPriceEuros = globalPair
+    ? (globalPair.compare_at_price_cents ?? globalPair.price_cents) / 100
+    : 0;
+  const promoPriceEuros =
+    globalPair?.compare_at_price_cents != null ? globalPair.price_cents / 100 : null;
+  const specificCount = globalPair
+    ? variants.filter((v) => !samePair(v, globalPair)).length
+    : 0;
+
+  const stockOf = (v: Variant): Inventory | undefined => {
+    const list = v.inventory ?? [];
+    return list.find((x) => x.warehouse_id === defaultWh?.id) ?? list[0];
+  };
+  const totalStock = variants.reduce(
+    (sum, v) => sum + (v.inventory ?? []).reduce((s, x) => s + x.quantity, 0),
+    0,
+  );
+  const activeCount = variants.filter((v) => v.active).length;
+
   const variantLabel = (v: Variant): string => {
     const ov = (v.option_values ?? {}) as Record<string, unknown>;
     const color = (ov.color ?? ov.Couleur ?? ov.couleur) as string | undefined;
     const all = Object.values(ov)
-      .filter((x): x is string => typeof x === "string" && x.length > 0)
+      .filter((x): x is string => typeof x === "string" && x.length > 0 && !x.startsWith("#"))
       .join(" / ");
     return color || all || v.sku;
   };
   const variantLabelById = new Map(variants.map((v) => [v.id, variantLabel(v)]));
+
+  const rows: VariantRow[] = variants.map((v) => {
+    const ov = (v.option_values ?? {}) as Record<string, unknown>;
+    const hex = typeof ov.hex === "string" && /^#[0-9a-fA-F]{6}$/.test(ov.hex) ? ov.hex : null;
+    const inv = stockOf(v);
+    return {
+      id: v.id,
+      sku: v.sku,
+      color: variantLabel(v),
+      hex,
+      active: v.active,
+      priceEuros: v.price_cents / 100,
+      isCustom: globalPair ? !samePair(v, globalPair) : false,
+      quantity: inv?.quantity ?? 0,
+      reorderPoint: inv?.reorder_point ?? 5,
+      costEuros: v.cost_cents != null ? v.cost_cents / 100 : null,
+      barcode: v.barcode,
+      weightG: v.weight_g,
+    };
+  });
+
+  const storefrontHref = product.slug.includes("sacoche")
+    ? "/sacoche"
+    : (`/products/${product.slug}` as const);
+  const updatedAt = product.updated_at
+    ? new Date(product.updated_at).toLocaleString("fr-FR", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : null;
+
   const seo = product.seo ?? {};
 
-  // Per-locale content panels (name + description + SEO) — submitted together.
+  // Onglets de contenu : nom + description uniquement (le SEO vit dans
+  // « Référencement & avancé » plus bas).
   const langPanels = routing.locales.map((loc) => ({
     code: loc,
     label: LOCALE_LABEL[loc] ?? loc.toUpperCase(),
@@ -177,34 +228,13 @@ export default async function AdminProductEdit({
             className={TEXTAREA_CLASS}
           />
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor={`seo_title_${loc}`}>SEO — titre ({loc.toUpperCase()})</Label>
-            <Input
-              id={`seo_title_${loc}`}
-              name={`seo_title_${loc}`}
-              maxLength={70}
-              defaultValue={seo.title?.[loc] ?? ""}
-              placeholder="≤ 70 caractères"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor={`seo_description_${loc}`}>SEO — description ({loc.toUpperCase()})</Label>
-            <Input
-              id={`seo_description_${loc}`}
-              name={`seo_description_${loc}`}
-              maxLength={320}
-              defaultValue={seo.description?.[loc] ?? ""}
-              placeholder="≤ 320 caractères"
-            />
-          </div>
-        </div>
       </>
     ),
   }));
 
   return (
     <div className="space-y-6">
+      {/* ── Bloc 1 : état de la boutique ─────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link
@@ -213,16 +243,31 @@ export default async function AdminProductEdit({
           >
             <ArrowLeft className="h-4 w-4" /> Produits
           </Link>
-          <h1 className="mt-2 font-display text-3xl">{product.name_i18n?.fr ?? product.slug}</h1>
-          <p className="text-sm text-[var(--color-muted)]">
-            {product.slug} · {STATUS_LABEL[product.status] ?? product.status}
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-3xl">{product.name_i18n?.fr ?? product.slug}</h1>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE[product.status] ?? ""}`}
+            >
+              {STATUS_LABEL[product.status] ?? product.status}
+            </span>
+          </div>
+          {updatedAt && (
+            <p className="mt-1 text-sm text-[var(--color-muted)]">
+              Dernière modification : {updatedAt}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {/* Quick status — change visibility in one click, no full-form save. */}
+          <Link
+            href={storefrontHref as never}
+            target="_blank"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3 text-sm font-medium hover:bg-[var(--color-bg)]"
+          >
+            <ExternalLink className="h-4 w-4" /> Voir sur la boutique
+          </Link>
           <form action={setProductStatus} className="flex items-center gap-1.5">
             <input type="hidden" name="id" value={product.id} />
-            <label htmlFor="quick-status" className="text-sm text-[var(--color-muted)]">
+            <label htmlFor="quick-status" className="sr-only">
               Statut
             </label>
             <select
@@ -243,233 +288,110 @@ export default async function AdminProductEdit({
           </form>
           <form action={duplicateProduct}>
             <input type="hidden" name="id" value={product.id} />
-            <SubmitButton variant="outline" size="sm">
-              <Copy className="h-4 w-4" /> Dupliquer
+            <SubmitButton variant="ghost" size="sm" aria-label="Dupliquer le produit">
+              <Copy className="h-4 w-4" />
             </SubmitButton>
           </form>
         </div>
       </div>
 
-      {/* Contenu (multilingue + SEO) */}
+      {/* Indicateurs clés */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label="Prix affiché">
+          {globalPair ? (
+            <>
+              {euros(globalPair.price_cents)}
+              {globalPair.compare_at_price_cents != null && (
+                <span className="ml-1.5 text-sm font-normal text-[var(--color-muted)] line-through">
+                  {euros(globalPair.compare_at_price_cents)}
+                </span>
+              )}
+            </>
+          ) : (
+            "—"
+          )}
+        </Stat>
+        <Stat label="Promotion">
+          {promoPriceEuros != null && globalPair?.compare_at_price_cents ? (
+            <span className="text-[var(--color-danger)]">
+              −
+              {Math.round(
+                (1 - globalPair.price_cents / globalPair.compare_at_price_cents) * 100,
+              )}{" "}
+              %
+            </span>
+          ) : (
+            "Aucune"
+          )}
+        </Stat>
+        <Stat label="Stock total">{totalStock}</Stat>
+        <Stat label="Couleurs actives">
+          {activeCount} / {variants.length}
+        </Stat>
+      </div>
+
+      {/* ── Bloc 2 : prix ────────────────────────────────────────────────── */}
       <Card className="p-6">
-        <h2 className="mb-4 font-medium">Contenu &amp; SEO</h2>
-        <ActionForm action={updateProduct} successMessage="Enregistré." className="space-y-4">
-          <input type="hidden" name="id" value={product.id} />
-          <UnsavedGuard />
-          <LangTabs panels={langPanels} />
-
-          <div className="grid gap-3 border-t border-[var(--color-border)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="slug">Slug *</Label>
-              <Input id="slug" name="slug" required maxLength={200} defaultValue={product.slug} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="brand">Marque</Label>
-              <Input id="brand" name="brand" maxLength={120} defaultValue={product.brand ?? ""} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="category_id">Catégorie</Label>
-              <select id="category_id" name="category_id" defaultValue={product.category_id ?? ""} className={SELECT_CLASS}>
-                <option value="">— Aucune —</option>
-                {(categories ?? []).map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name_i18n?.fr ?? c.id}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="supplier_id">Fournisseur</Label>
-              <select id="supplier_id" name="supplier_id" defaultValue={product.supplier_id ?? ""} className={SELECT_CLASS}>
-                <option value="">— Aucun —</option>
-                {(suppliers ?? []).map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="status">Statut</Label>
-              <select id="status" name="status" defaultValue={product.status} className={SELECT_CLASS}>
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABEL[s]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <label className="flex items-center gap-2 self-end pb-2 text-sm">
-              <input
-                type="checkbox"
-                name="featured"
-                defaultChecked={product.featured ?? false}
-                className="h-4 w-4"
-              />
-              <span>
-                <strong>Vedette</strong> (accueil)
-              </span>
-            </label>
-          </div>
-
-          <SubmitButton>Enregistrer</SubmitButton>
-        </ActionForm>
+        <h2 className="mb-1 font-medium">Prix</h2>
+        <p className="mb-4 text-xs text-[var(--color-muted)]">
+          Le prix se règle une seule fois ici et s&apos;applique à toutes les couleurs.
+          Renseigne un prix promotionnel pour afficher l&apos;ancien prix barré sur la boutique.
+        </p>
+        <PricingForm
+          productId={product.id}
+          initialPrice={normalPriceEuros}
+          initialPromo={promoPriceEuros}
+          specificCount={specificCount}
+          action={updatePricing}
+        />
       </Card>
 
-      {/* Variantes */}
+      {/* ── Bloc 3 : couleurs & stock ────────────────────────────────────── */}
       <Card className="p-6">
-        <h2 className="mb-1 font-medium">Variantes &amp; prix</h2>
-        <p className="mb-4 text-xs text-[var(--color-muted)]">
-          💡 <strong>SKU</strong> = ta référence interne (unique) ·{" "}
-          <strong>Prix barré</strong> = ancien prix, affiché rayé ·{" "}
-          <strong>Coût</strong> = ton prix d&apos;achat (sert à calculer la marge) ·{" "}
-          <strong>Code-barres</strong> = EAN/UPC (optionnel).
-        </p>
-        <div className="space-y-4">
-          {variants.length === 0 && (
-            <p className="text-sm text-[var(--color-muted)]">
-              Aucune variante. Ajoute-en une ci-dessous (un produit a besoin d&apos;au moins une variante
-              active avec un prix pour être vendable / publiable).
-            </p>
-          )}
-          {variants.map((v) => {
-            const invList = v.inventory ?? [];
-            const defInv = invList.find((x) => x.warehouse_id === defaultWh?.id) ?? invList[0];
-            const opt = optionFields(v.option_values);
-            return (
-              <div key={v.id} className="rounded-md border border-[var(--color-border)] p-4">
-                <div className="flex flex-wrap items-start gap-3">
-                  <ActionForm action={updateVariant} successMessage="Variante enregistrée." className="flex flex-wrap items-end gap-3">
-                    <input type="hidden" name="productId" value={product.id} />
-                    <input type="hidden" name="variantId" value={v.id} />
-                    <Field label="SKU" name="sku" defaultValue={v.sku} className="w-40" required maxLength={120} />
-                    <Field label={`Prix (${v.currency})`} name="price" type="number" step="0.01" min="0" defaultValue={euros(v.price_cents)} className="w-24" required />
-                    <Field label="Prix barré" name="compareAt" type="number" step="0.01" min="0" defaultValue={euros(v.compare_at_price_cents)} className="w-24" />
-                    <Field label="Coût" name="cost" type="number" step="0.01" min="0" defaultValue={euros(v.cost_cents)} className="w-24" />
-                    <Field label="Code-barres" name="barcode" defaultValue={v.barcode ?? ""} className="w-36" maxLength={120} />
-                    <Field label="Poids (g)" name="weight" type="number" min="0" defaultValue={v.weight_g != null ? String(v.weight_g) : ""} className="w-20" />
-                    <Field label="Option" name="optionName" defaultValue={opt.name} className="w-28" placeholder="Taille" maxLength={60} />
-                    <Field label="Valeur" name="optionValue" defaultValue={opt.value} className="w-28" placeholder="M" maxLength={120} />
-                    <label className="flex items-center gap-2 pb-2 text-sm">
-                      <input type="checkbox" name="active" defaultChecked={v.active} className="h-4 w-4" /> Actif
-                    </label>
-                    <SubmitButton size="sm" variant="secondary">Enregistrer</SubmitButton>
-                  </ActionForm>
-                  <form action={deleteVariant} className="pb-1">
-                    <input type="hidden" name="productId" value={product.id} />
-                    <input type="hidden" name="variantId" value={v.id} />
-                    <SubmitButton size="sm" variant="ghost" aria-label="Supprimer la variante">
-                      <Trash2 className="h-4 w-4 text-[var(--color-danger)]" />
-                    </SubmitButton>
-                  </form>
-                </div>
+        <h2 className="mb-4 font-medium">Couleurs &amp; stock</h2>
+        <VariantsEditor
+          productId={product.id}
+          variants={rows}
+          globalEffectiveEuros={globalPair ? globalPair.price_cents / 100 : null}
+          saveAction={saveVariantsAndStock}
+          deleteAction={deleteVariant}
+        />
 
-                {v.cost_cents != null && v.cost_cents > 0 && v.price_cents > 0 && (
-                  <p className="mt-2 text-xs font-medium text-[var(--color-secondary-700)]">
-                    Marge : {euros(v.price_cents - v.cost_cents)} € ·{" "}
-                    {Math.round(((v.price_cents - v.cost_cents) / v.price_cents) * 100)} %
-                  </p>
-                )}
-
-                <div className="mt-3 border-t border-[var(--color-border)] pt-3">
-                  {invList.length > 0 && (
-                    <p className="mb-2 text-xs text-[var(--color-muted)]">
-                      Stock :{" "}
-                      {invList
-                        .map(
-                          (x) =>
-                            `${whName(x.warehouse_id)} ${x.quantity}` +
-                            (x.reserved ? ` (réservé ${x.reserved})` : ""),
-                        )
-                        .join(" · ")}
-                    </p>
-                  )}
-                  <ActionForm
-                    action={setInventory}
-                    successMessage="Stock mis à jour."
-                    className="flex flex-wrap items-end gap-3"
-                  >
-                    <input type="hidden" name="productId" value={product.id} />
-                    <input type="hidden" name="variantId" value={v.id} />
-                    {warehouses.length > 1 && (
-                      <div className="space-y-1">
-                        <Label className="text-xs">Entrepôt</Label>
-                        <select
-                          name="warehouseId"
-                          defaultValue={defaultWh?.id ?? ""}
-                          className="h-10 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
-                        >
-                          {warehouses.map((w) => (
-                            <option key={w.id} value={w.id}>
-                              {w.name}
-                              {w.is_default ? " (défaut)" : ""}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    <Field label="Stock" name="quantity" type="number" min="0" defaultValue={String(defInv?.quantity ?? 0)} className="w-24" />
-                    <Field label="Seuil d'alerte" name="reorder_point" type="number" min="0" defaultValue={String(defInv?.reorder_point ?? 5)} className="w-24" />
-                    <SubmitButton size="sm" variant="outline">Mettre à jour le stock</SubmitButton>
-                  </ActionForm>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-5 border-t border-[var(--color-border)] pt-4">
-          <h3 className="mb-2 text-sm font-medium">Générer des variantes (matrice)</h3>
+        <div className="mt-6 border-t border-[var(--color-border)] pt-4">
+          <h3 className="mb-2 text-sm font-medium">Ajouter une couleur</h3>
           <ActionForm
-            action={generateVariants}
-            successMessage="Variantes générées."
-            className="space-y-3"
+            action={addColorVariant}
+            successMessage="Couleur ajoutée."
+            resetOnSuccess
+            className="flex flex-wrap items-end gap-3"
           >
             <input type="hidden" name="productId" value={product.id} />
-            <div className="flex flex-wrap items-end gap-3">
-              <Field label="Préfixe SKU" name="skuPrefix" className="w-32" placeholder="auto (slug)" maxLength={16} />
-              <Field label="Prix de base (EUR)" name="basePrice" type="number" step="0.01" min="0" required className="w-32" />
+            <Field label="Couleur" name="color" required maxLength={60} className="w-36" placeholder="Rose" />
+            <div className="space-y-1">
+              <Label className="text-xs">Pastille</Label>
+              <input
+                type="color"
+                name="hex"
+                defaultValue="#cccccc"
+                className="h-10 w-14 cursor-pointer rounded-md border border-[var(--color-border)] bg-white p-1"
+              />
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-end gap-2">
-                  <Field label={`Option ${i}`} name={`optionName${i}`} className="w-24" placeholder={i === 1 ? "Taille" : i === 2 ? "Couleur" : ""} maxLength={60} />
-                  <Field label="Valeurs (virgules)" name={`optionValues${i}`} className="flex-1" placeholder={i === 1 ? "S, M, L" : i === 2 ? "Bleu, Rouge" : ""} maxLength={500} />
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-3">
-              <SubmitButton size="sm" variant="secondary">Générer les combinaisons</SubmitButton>
-              <span className="text-xs text-[var(--color-muted)]">
-                1 variante par combinaison (max 100) · les combinaisons existantes sont ignorées.
-              </span>
-            </div>
-          </ActionForm>
-        </div>
-
-        <div className="mt-5 border-t border-[var(--color-border)] pt-4">
-          <h3 className="mb-2 text-sm font-medium">Ajouter une variante</h3>
-          <ActionForm action={createVariant} successMessage="Variante ajoutée." resetOnSuccess className="flex flex-wrap items-end gap-3">
-            <input type="hidden" name="productId" value={product.id} />
-            <Field label="SKU" name="sku" required maxLength={120} className="w-40" placeholder="HAM-XXX" />
-            <Field label="Prix (EUR)" name="price" type="number" step="0.01" min="0" required className="w-24" />
-            <Field label="Prix barré" name="compareAt" type="number" step="0.01" min="0" className="w-24" />
-            <Field label="Coût" name="cost" type="number" step="0.01" min="0" className="w-24" />
-            <Field label="Option" name="optionName" className="w-28" placeholder="Taille" maxLength={60} />
-            <Field label="Valeur" name="optionValue" className="w-28" placeholder="M" maxLength={120} />
-            <label className="flex items-center gap-2 pb-2 text-sm">
-              <input type="checkbox" name="active" defaultChecked className="h-4 w-4" /> Actif
-            </label>
+            <Field label="Stock initial" name="stock" type="number" min="0" defaultValue="0" className="w-24" />
+            <Field label="Prix spécifique (€) — optionnel" name="customPrice" type="number" step="0.01" min="0.01" className="w-44" placeholder="hérite du prix global" />
             <SubmitButton size="sm">Ajouter</SubmitButton>
           </ActionForm>
+          <p className="mt-1 text-xs text-[var(--color-muted)]">
+            La référence interne (SKU) est générée automatiquement. Sans prix
+            spécifique, la couleur suit le prix global.
+          </p>
         </div>
       </Card>
 
-      {/* Images */}
+      {/* ── Bloc 4 : photos ──────────────────────────────────────────────── */}
       <Card className="p-6">
-        <h2 className="mb-4 font-medium">Images</h2>
+        <h2 className="mb-4 font-medium">Photos</h2>
         <div className="flex flex-wrap gap-4">
-          {images.length === 0 && <p className="text-sm text-[var(--color-muted)]">Aucune image.</p>}
+          {images.length === 0 && <p className="text-sm text-[var(--color-muted)]">Aucune photo.</p>}
           {images.map((img, i) => (
             <div key={img.id} className="w-36">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -501,7 +423,7 @@ export default async function AdminProductEdit({
                   <input type="hidden" name="productId" value={product.id} />
                   <input type="hidden" name="imageId" value={img.id} />
                   <input type="hidden" name="storagePath" value={img.storage_path} />
-                  <SubmitButton size="sm" variant="ghost" className="h-8 w-8 px-0" aria-label="Supprimer l'image">
+                  <SubmitButton size="sm" variant="ghost" className="h-8 w-8 px-0" aria-label="Supprimer la photo">
                     <Trash2 className="h-4 w-4 text-[var(--color-danger)]" />
                   </SubmitButton>
                 </form>
@@ -521,8 +443,8 @@ export default async function AdminProductEdit({
         </div>
 
         <div className="mt-5 border-t border-[var(--color-border)] pt-4">
-          <h3 className="mb-2 text-sm font-medium">Téléverser une image</h3>
-          <ActionForm action={uploadImage} successMessage="Image ajoutée." className="flex flex-wrap items-end gap-3">
+          <h3 className="mb-2 text-sm font-medium">Ajouter des photos</h3>
+          <ActionForm action={uploadImage} successMessage="Photo ajoutée." className="flex flex-wrap items-end gap-3">
             <input type="hidden" name="productId" value={product.id} />
             <input
               type="file"
@@ -531,16 +453,15 @@ export default async function AdminProductEdit({
               required
               className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[var(--color-primary-600)] file:px-3 file:py-1.5 file:text-white"
             />
-            <Field label="Texte alt (FR)" name="alt_fr" className="w-56" maxLength={200} />
             {variants.length > 0 && (
               <div className="space-y-1">
-                <Label className="text-xs">Couleur</Label>
+                <Label className="text-xs">Couleur associée</Label>
                 <select
                   name="variantId"
                   defaultValue=""
                   className="h-10 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
                 >
-                  <option value="">Toutes (photo générale)</option>
+                  <option value="">Toutes les couleurs</option>
                   {variants.map((v) => (
                     <option key={v.id} value={v.id}>
                       {variantLabel(v)}
@@ -549,40 +470,120 @@ export default async function AdminProductEdit({
                 </select>
               </div>
             )}
+            <Field label="Texte alternatif (optionnel)" name="alt_fr" className="w-52" maxLength={200} placeholder="Description de la photo" />
             <SubmitButton size="sm">Téléverser</SubmitButton>
           </ActionForm>
           <p className="mt-1 text-xs text-[var(--color-muted)]">
-            JPEG, PNG, WebP, AVIF, GIF — 5 Mo max. Bucket Storage « product-images ».
+            JPEG, PNG, WebP, AVIF, GIF — 5 Mo max. La première photo est la photo principale.
           </p>
-        </div>
 
-        <div className="mt-5 border-t border-[var(--color-border)] pt-4">
-          <h3 className="mb-2 text-sm font-medium">… ou ajouter par URL</h3>
-          <ActionForm action={addImage} successMessage="Image ajoutée." resetOnSuccess className="flex flex-wrap items-end gap-3">
-            <input type="hidden" name="productId" value={product.id} />
-            <Field label="URL" name="url" type="url" required className="w-72" placeholder="https://…" />
-            <Field label="Alt (FR)" name="alt_fr" className="w-40" maxLength={200} />
-            <Field label="Alt (EN)" name="alt_en" className="w-40" maxLength={200} />
-            {variants.length > 0 && (
-              <div className="space-y-1">
-                <Label className="text-xs">Couleur</Label>
-                <select
-                  name="variantId"
-                  defaultValue=""
-                  className="h-10 rounded-md border border-[var(--color-border)] bg-white px-2 text-sm"
-                >
-                  <option value="">Toutes (photo générale)</option>
-                  {variants.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {variantLabel(v)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <SubmitButton size="sm">Ajouter</SubmitButton>
-          </ActionForm>
+          <details className="mt-4">
+            <summary className="cursor-pointer text-xs font-medium text-[var(--color-muted)] hover:underline">
+              Avancé : ajouter une photo par URL
+            </summary>
+            <ActionForm action={addImage} successMessage="Photo ajoutée." resetOnSuccess className="mt-3 flex flex-wrap items-end gap-3">
+              <input type="hidden" name="productId" value={product.id} />
+              <Field label="URL" name="url" type="url" required className="w-72" placeholder="https://…" />
+              <Field label="Alt (FR)" name="alt_fr" className="w-40" maxLength={200} />
+              <Field label="Alt (EN)" name="alt_en" className="w-40" maxLength={200} />
+              <SubmitButton size="sm" variant="secondary">Ajouter par URL</SubmitButton>
+            </ActionForm>
+          </details>
         </div>
+      </Card>
+
+      {/* ── Bloc 5 : contenu de la page produit ──────────────────────────── */}
+      <Card className="p-6">
+        <h2 className="mb-4 font-medium">Contenu produit</h2>
+        <ActionForm action={updateProduct} successMessage="Contenu enregistré." className="space-y-4">
+          <input type="hidden" name="id" value={product.id} />
+          <input type="hidden" name="status" value={product.status} />
+          <UnsavedGuard />
+          <LangTabs panels={langPanels} />
+
+          <details className="rounded-md border border-[var(--color-border)] p-4">
+            <summary className="cursor-pointer text-sm font-medium">
+              Référencement &amp; informations avancées
+            </summary>
+            <div className="mt-4 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {routing.locales.map((loc) => (
+                  <div key={loc} className="space-y-3 rounded-md bg-[var(--color-bg)]/60 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                      SEO {LOCALE_LABEL[loc] ?? loc}
+                    </p>
+                    <div className="space-y-1.5">
+                      <Label htmlFor={`seo_title_${loc}`}>Titre</Label>
+                      <Input
+                        id={`seo_title_${loc}`}
+                        name={`seo_title_${loc}`}
+                        maxLength={70}
+                        defaultValue={seo.title?.[loc] ?? ""}
+                        placeholder="≤ 70 caractères"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor={`seo_description_${loc}`}>Description</Label>
+                      <Input
+                        id={`seo_description_${loc}`}
+                        name={`seo_description_${loc}`}
+                        maxLength={320}
+                        defaultValue={seo.description?.[loc] ?? ""}
+                        placeholder="≤ 320 caractères"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-3 border-t border-[var(--color-border)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="slug">Slug *</Label>
+                  <Input id="slug" name="slug" required maxLength={200} defaultValue={product.slug} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="brand">Marque</Label>
+                  <Input id="brand" name="brand" maxLength={120} defaultValue={product.brand ?? ""} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="category_id">Catégorie</Label>
+                  <select id="category_id" name="category_id" defaultValue={product.category_id ?? ""} className={SELECT_CLASS}>
+                    <option value="">— Aucune —</option>
+                    {(categories ?? []).map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name_i18n?.fr ?? c.id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="supplier_id">Fournisseur</Label>
+                  <select id="supplier_id" name="supplier_id" defaultValue={product.supplier_id ?? ""} className={SELECT_CLASS}>
+                    <option value="">— Aucun —</option>
+                    {(suppliers ?? []).map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="featured"
+                    defaultChecked={product.featured ?? false}
+                    className="h-4 w-4"
+                  />
+                  <span>
+                    <strong>Vedette</strong> (accueil)
+                  </span>
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <SubmitButton>Enregistrer le contenu</SubmitButton>
+        </ActionForm>
       </Card>
 
       {/* Zone de danger — suppression définitive */}
@@ -591,7 +592,7 @@ export default async function AdminProductEdit({
           Zone de danger
         </h2>
         <p className="mb-3 text-sm text-[var(--color-muted)]">
-          Supprime définitivement ce produit, ses variantes, son stock et ses
+          Supprime définitivement ce produit, ses couleurs, son stock et ses
           photos. Les commandes déjà passées sont conservées (historique).
           Action irréversible.
         </p>
@@ -611,7 +612,17 @@ export default async function AdminProductEdit({
   );
 }
 
-/** Compact labelled input used across the variant/stock/image forms. */
+/** Indicateur clé du bandeau d'état. */
+function Stat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+      <p className="text-xs uppercase tracking-wide text-[var(--color-muted)]">{label}</p>
+      <p className="mt-1 text-lg font-semibold">{children}</p>
+    </div>
+  );
+}
+
+/** Compact labelled input used across the small forms. */
 function Field({
   label,
   className,
