@@ -26,6 +26,12 @@ export interface ProductCopy {
   skipToContent: string;
   nav: { home: string; sacoche: string; avis: string; faq: string; about: string; contact: string };
   hero: { badge: string; titleLine1: string; titleLine2: string; subtitle: string };
+  problem: {
+    eyebrow: string;
+    heading: string;
+    sub: string;
+    items: { title: string; body: string }[];
+  };
   buyBox: {
     ratingSuffix: string;
     /** Uses `{price}`. */
@@ -124,6 +130,16 @@ const fr: ProductCopy = {
     titleLine1: "Filmez sous l'eau.",
     titleLine2: "Ressortez au sec.",
     subtitle: "Sacoche certifiée IPX8 jusqu'à 30 m. Écran tactile, compatible iPhone & Android.",
+  },
+  problem: {
+    eyebrow: "Le problème",
+    heading: "L'eau et votre smartphone ne font pas bon ménage.",
+    sub: "Une vague, une chute dans la piscine, une averse — et c'est 1 000 € qui coulent.",
+    items: [
+      { title: "Un instant d'inattention", body: "Le téléphone glisse de la serviette, tombe du paddle, prend une vague. Trop tard." },
+      { title: "Les photos que vous ratez", body: "Vos enfants qui plongent, le fond marin, l'instant parfait — impossible à filmer sans risque." },
+      { title: "Les « waterproof » qui fuient", body: "Zip fragile, tactile mort sous l'eau, sacoche qui coule au fond. Vous avez déjà donné." },
+    ],
   },
   buyBox: {
     ratingSuffix: "avis",
@@ -287,6 +303,16 @@ const en: ProductCopy = {
     titleLine2: "Come out dry.",
     subtitle: "IPX8-certified pouch down to 30 m. Touchscreen works, compatible with iPhone & Android.",
   },
+  problem: {
+    eyebrow: "The problem",
+    heading: "Water and your smartphone don't mix.",
+    sub: "One wave, one drop in the pool, one downpour — and there goes €1,000.",
+    items: [
+      { title: "One moment's lapse", body: "The phone slides off the towel, falls off the paddleboard, catches a wave. Too late." },
+      { title: "The shots you miss", body: "Your kids diving, the seabed, the perfect moment — impossible to film without risking it." },
+      { title: "“Waterproof” that leaks", body: "Flimsy zip, dead touchscreen underwater, a pouch that sinks. You've been there." },
+    ],
+  },
   buyBox: {
     ratingSuffix: "reviews",
     installment: "or 3× {price} — instalments available",
@@ -449,6 +475,16 @@ const es: ProductCopy = {
     titleLine2: "Sal seco.",
     subtitle: "Funda certificada IPX8 hasta 30 m. Pantalla táctil, compatible con iPhone y Android.",
   },
+  problem: {
+    eyebrow: "El problema",
+    heading: "El agua y tu smartphone no se llevan bien.",
+    sub: "Una ola, una caída en la piscina, un chaparrón — y ahí se van 1.000 €.",
+    items: [
+      { title: "Un instante de descuido", body: "El teléfono resbala de la toalla, cae del paddle, le entra una ola. Demasiado tarde." },
+      { title: "Las fotos que te pierdes", body: "Tus hijos buceando, el fondo marino, el momento perfecto — imposible grabarlo sin arriesgar." },
+      { title: "Los «waterproof» que gotean", body: "Cremallera frágil, táctil muerto bajo el agua, funda que se hunde. Ya lo has vivido." },
+    ],
+  },
   buyBox: {
     ratingSuffix: "opiniones",
     installment: "o 3× {price} — pago fraccionado disponible",
@@ -610,6 +646,16 @@ const de: ProductCopy = {
     titleLine1: "Filme unter Wasser.",
     titleLine2: "Komm trocken heraus.",
     subtitle: "IPX8-zertifizierte Hülle bis 30 m. Touchscreen, kompatibel mit iPhone & Android.",
+  },
+  problem: {
+    eyebrow: "Das Problem",
+    heading: "Wasser und dein Smartphone vertragen sich nicht.",
+    sub: "Eine Welle, ein Sturz in den Pool, ein Regenguss — und 1.000 € sind weg.",
+    items: [
+      { title: "Ein Moment der Unachtsamkeit", body: "Das Handy rutscht vom Handtuch, fällt vom SUP, erwischt eine Welle. Zu spät." },
+      { title: "Die Aufnahmen, die du verpasst", body: "Deine Kinder beim Tauchen, der Meeresgrund, der perfekte Moment — ohne Risiko unmöglich zu filmen." },
+      { title: "„Wasserdicht“, das leckt", body: "Fragiler Zip, toter Touchscreen unter Wasser, Hülle, die untergeht. Kennst du schon." },
+    ],
   },
   buyBox: {
     ratingSuffix: "Bewertungen",

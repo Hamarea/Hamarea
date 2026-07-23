@@ -4,8 +4,8 @@ import { setRequestLocale } from "next-intl/server";
 import { HeroImage } from "@/components/product/hero-image";
 import { BuyBox } from "@/components/product/buy-box";
 import { TrustBar } from "@/components/product/trust-bar";
+import { Problem } from "@/components/product/problem";
 import { UspGrid } from "@/components/product/usp-grid";
-import { PressBar } from "@/components/product/press-bar";
 import { HowItWorks } from "@/components/product/how-it-works";
 import { ColorsShowcase } from "@/components/product/colors-showcase";
 import { Comparison } from "@/components/product/comparison";
@@ -123,15 +123,18 @@ export default async function SacochePage({
         </div>
       </section>
 
+      {/* Funnel resserré, preuve sociale remontée :
+          réassurance → problème → solution (USP) → démo vidéo → avis clients
+          → couleurs → comparatif → mode d'emploi → packs → FAQ. */}
       <TrustBar />
-      <PressBar />
+      <Problem />
       <UspGrid />
-      <HowItWorks />
       <VideoReel />
+      <Testimonials />
       <ColorsShowcase />
       <Comparison />
+      <HowItWorks />
       <BundlePicker />
-      <Testimonials />
       <Faq />
 
       {/* Closing CTA */}
