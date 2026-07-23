@@ -7,15 +7,12 @@ import { CommandPalette } from "@/components/admin/command-palette";
 import {
   LayoutDashboard,
   Package,
-  FolderTree,
   ShoppingBag,
   Users,
   Boxes,
   Tag,
   Star,
-  ShieldCheck,
   Settings,
-  Truck,
   ScrollText,
   CreditCard,
   Home,
@@ -90,34 +87,53 @@ export default async function AdminLayout({
 
   const t = await getTranslations();
   const ic = "h-4 w-4 opacity-80";
-  const items = [
-    { href: "/admin", label: t("admin.dashboard"), icon: <LayoutDashboard className={ic} /> },
-    { href: "/admin/appearance", label: "Page d'accueil", icon: <Home className={ic} /> },
-    { href: "/admin/products", label: t("admin.products"), icon: <Package className={ic} /> },
-    { href: "/admin/categories", label: "Catégories", icon: <FolderTree className={ic} /> },
-    { href: "/admin/suppliers", label: "Fournisseurs", icon: <Truck className={ic} /> },
-    { href: "/admin/orders", label: t("admin.orders"), icon: <ShoppingBag className={ic} /> },
-    { href: "/admin/payments", label: "Paiements", icon: <CreditCard className={ic} /> },
-    { href: "/admin/customers", label: t("admin.customers"), icon: <Users className={ic} /> },
-    { href: "/admin/stock", label: t("admin.stock"), icon: <Boxes className={ic} /> },
-    { href: "/admin/coupons", label: t("admin.coupons"), icon: <Tag className={ic} /> },
-    { href: "/admin/reviews", label: t("admin.reviews"), icon: <Star className={ic} /> },
-    { href: "/admin/moderation", label: t("admin.moderation"), icon: <ShieldCheck className={ic} /> },
-    { href: "/admin/settings", label: t("admin.settings"), icon: <Settings className={ic} /> },
-    { href: "/admin/audit", label: "Audit", icon: <ScrollText className={ic} /> },
+  // Menu resserré pour une boutique mono-produit : Catégories, Fournisseurs et
+  // Modération restent accessibles par URL mais sortent de la navigation.
+  const sections = [
+    {
+      items: [
+        { href: "/admin", label: t("admin.dashboard"), icon: <LayoutDashboard className={ic} /> },
+      ],
+    },
+    {
+      title: "Boutique",
+      items: [
+        { href: "/admin/products", label: t("admin.products"), icon: <Package className={ic} /> },
+        { href: "/admin/orders", label: t("admin.orders"), icon: <ShoppingBag className={ic} /> },
+        { href: "/admin/customers", label: t("admin.customers"), icon: <Users className={ic} /> },
+        { href: "/admin/stock", label: t("admin.stock"), icon: <Boxes className={ic} /> },
+      ],
+    },
+    {
+      title: "Marketing",
+      items: [
+        { href: "/admin/coupons", label: t("admin.coupons"), icon: <Tag className={ic} /> },
+        { href: "/admin/reviews", label: t("admin.reviews"), icon: <Star className={ic} /> },
+      ],
+    },
+    {
+      title: "Configuration",
+      items: [
+        { href: "/admin/payments", label: "Paiements", icon: <CreditCard className={ic} /> },
+        { href: "/admin/appearance", label: "Page d'accueil", icon: <Home className={ic} /> },
+        { href: "/admin/settings", label: t("admin.settings"), icon: <Settings className={ic} /> },
+        { href: "/admin/audit", label: "Audit", icon: <ScrollText className={ic} /> },
+      ],
+    },
   ];
 
   const paletteItems = [
-    ...items.map((it) => ({ label: it.label, href: it.href })),
-    { label: "Action : nouveau produit", href: "/admin/products" },
-    { label: "Action : nouvelle catégorie", href: "/admin/categories" },
+    ...sections.flatMap((s) => s.items.map((it) => ({ label: it.label, href: it.href }))),
+    { label: "Catégories", href: "/admin/categories" },
+    { label: "Fournisseurs", href: "/admin/suppliers" },
+    { label: "Modération", href: "/admin/moderation" },
     { label: "Voir la boutique", href: "/" },
   ];
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] md:grid md:grid-cols-[240px_1fr]">
       <AdminSidebar
-        items={items}
+        sections={sections}
         userEmail={userEmail}
         supabaseConfigured={supabaseConfigured}
       />

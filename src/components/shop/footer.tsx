@@ -23,8 +23,6 @@ export function ShopFooter() {
           </p>
           <ul className="space-y-2 text-sm">
             <li><Link href="/sacoche" className="hover:underline">{b.nav.sacoche}</Link></li>
-            <li><Link href="/#univers" className="hover:underline">{b.footer.universe}</Link></li>
-            <li><Link href="/#waitlist" className="hover:underline">{b.footer.soon}</Link></li>
           </ul>
         </div>
 
@@ -34,7 +32,6 @@ export function ShopFooter() {
           </p>
           <ul className="space-y-2 text-sm">
             <li><Link href="/about" className="hover:underline">{b.nav.about}</Link></li>
-            <li><Link href="/#engagement" className="hover:underline">{b.footer.commitment}</Link></li>
             <li><Link href="/account" className="hover:underline">{t("common.account")}</Link></li>
             <li><Link href="/contact" className="hover:underline">{t("footer.contact")}</Link></li>
           </ul>

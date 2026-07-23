@@ -10,6 +10,7 @@ import { slugify } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { routing } from "@/i18n/routing";
 import type { FormState } from "@/lib/form-state";
+import { deriveGlobalPair, samePair, type PricePair } from "@/lib/pricing";
 import { randomUUID } from "node:crypto";
 
 type Result = { data: unknown; error: { message?: string; code?: string } | null };
@@ -689,6 +690,386 @@ export async function duplicateProduct(formData: FormData): Promise<void> {
     revalidatePath(`/admin/products/${newId}`);
   } catch {
     /* swallow */
+  }
+}
+
+// --- Pricing global (poste de pilotage mono-produit) ------------------------
+const PricingSchema = z.object({
+  productId: z.string().uuid(),
+  price: z.coerce.number().gt(0).max(1_000_000),
+  promo: z.coerce.number().gt(0).max(1_000_000).optional().nullable(),
+  applyAll: z.boolean(),
+});
+
+/**
+ * One-shot price update. `price` is the normal price; `promo` (optional) is the
+ * current promotional price. Storefront mapping: variants get
+ * price_cents = promo ?? price and compare_at = promo ? price : null (the
+ * struck-through price customers see). With applyAll every variant is aligned;
+ * otherwise only variants inheriting the current global price follow, and
+ * colour-specific prices are preserved.
+ */
+export async function updatePricing(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const actor = await requirePermission("products.write");
+    const promoRaw = ((formData.get("promo") as string) ?? "").trim();
+    const d = PricingSchema.parse({
+      productId: formData.get("productId"),
+      price: formData.get("price"),
+      promo: promoRaw ? promoRaw : null,
+      applyAll: formData.get("applyAll") === "on" || formData.get("applyAll") === "true",
+    });
+    if (d.promo != null && d.promo >= d.price) {
+      return err("Le prix promotionnel doit être inférieur au prix normal.");
+    }
+
+    const target: PricePair = {
+      price_cents: cents(d.promo ?? d.price),
+      compare_at_price_cents: d.promo != null ? cents(d.price) : null,
+    };
+
+    const sb = await db();
+    const { data } = await sb
+      .from("product_variants")
+      .select("id, price_cents, compare_at_price_cents")
+      .eq("product_id", d.productId);
+    const variants =
+      (data as ({ id: string } & PricePair)[] | null) ?? [];
+    if (variants.length === 0) return err("Aucune couleur à tarifer — ajoute d'abord une couleur.");
+
+    const current = deriveGlobalPair(variants);
+    const targets = d.applyAll
+      ? variants
+      : variants.filter((v) => current && samePair(v, current));
+
+    for (const v of targets) {
+      const { error } = await sb
+        .from("product_variants")
+        .update({
+          price_cents: target.price_cents,
+          compare_at_price_cents: target.compare_at_price_cents,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", v.id);
+      if (error) return err("Mise à jour des prix impossible.");
+    }
+
+    await logAudit({
+      actorId: actor.id,
+      action: "product.pricing",
+      entity: "product",
+      entityId: d.productId,
+      data: {
+        previous: current,
+        next: target,
+        applied_to: targets.length,
+        apply_all: d.applyAll,
+      },
+    });
+    revalidate(d.productId);
+    return ok();
+  } catch (e) {
+    return err(toMessage(e));
+  }
+}
+
+// --- Sauvegarde groupée du tableau couleurs & stock -------------------------
+
+/** Default warehouse id (creation order fallback). */
+async function defaultWarehouseId(sb: DB): Promise<string | null> {
+  const { data } = await sb
+    .from("warehouses")
+    .select("id, is_default")
+    .order("created_at", { ascending: true });
+  const list = (data as { id: string; is_default: boolean }[] | null) ?? [];
+  return (list.find((w) => w.is_default) ?? list[0])?.id ?? null;
+}
+
+/** Upsert stock for a variant on a warehouse + trace the movement. */
+async function writeStock(
+  sb: DB,
+  actorId: string,
+  variantId: string,
+  warehouseId: string,
+  quantity: number,
+  reorderPoint: number | null,
+) {
+  const { data: cur } = await sb
+    .from("inventory")
+    .select("quantity, reorder_point")
+    .eq("variant_id", variantId)
+    .eq("warehouse_id", warehouseId)
+    .maybeSingle();
+  const row = cur as { quantity: number; reorder_point: number } | null;
+  const previous = row?.quantity ?? 0;
+  const delta = quantity - previous;
+
+  const { error } = await sb.from("inventory").upsert(
+    {
+      variant_id: variantId,
+      warehouse_id: warehouseId,
+      quantity,
+      reorder_point: reorderPoint ?? row?.reorder_point ?? 5,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "variant_id,warehouse_id" },
+  );
+  if (error) throw new Error("VISIBLE:Mise à jour du stock impossible.");
+
+  if (delta !== 0) {
+    await sb.from("stock_movements").insert({
+      variant_id: variantId,
+      warehouse_id: warehouseId,
+      delta,
+      reason: "adjustment",
+      note: "réglage manuel (admin)",
+      created_by: actorId,
+    });
+  }
+}
+
+const RowSchema = z.object({
+  active: z.boolean(),
+  quantity: z.coerce.number().int().min(0).max(1_000_000),
+  useCustom: z.boolean(),
+  customPrice: z.coerce.number().gt(0).max(1_000_000).optional().nullable(),
+  color: z.string().trim().max(60).optional().nullable(),
+  hex: z
+    .string()
+    .trim()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .nullable(),
+  sku: z.string().trim().min(1).max(120).optional().nullable(),
+  cost: z.coerce.number().min(0).max(1_000_000).optional().nullable(),
+  barcode: z.string().trim().max(120).optional().nullable(),
+  weight: z.coerce.number().int().min(0).max(1_000_000).optional().nullable(),
+  reorder: z.coerce.number().int().min(0).max(1_000_000).optional().nullable(),
+});
+
+/**
+ * Single save for the whole colours & stock table: per variant — active flag,
+ * stock, global-or-specific price, colour label/swatch and the advanced fields
+ * (SKU, cost, barcode, weight, reorder point). Replaces the per-variant
+ * "Enregistrer" + separate "Mettre à jour le stock" forms.
+ */
+export async function saveVariantsAndStock(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const actor = await requirePermission("products.write");
+    const productId = z.string().uuid().parse(formData.get("productId"));
+    const ids = formData
+      .getAll("variantIds")
+      .map((v) => z.string().uuid().parse(v));
+    if (ids.length === 0) return err("Aucune couleur à enregistrer.");
+
+    const sb = await db();
+    const { data } = await sb
+      .from("product_variants")
+      .select("id, option_values, price_cents, compare_at_price_cents")
+      .eq("product_id", productId);
+    const existing = new Map(
+      (
+        (data as
+          | ({ id: string; option_values: Record<string, unknown> | null } & PricePair)[]
+          | null) ?? []
+      ).map((v) => [v.id, v]),
+    );
+    const globalPair = deriveGlobalPair([...existing.values()]);
+
+    const warehouseId = await defaultWarehouseId(sb);
+    if (!warehouseId) return err("Aucun entrepôt par défaut défini.");
+
+    const str = (k: string) => {
+      const v = (formData.get(k) as string | null)?.trim();
+      return v ? v : null;
+    };
+
+    for (const id of ids) {
+      const before = existing.get(id);
+      if (!before) continue;
+      const row = RowSchema.parse({
+        active: formData.get(`active_${id}`) === "on",
+        quantity: formData.get(`quantity_${id}`),
+        useCustom: formData.get(`useCustom_${id}`) === "on",
+        customPrice: str(`price_${id}`),
+        color: str(`color_${id}`),
+        hex: str(`hex_${id}`),
+        sku: str(`sku_${id}`),
+        cost: str(`cost_${id}`),
+        barcode: str(`barcode_${id}`),
+        weight: str(`weight_${id}`),
+        reorder: str(`reorder_${id}`),
+      });
+
+      // Price: specific → its own price (no struck-through price); inherited →
+      // realign on the product's global pair.
+      let pricePatch: Partial<PricePair> = {};
+      if (row.useCustom && row.customPrice != null) {
+        pricePatch = {
+          price_cents: cents(row.customPrice),
+          compare_at_price_cents: null,
+        };
+      } else if (!row.useCustom && globalPair) {
+        pricePatch = {
+          price_cents: globalPair.price_cents,
+          compare_at_price_cents: globalPair.compare_at_price_cents,
+        };
+      }
+
+      const option_values = { ...(before.option_values ?? {}) };
+      if (row.color) option_values.color = row.color;
+      if (row.hex) option_values.hex = row.hex;
+
+      const { error } = await sb
+        .from("product_variants")
+        .update({
+          active: row.active,
+          option_values,
+          ...(row.sku ? { sku: row.sku } : {}),
+          cost_cents: row.cost != null ? cents(row.cost) : null,
+          barcode: row.barcode,
+          weight_g: row.weight ?? null,
+          ...pricePatch,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (error) {
+        if (error.code === "23505") return err("Un SKU saisi existe déjà.");
+        return err("Enregistrement des couleurs impossible.");
+      }
+
+      await writeStock(sb, actor.id, id, warehouseId, row.quantity, row.reorder ?? null);
+    }
+
+    await logAudit({
+      actorId: actor.id,
+      action: "variants.batch_update",
+      entity: "product",
+      entityId: productId,
+      data: { count: ids.length },
+    });
+    revalidate(productId);
+    return ok();
+  } catch (e) {
+    return err(toMessage(e));
+  }
+}
+
+// --- Ajouter une couleur (variante simplifiée) ------------------------------
+const ColorSchema = z.object({
+  productId: z.string().uuid(),
+  color: z.string().trim().min(1).max(60),
+  hex: z
+    .string()
+    .trim()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .nullable(),
+  stock: z.coerce.number().int().min(0).max(1_000_000).default(0),
+  customPrice: z.coerce.number().gt(0).max(1_000_000).optional().nullable(),
+});
+
+/**
+ * "Ajouter une couleur" : creates a variant with an auto-generated SKU that
+ * inherits the product's global price (unless a specific price is given), and
+ * seeds its stock on the default warehouse. No SKU/matrix knowledge needed.
+ */
+export async function addColorVariant(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  try {
+    const actor = await requirePermission("products.write");
+    const priceRaw = ((formData.get("customPrice") as string) ?? "").trim();
+    const d = ColorSchema.parse({
+      productId: formData.get("productId"),
+      color: formData.get("color"),
+      hex: ((formData.get("hex") as string) ?? "").trim() || null,
+      stock: formData.get("stock") || 0,
+      customPrice: priceRaw ? priceRaw : null,
+    });
+
+    const sb = await db();
+    const { data: prod } = await sb
+      .from("products")
+      .select("slug")
+      .eq("id", d.productId)
+      .maybeSingle();
+    const slug = (prod as { slug: string } | null)?.slug ?? "produit";
+
+    const { data } = await sb
+      .from("product_variants")
+      .select("price_cents, compare_at_price_cents, position, option_values")
+      .eq("product_id", d.productId);
+    const variants =
+      (data as (PricePair & { position: number; option_values: Record<string, unknown> | null })[] | null) ?? [];
+
+    const dup = variants.some(
+      (v) =>
+        String(v.option_values?.color ?? "").toLowerCase() === d.color.toLowerCase(),
+    );
+    if (dup) return err(`La couleur « ${d.color} » existe déjà.`);
+
+    const globalPair = deriveGlobalPair(variants);
+    if (d.customPrice == null && !globalPair) {
+      return err("Indique un prix : ce produit n'a pas encore de prix global.");
+    }
+    const pair: PricePair =
+      d.customPrice != null
+        ? { price_cents: cents(d.customPrice), compare_at_price_cents: null }
+        : globalPair!;
+
+    const prefix = slugify(slug).toUpperCase().replace(/-/g, "").slice(0, 16) || "VAR";
+    const token = slugify(d.color).toUpperCase().replace(/-/g, "") || "COULEUR";
+    const position = variants.reduce((m, v) => Math.max(m, v.position ?? 0), -1) + 1;
+
+    let sku = `${prefix}-${token}`.slice(0, 120);
+    const insertVariant = (s: string) =>
+      sb
+        .from("product_variants")
+        .insert({
+          product_id: d.productId,
+          sku: s,
+          price_cents: pair.price_cents,
+          compare_at_price_cents: pair.compare_at_price_cents,
+          option_values: { color: d.color, ...(d.hex ? { hex: d.hex } : {}) },
+          active: true,
+          position,
+        })
+        .select("id")
+        .single();
+    let created = await insertVariant(sku);
+    if (created.error?.code === "23505") {
+      sku = `${sku.slice(0, 113)}-${randomUUID().slice(0, 4)}`;
+      created = await insertVariant(sku);
+    }
+    if (created.error) return err("Ajout de la couleur impossible.");
+    const variantId = (created.data as { id: string } | null)?.id;
+
+    if (variantId && d.stock > 0) {
+      const warehouseId = await defaultWarehouseId(sb);
+      if (warehouseId) {
+        await writeStock(sb, actor.id, variantId, warehouseId, d.stock, null);
+      }
+    }
+
+    await logAudit({
+      actorId: actor.id,
+      action: "variant.create",
+      entity: "product",
+      entityId: d.productId,
+      data: { sku, color: d.color, price_cents: pair.price_cents },
+    });
+    revalidate(d.productId);
+    return ok();
+  } catch (e) {
+    return err(toMessage(e));
   }
 }
 

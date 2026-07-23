@@ -25,7 +25,6 @@ export function ShopHeader() {
 
   const NAV: { href: string; label: string }[] = [
     { href: "/sacoche", label: nav.sacoche },
-    { href: "/#univers", label: nav.univers },
     { href: "/about", label: nav.about },
   ];
 

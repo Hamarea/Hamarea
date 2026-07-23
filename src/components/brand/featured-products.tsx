@@ -28,7 +28,7 @@ export async function FeaturedProducts({ locale }: { locale: string }) {
           </h2>
         </div>
         <Link
-          href="/products"
+          href="/sacoche"
           className="inline-flex min-h-12 items-center gap-2 rounded-full border border-[var(--color-border)] px-5 py-3 text-sm font-semibold transition-colors hover:bg-[var(--color-primary-50)]"
         >
           {t("home.viewAll")}

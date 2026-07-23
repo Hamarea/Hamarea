@@ -28,7 +28,7 @@ export default function CartPage() {
         <Card className="p-12 text-center">
           <p className="text-[var(--color-muted)] mb-6">{t("cart.empty")}</p>
           <Button asChild>
-            <Link href="/products">{t("cart.continueShopping")}</Link>
+            <Link href="/sacoche">{t("cart.continueShopping")}</Link>
           </Button>
         </Card>
       ) : (
@@ -109,7 +109,7 @@ export default function CartPage() {
               <Link href="/checkout">{t("cart.checkout")}</Link>
             </Button>
             <Button asChild variant="ghost" className="mt-2 w-full">
-              <Link href="/products">{t("cart.continueShopping")}</Link>
+              <Link href="/sacoche">{t("cart.continueShopping")}</Link>
             </Button>
           </Card>
         </div>
