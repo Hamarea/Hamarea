@@ -16,6 +16,7 @@ import {
   ScrollText,
   CreditCard,
   Home,
+  Activity,
 } from "lucide-react";
 
 const isSupabaseConfigured = () =>
@@ -115,6 +116,7 @@ export default async function AdminLayout({
       title: "Configuration",
       items: [
         { href: "/admin/payments", label: "Paiements", icon: <CreditCard className={ic} /> },
+        { href: "/admin/diagnostics", label: "Diagnostic", icon: <Activity className={ic} /> },
         { href: "/admin/appearance", label: "Page d'accueil", icon: <Home className={ic} /> },
         { href: "/admin/settings", label: t("admin.settings"), icon: <Settings className={ic} /> },
         { href: "/admin/audit", label: "Audit", icon: <ScrollText className={ic} /> },
@@ -124,6 +126,7 @@ export default async function AdminLayout({
 
   const paletteItems = [
     ...sections.flatMap((s) => s.items.map((it) => ({ label: it.label, href: it.href }))),
+    { label: "Diagnostic", href: "/admin/diagnostics" },
     { label: "Catégories", href: "/admin/categories" },
     { label: "Fournisseurs", href: "/admin/suppliers" },
     { label: "Modération", href: "/admin/moderation" },

@@ -221,17 +221,18 @@ export function BuyBox({
         </Button>
       </div>
 
-      {!compact && (
-        <Button
-          size="lg"
-          variant="secondary"
-          className="mt-2 w-full"
-          onClick={onBuyNow}
-          disabled={outOfStock}
-        >
-          <Zap className="h-4 w-4" /> {copy.buyBox.buyNow}
-        </Button>
-      )}
+      {/* Achat direct : ajoute la ligne ET saute au paiement, sans détour par le
+          tiroir. Exposé aussi sur le hero (mode compact) — c'est le chemin le
+          plus court vers l'achat pour un mono-produit. */}
+      <Button
+        size={btnSize}
+        variant="secondary"
+        className="mt-2 w-full"
+        onClick={onBuyNow}
+        disabled={outOfStock}
+      >
+        <Zap className="h-4 w-4" /> {copy.buyBox.buyNow}
+      </Button>
 
       <div className={`${compact ? "mt-3" : "mt-4"} space-y-2`}>
         <Reassurance dark={dark} locale={locale} />

@@ -11,6 +11,7 @@ import { useCartUI } from "@/stores/cart-ui";
 import { formatMoney } from "@/lib/utils";
 import { SHIPPING } from "@/lib/product";
 import { getProductCopy } from "@/lib/product-content";
+import { ExpressCheckout } from "@/components/checkout/express-checkout";
 
 /**
  * Slide-in mini-cart. Mounted once in the locale layout; opens on add-to-cart
@@ -196,7 +197,16 @@ export function CartDrawer() {
                   {formatMoney(subtotal, "EUR", locale)}
                 </span>
               </div>
-              <Button asChild size="lg" className="mt-4 w-full">
+              {/* Paiement express 1-tap (Apple Pay / Google Pay). Monté UNIQUEMENT
+                  quand le tiroir est ouvert : le drawer est toujours présent dans
+                  le layout, donc rendre l'élément Stripe en continu chargerait
+                  Stripe.js sur chaque page. `open` le charge à la demande. */}
+              {open && (
+                <div className="mt-4">
+                  <ExpressCheckout shippingMethod="standard" />
+                </div>
+              )}
+              <Button asChild size="lg" className="mt-2 w-full">
                 <Link href="/checkout" onClick={close}>
                   {t.checkout}
                 </Link>

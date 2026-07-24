@@ -61,10 +61,7 @@ export default async function WishlistPage({
                 <Card className="flex items-center justify-between p-4">
                   <div className="text-sm">
                     {it.product ? (
-                      <Link
-                        href={`/products/${it.product.slug}`}
-                        className="font-medium hover:underline"
-                      >
+                      <Link href="/sacoche" className="font-medium hover:underline">
                         {name}
                       </Link>
                     ) : (

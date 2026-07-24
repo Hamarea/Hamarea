@@ -114,7 +114,7 @@ export function ModerationRow({ review, locale }: { review: ReviewView; locale: 
               <dd>
                 {review.product ? (
                   <Link
-                    href={`/products/${review.product.slug}`}
+                    href="/sacoche"
                     className="underline-offset-2 hover:underline"
                   >
                     {review.product.name}
